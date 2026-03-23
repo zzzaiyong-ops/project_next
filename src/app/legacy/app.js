@@ -1,5 +1,9 @@
 console.log('[SSGLIVE] 메인 스크립트 시작');
 
+// ── 고정 기본 텍스트 ──
+var DEFAULT_PRODUCT_BASIC_INFO = "① 상품명/상품구성 :\n②가격/프로모션 조건 : MD할인가,카드즉시할인5%(5만원이상),신규가입3천원 적립, 최종공구가\n③이벤트 : 사전알림댓글 이벤트, 구매인증 이벤트, 모바일라이브 유무 등\n④참고용상품링크 : ";
+var DEFAULT_CS_INFO = "1)과세/면세 :\n2)제조사/원산지 :\n3)반품.교환정책 :\n4)반품교환문의 : 1800-0850\n5)출고지/교환반품주소\n6)CS고객센터 협의사항:";
+
 // ── 커스텀 confirm (sandbox iframe에서 native confirm 차단 대비) ──
 function showConfirm(msg, onOk, onCancel){
   // 기존 overlay 제거
@@ -2475,8 +2479,8 @@ function editProd(id){
   var sdEl=document.getElementById('p-settle-da'); if(sdEl) sdEl.value=p.settleDa ? p.settleDa.toLocaleString('ko-KR') : '';
   var sdoneEl=document.getElementById('p-settle-done'); if(sdoneEl) sdoneEl.checked=!!(p.settleDone);
   var arEl3=document.getElementById('p-agency-rate'); if(arEl3) arEl3.value=p.agencyRate||'';
-  var pbiEl=document.getElementById('p-product-basic-info'); if(pbiEl){ pbiEl.value=p.productBasicInfo||''; pbiEl.nextElementSibling.textContent=(p.productBasicInfo||'').length+'/2000'; }
-  var csEl=document.getElementById('p-cs-info'); if(csEl){ csEl.value=p.csInfo||''; csEl.nextElementSibling.textContent=(p.csInfo||'').length+'/500'; }
+  var pbiEl=document.getElementById('p-product-basic-info'); if(pbiEl){ pbiEl.value=p.productBasicInfo||DEFAULT_PRODUCT_BASIC_INFO; pbiEl.nextElementSibling.textContent=(p.productBasicInfo||DEFAULT_PRODUCT_BASIC_INFO).length+'/2000'; }
+  var csEl=document.getElementById('p-cs-info'); if(csEl){ csEl.value=p.csInfo||DEFAULT_CS_INFO; csEl.nextElementSibling.textContent=(p.csInfo||DEFAULT_CS_INFO).length+'/500'; }
   var diEl=document.getElementById('p-delivery-info'); if(diEl){ diEl.value=p.deliveryInfo||''; diEl.nextElementSibling.textContent=(p.deliveryInfo||'').length+'/300'; }
   var irEl=document.getElementById('p-inf-request'); if(irEl){ irEl.value=p.infRequest||''; irEl.nextElementSibling.textContent=(p.infRequest||'').length+'/300'; }
   var spdEl=document.getElementById('p-settle-process-date'); if(spdEl){ spdEl.value=p.settleProcessDate||''; }
@@ -4607,7 +4611,7 @@ function copyCampData(campId){
   document.querySelectorAll('.bas-reason-cb,.c-reason-cb').forEach(function(cb){ cb.checked=false; });
   var ssEl = document.getElementById('p-sample-sent'); if(ssEl) ssEl.checked=false;
   var saElC = document.getElementById('p-sample-address'); if(saElC) saElC.value=p.sampleAddress||'';
-  var csElC = document.getElementById('p-cs-info'); if(csElC){ csElC.value=p.csInfo||''; csElC.nextElementSibling.textContent=(p.csInfo||'').length+'/500'; }
+  var csElC = document.getElementById('p-cs-info'); if(csElC){ csElC.value=p.csInfo||DEFAULT_CS_INFO; csElC.nextElementSibling.textContent=(p.csInfo||DEFAULT_CS_INFO).length+'/500'; }
   var diElC = document.getElementById('p-delivery-info'); if(diElC){ diElC.value=p.deliveryInfo||''; diElC.nextElementSibling.textContent=(p.deliveryInfo||'').length+'/300'; }
 
   // SKU 복사
@@ -4908,6 +4912,9 @@ function openNewProd(){
   ['p-name','p-company','p-brand','p-cat','p-owner','p-start','p-end','p-appeal','p-product-basic-info','p-cs-info','p-delivery-info','p-inf-request','p-revenue','p-budget','p-target','p-mdcat','p-mcn','p-fee-rate','p-fee-amount','p-inf-name','p-pd-single','p-sample-address','p-youtube-ch','p-insta-ch','p-twitter-ch','p-courier','p-ship-cutoff','p-ship-fee','p-island-fee','p-exchange-fee','p-return-fee','p-settle-process-date','p-settle-payment-date'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
+  // 고정 기본 텍스트 복원
+  var pbiReset=document.getElementById('p-product-basic-info'); if(pbiReset){ pbiReset.value=DEFAULT_PRODUCT_BASIC_INFO; pbiReset.nextElementSibling.textContent=DEFAULT_PRODUCT_BASIC_INFO.length+'/2000'; }
+  var csReset=document.getElementById('p-cs-info'); if(csReset){ csReset.value=DEFAULT_CS_INFO; csReset.nextElementSibling.textContent=DEFAULT_CS_INFO.length+'/500'; }
   // 인플루언서 블록 초기화
   infBlockCount = 0;
   renderInfBlocks([]);
@@ -4949,8 +4956,8 @@ function openNewProd(){
   var arInp2=document.getElementById('p-agency-rate'); if(arInp2) arInp2.value='';
   var seEl2=document.getElementById('p-sample-exempt'); if(seEl2) seEl2.checked=false;
   var saEl2=document.getElementById('p-sample-address'); if(saEl2) saEl2.value='';
-  var pbiEl2=document.getElementById('p-product-basic-info'); if(pbiEl2){ pbiEl2.value=''; pbiEl2.nextElementSibling.textContent='0/2000'; }
-  var csEl2=document.getElementById('p-cs-info'); if(csEl2){ csEl2.value=''; csEl2.nextElementSibling.textContent='0/500'; }
+  var pbiEl2=document.getElementById('p-product-basic-info'); if(pbiEl2){ pbiEl2.value=DEFAULT_PRODUCT_BASIC_INFO; pbiEl2.nextElementSibling.textContent=DEFAULT_PRODUCT_BASIC_INFO.length+'/2000'; }
+  var csEl2=document.getElementById('p-cs-info'); if(csEl2){ csEl2.value=DEFAULT_CS_INFO; csEl2.nextElementSibling.textContent=DEFAULT_CS_INFO.length+'/500'; }
   var diEl2=document.getElementById('p-delivery-info'); if(diEl2){ diEl2.value=''; diEl2.nextElementSibling.textContent='0/300'; }
   var irEl2=document.getElementById('p-inf-request'); if(irEl2){ irEl2.value=''; irEl2.nextElementSibling.textContent='0/300'; }
   var arEl2=document.getElementById('p-agency-rate'); if(arEl2) arEl2.value='';
