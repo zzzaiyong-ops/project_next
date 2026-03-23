@@ -1283,7 +1283,7 @@
         </div>
       </div>
       <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
-      <div class="fr2"><div><label>시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="date"></div><div><label>종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="date"></div></div>
+      <div class="fr2"><div><label>시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local"></div><div><label>종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local"></div></div>
       <div class="fr2"><div><label>예산 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-budget" placeholder="3,000,000"></div><div><label>MDCAT <span style="color:var(--red)">*</span></label>
         <div class="fdd-wrap" id="fdd-wrap-p-mdcat">
           <input class="inp fdd-input" id="p-mdcat" placeholder="MDCAT 선택..." readonly style="cursor:pointer" onclick="mdcatDdOpen()" onkeydown="if(event.key==='Escape')mdcatDdClose()">
@@ -1365,6 +1365,11 @@
         </div>
       </div>
       <div class="mo-sec-body" id="sec-product">
+        <div class="fr">
+          <label>상품기본정보 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(자유 기재)</span></label>
+          <textarea class="ta" id="p-product-basic-info" placeholder="① 상품명/상품구성 : &#10;②가격/프로모션 조건 : MD할인가,카드즉시할인5%(5만원이상),신규가입3천원 적립, 최종공구가&#10;③이벤트 : 사전알림댓글 이벤트, 구매인증 이벤트, 모바일라이브 유무 등&#10;④참고용상품링크 : " maxlength="2000" style="min-height:120px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/2000'"></textarea>
+          <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/2000</div>
+        </div>
         <div class="fr2"><div><label>브랜드</label><input class="inp" id="p-brand" placeholder="스킨랩"></div><div><label>협력업체</label><input class="inp" id="p-company" placeholder="(주)스킨랩"></div></div>
         <div class="fr2"><div><label>담당 MD</label>
 <div class="search-sel-wrap" id="wrap-p-owner">
@@ -1426,7 +1431,7 @@
         <div style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px;display:flex;flex-direction:column;gap:12px">
           <div class="fr">
             <label>CS 정보 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 500자)</span></label>
-            <textarea class="ta" id="p-cs-info" placeholder="고객센터 연락처, 교환/반품 정책, AS 안내 등..." maxlength="500" style="min-height:70px;resize:vertical" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/500'"></textarea>
+            <textarea class="ta" id="p-cs-info" placeholder="1)과세/면세 : &#10;2)제조사/원산지 : &#10;3)반품.교환정책 : &#10;4)반품교환문의 : 1800-0850&#10;5)출고지/교환반품주소&#10;6)CS고객센터 협의사항:" maxlength="500" style="min-height:110px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/500'"></textarea>
             <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
           </div>
           <div class="fr">
@@ -1482,7 +1487,7 @@
                 </div>
               </div>
             </div>
-            <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">기타 사항 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 300자)</span></label>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">배송정보 및 기타사항 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 300자)</span></label>
             <textarea class="ta" id="p-delivery-info" placeholder="기타 배송 관련 안내 사항..." maxlength="300" style="min-height:60px;resize:vertical" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/300'"></textarea>
             <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/300</div>
           </div>
@@ -1507,6 +1512,11 @@
       </div>
       <div class="mo-sec-body" id="sec-inf">
         <div id="inf-blocks-container"></div>
+        <div class="fr" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
+          <label>인플루언서 요청사항 및 기타 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 300자)</span></label>
+          <textarea class="ta" id="p-inf-request" placeholder="인플루언서에게 전달할 요청사항, 특이사항 등을 기재하세요..." maxlength="300" style="min-height:70px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/300'"></textarea>
+          <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/300</div>
+        </div>
       </div>
     </div>
 
@@ -1585,6 +1595,10 @@
             <input type="checkbox" id="p-settle-done" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer">
             <label for="p-settle-done" style="font-size:13px;font-weight:600;cursor:pointer">✅ 정산 완료</label>
           </div>
+        </div>
+        <div class="fr2" style="margin-bottom:12px">
+          <div><label>정산처리일 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(캠페인 종료+14일 자동)</span></label><input class="inp" id="p-settle-process-date" type="date"></div>
+          <div><label>비용지불일</label><input class="inp" id="p-settle-payment-date" type="date"></div>
         </div>
         <div id="settle-blocks-container"></div>
       </div>

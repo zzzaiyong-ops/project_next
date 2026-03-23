@@ -659,8 +659,8 @@ var PF_SECTIONS = {
     hint: ['캠페인명: 2026 여름 선케어','시작일: 2026-06-01','종료일: 2026-07-15','예상매출: 150,000,000','예산: 5,000,000','역할: 신규','캠페인담당: 홍길동','소구포인트: 워터프루프 SPF50+'],
     fields: [
       { keys:['캠페인명','캠페인이름','캠페인 이름'], id:'p-name', label:'캠페인명', type:'text' },
-      { keys:['시작일','시작','start','진행시작'], id:'p-start', label:'시작일', type:'date' },
-      { keys:['종료일','종료','end','마감일','진행종료'], id:'p-end', label:'종료일', type:'date' },
+      { keys:['시작일','시작','start','진행시작'], id:'p-start', label:'시작일', type:'datetime' },
+      { keys:['종료일','종료','end','마감일','진행종료'], id:'p-end', label:'종료일', type:'datetime' },
       { keys:['예상매출','매출','목표매출','revenue'], id:'p-revenue', label:'예상매출', type:'money' },
       { keys:['예산','budget'], id:'p-budget', label:'예산', type:'money' },
       { keys:['역할','role','유형'], id:'p-role', label:'역할', type:'role' },
@@ -677,8 +677,9 @@ var PF_SECTIONS = {
       { keys:['카테고리','cat','category'], id:'p-cat', label:'카테고리', type:'text' },
       { keys:['mdcat','md cat'], id:'p-mdcat', label:'MDCAT', type:'text' },
       { keys:['담당md','md담당','md'], id:'p-owner', label:'담당MD', type:'search-sel' },
+      { keys:['상품기본정보','상품정보','상품기본'], id:'p-product-basic-info', label:'상품기본정보', type:'text' },
       { keys:['cs정보','cs','고객센터'], id:'p-cs-info', label:'CS정보', type:'text' },
-      { keys:['배송정보','배송'], id:'p-delivery-info', label:'배송정보', type:'text' },
+      { keys:['배송정보','배송'], id:'p-delivery-info', label:'배송정보 및 기타사항', type:'text' },
     ]
   },
   inf: {
@@ -694,6 +695,7 @@ var PF_SECTIONS = {
       { keys:['수수료율','수수료'], id:'_inf_frate', label:'수수료율(%)', type:'inf' },
       { keys:['원고료','원고'], id:'_inf_famt', label:'원고료', type:'inf' },
       { keys:['샘플주소','수신주소','주소'], id:'_inf_addr', label:'샘플주소', type:'inf' },
+      { keys:['인플루언서요청사항','요청사항','기타'], id:'p-inf-request', label:'인플루언서 요청사항 및 기타', type:'text' },
     ]
   },
   appmkt: {
@@ -710,11 +712,13 @@ var PF_SECTIONS = {
   },
   settle: {
     title: '💰 정산정보 붙여넣기',
-    hint: ['정산매출: 120,000,000','DA광고료: 3,000,000','주문건수: 850'],
+    hint: ['정산매출: 120,000,000','DA광고료: 3,000,000','주문건수: 850','정산처리일: 2026-07-29','비용지불일: 2026-08-15'],
     fields: [
       { keys:['정산매출','매출'], id:'p-settle-revenue', label:'정산매출', type:'money' },
       { keys:['da광고료','da','광고료'], id:'p-settle-da', label:'DA광고료', type:'money' },
       { keys:['주문건수','주문'], id:'p-settle-orders', label:'주문건수', type:'text' },
+      { keys:['정산처리일','정산일'], id:'p-settle-process-date', label:'정산처리일', type:'date' },
+      { keys:['비용지불일','지불일','결제일'], id:'p-settle-payment-date', label:'비용지불일', type:'date' },
     ]
   }
 };
@@ -1028,8 +1032,13 @@ function _buildShareText(c){
     if(c.reasons&&c.reasons.length) lines.push('선정사유: '+c.reasons.join(', '));
     lines.push('');
   }
-  if(checked['product']&&(c.brand||c.cat||c.appeal)){
+  if(checked['product']&&(c.brand||c.cat||c.appeal||c.productBasicInfo)){
     lines.push('─ 상품 정보');
+    if(c.productBasicInfo){
+      lines.push('상품기본정보:');
+      lines.push(c.productBasicInfo);
+      lines.push('');
+    }
     if(c.brand)    lines.push('브랜드: '+c.brand);
     if(c.company)  lines.push('협력업체: '+c.company);
     if(c.cat)      lines.push('카테고리: '+c.cat);
@@ -1039,7 +1048,11 @@ function _buildShareText(c){
       lines.push(c.appeal);
       lines.push('');
     }
-    if(c.csInfo)       lines.push('CS정보: '+c.csInfo);
+    if(c.csInfo){
+      lines.push('CS정보:');
+      lines.push(c.csInfo);
+      lines.push('');
+    }
     // 배송 구조화 항목
     var _hasDelivery = c.courier||c.shipCutoff||c.shipFree||c.shipFee||c.islandFree||c.islandFee!=null||c.exchangeFee||c.returnFee;
     if(_hasDelivery){
@@ -1053,7 +1066,7 @@ function _buildShareText(c){
       if(c.returnFee>0)   lines.push('반품비: '+c.returnFee.toLocaleString()+'원');
       if(c.shipCutoff)    lines.push('당일출고 마감: '+c.shipCutoff);
     }
-    if(c.deliveryInfo) lines.push('기타사항: '+c.deliveryInfo);
+    if(c.deliveryInfo) lines.push('배송정보 및 기타사항: '+c.deliveryInfo);
     lines.push('');
   }
   // 가격 정보: skus 우선, fallback priceGrid
@@ -1096,6 +1109,7 @@ function _buildShareText(c){
     if(feeAmt>0) lines.push('제안원고료: '+feeAmt.toLocaleString()+'원');
     if(inf0.feeRate && inf0.feeRate !== feeRate)   lines.push('확정수수료율: '+inf0.feeRate+'%');
     if(inf0.feeAmount && inf0.feeAmount !== feeAmt) lines.push('확정원고료: '+inf0.feeAmount.toLocaleString()+'원');
+    if(c.infRequest) lines.push('인플루언서 요청사항: '+c.infRequest);
     lines.push('');
   }
   if(checked['appmkt']&&c.appMkt&&(c.appMkt.channels&&c.appMkt.channels.length||c.appMkt.landingUrl)){
@@ -1105,10 +1119,12 @@ function _buildShareText(c){
     if(c.appMkt.landingUrl) lines.push('랜딩: '+c.appMkt.landingUrl);
     lines.push('');
   }
-  if(checked['settle']&&(c.settleRevenue||c.settleDa)){
+  if(checked['settle']&&(c.settleRevenue||c.settleDa||c.settleProcessDate||c.settlePaymentDate)){
     lines.push('─ 정산 정보');
     if(c.settleRevenue) lines.push('정산매출: '+(c.settleRevenue/100000000).toFixed(1)+'억원');
     if(c.settleDa)      lines.push('DA광고료: '+c.settleDa.toLocaleString()+'원');
+    if(c.settleProcessDate) lines.push('정산처리일: '+c.settleProcessDate);
+    if(c.settlePaymentDate) lines.push('비용지불일: '+c.settlePaymentDate);
     lines.push('');
   }
   lines.push('🔗 SSGLIVE 인플루언서 마케팅 허브');
@@ -2396,12 +2412,17 @@ function editProd(id){
   if(ownerSel) ownerSel.value = p.owner||'';
   searchSelSetValue('p-owner', p.owner||'');
     document.getElementById('p-revenue').value = p.revenue ? p.revenue.toLocaleString('ko-KR') : '';
-    document.getElementById('p-start').value   = p.start||p.startDate||'';
+    // datetime-local 호환: 기존 date-only 값(YYYY-MM-DD)은 T00:00 추가
+    var _startVal = p.start||p.startDate||'';
+    if(_startVal && _startVal.length === 10) _startVal += 'T00:00';
+    document.getElementById('p-start').value = _startVal;
   var budgetEl=document.getElementById('p-budget'); if(budgetEl) budgetEl.value=p.budget ? p.budget.toLocaleString('ko-KR') : '';
   var targetEl=document.getElementById('p-target'); if(targetEl) targetEl.value=p.target||'';
   document.querySelectorAll('input[name="p-role"]').forEach(function(r){ r.checked=(r.value===p.role); });
   updateProdRoleLabels();
-    document.getElementById('p-end').value = p.end||p.endDate||'';
+    var _endVal = p.end||p.endDate||'';
+    if(_endVal && _endVal.length === 10) _endVal += 'T00:00';
+    document.getElementById('p-end').value = _endVal;
     // p-inf-size는 멀티 인플루언서 블록으로 이동됨 (생략)
     // pd-list는 p-pd-single로 대체됨 (생략)
     var skuContainer = document.getElementById('sku-list');
@@ -2454,8 +2475,14 @@ function editProd(id){
   var sdEl=document.getElementById('p-settle-da'); if(sdEl) sdEl.value=p.settleDa ? p.settleDa.toLocaleString('ko-KR') : '';
   var sdoneEl=document.getElementById('p-settle-done'); if(sdoneEl) sdoneEl.checked=!!(p.settleDone);
   var arEl3=document.getElementById('p-agency-rate'); if(arEl3) arEl3.value=p.agencyRate||'';
+  var pbiEl=document.getElementById('p-product-basic-info'); if(pbiEl){ pbiEl.value=p.productBasicInfo||''; pbiEl.nextElementSibling.textContent=(p.productBasicInfo||'').length+'/2000'; }
   var csEl=document.getElementById('p-cs-info'); if(csEl){ csEl.value=p.csInfo||''; csEl.nextElementSibling.textContent=(p.csInfo||'').length+'/500'; }
   var diEl=document.getElementById('p-delivery-info'); if(diEl){ diEl.value=p.deliveryInfo||''; diEl.nextElementSibling.textContent=(p.deliveryInfo||'').length+'/300'; }
+  var irEl=document.getElementById('p-inf-request'); if(irEl){ irEl.value=p.infRequest||''; irEl.nextElementSibling.textContent=(p.infRequest||'').length+'/300'; }
+  var spdEl=document.getElementById('p-settle-process-date'); if(spdEl){ spdEl.value=p.settleProcessDate||''; }
+  var spyEl=document.getElementById('p-settle-payment-date'); if(spyEl) spyEl.value=p.settlePaymentDate||'';
+  // 기존 캠페인에 정산처리일 없으면 자동 계산
+  if(!p.settleProcessDate) autoCalcSettleProcessDate();
   // 배송 구조화 필드 복원
   var courierEl=document.getElementById('p-courier'); if(courierEl) courierEl.value=p.courier||'';
   var cutoffEl=document.getElementById('p-ship-cutoff'); if(cutoffEl) cutoffEl.value=p.shipCutoff||'';
@@ -4878,7 +4905,7 @@ function openNewProd(){
   // 검색형 드롭다운 초기화
   searchSelSetValue('p-owner', '');
   searchSelSetValue('p-pd-single', '');
-  ['p-name','p-company','p-brand','p-cat','p-owner','p-start','p-end','p-appeal','p-cs-info','p-delivery-info','p-revenue','p-budget','p-target','p-mdcat','p-mcn','p-fee-rate','p-fee-amount','p-inf-name','p-pd-single','p-sample-address','p-youtube-ch','p-insta-ch','p-twitter-ch','p-courier','p-ship-cutoff','p-ship-fee','p-island-fee','p-exchange-fee','p-return-fee'].forEach(function(id){
+  ['p-name','p-company','p-brand','p-cat','p-owner','p-start','p-end','p-appeal','p-product-basic-info','p-cs-info','p-delivery-info','p-inf-request','p-revenue','p-budget','p-target','p-mdcat','p-mcn','p-fee-rate','p-fee-amount','p-inf-name','p-pd-single','p-sample-address','p-youtube-ch','p-insta-ch','p-twitter-ch','p-courier','p-ship-cutoff','p-ship-fee','p-island-fee','p-exchange-fee','p-return-fee','p-settle-process-date','p-settle-payment-date'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   // 인플루언서 블록 초기화
@@ -4922,8 +4949,10 @@ function openNewProd(){
   var arInp2=document.getElementById('p-agency-rate'); if(arInp2) arInp2.value='';
   var seEl2=document.getElementById('p-sample-exempt'); if(seEl2) seEl2.checked=false;
   var saEl2=document.getElementById('p-sample-address'); if(saEl2) saEl2.value='';
+  var pbiEl2=document.getElementById('p-product-basic-info'); if(pbiEl2){ pbiEl2.value=''; pbiEl2.nextElementSibling.textContent='0/2000'; }
   var csEl2=document.getElementById('p-cs-info'); if(csEl2){ csEl2.value=''; csEl2.nextElementSibling.textContent='0/500'; }
   var diEl2=document.getElementById('p-delivery-info'); if(diEl2){ diEl2.value=''; diEl2.nextElementSibling.textContent='0/300'; }
+  var irEl2=document.getElementById('p-inf-request'); if(irEl2){ irEl2.value=''; irEl2.nextElementSibling.textContent='0/300'; }
   var arEl2=document.getElementById('p-agency-rate'); if(arEl2) arEl2.value='';
   var srEl2=document.getElementById('p-settle-revenue'); if(srEl2) srEl2.value='';
   var soEl2=document.getElementById('p-settle-orders'); if(soEl2) soEl2.value='';
@@ -5085,7 +5114,9 @@ function saveProd(){
     settleOrders:  getSettleBlocksData().reduce(function(s,d){return s+(d.orders||0);},0),
     start:v('p-start'), end:v('p-end'),
     startDate:v('p-start'), endDate:v('p-end'),
-    appeal:v('p-appeal'), csInfo:v('p-cs-info'), deliveryInfo:v('p-delivery-info'), promos:promos,
+    appeal:v('p-appeal'), productBasicInfo:v('p-product-basic-info'), csInfo:v('p-cs-info'), deliveryInfo:v('p-delivery-info'), infRequest:v('p-inf-request'),
+    settleProcessDate:v('p-settle-process-date'), settlePaymentDate:v('p-settle-payment-date'),
+    promos:promos,
     courier:v('p-courier'), shipCutoff:v('p-ship-cutoff'),
     shipFree:!!(document.getElementById('p-ship-free')?.checked),
     shipFee:parseInt((document.getElementById('p-ship-fee')?.value||'').replace(/,/g,''))||0,
@@ -8275,6 +8306,27 @@ function saveUser(){
 }
 
 // ═══════════════════════════════════════
+// ── 정산처리일 자동 계산 (캠페인 종료일 +14일) ──
+function autoCalcSettleProcessDate(){
+  var endVal = document.getElementById('p-end')?.value||'';
+  var spEl = document.getElementById('p-settle-process-date');
+  if(!spEl) return;
+  // 기존 값이 있으면 덮어쓰지 않음 (수동 수정 보호)
+  if(spEl.value) return;
+  if(!endVal) return;
+  // datetime-local이면 날짜 부분만 추출
+  var dateStr = endVal.length > 10 ? endVal.substring(0,10) : endVal;
+  try {
+    var d = new Date(dateStr);
+    d.setDate(d.getDate() + 14);
+    spEl.value = d.toISOString().substring(0,10);
+  } catch(e){ /* ignore */ }
+}
+// p-end 변경 시 자동 계산
+document.addEventListener('change', function(e){
+  if(e.target && e.target.id === 'p-end') autoCalcSettleProcessDate();
+});
+
 // INIT
 // ═══════════════════════════════════════
 // Auth 확인 전: 로딩 오버레이 표시 (로그인 화면 깜빡임 방지)
