@@ -1,0 +1,1759 @@
+
+<!-- ════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════ -->
+<div id="login-screen">
+
+  <!-- ══ 패널 A: 로그인 ══ -->
+  <div class="login-box" id="login-panel-login">
+    <div class="login-logo">
+      <div class="login-logo-name">SSGLIVE</div>
+      <div class="login-logo-sub">인플루언서 마케팅 허브</div>
+    </div>
+    <h2>로그인</h2>
+    <div class="login-fr">
+      <label>이메일</label>
+      <input type="email" id="login-email" placeholder="example@company.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()">
+    </div>
+    <div class="login-fr">
+      <label>비밀번호</label>
+      <input type="password" id="login-pw" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <input type="checkbox" id="remember-email" style="accent-color:#6c5ce7;width:14px;height:14px;cursor:pointer">
+      <label for="remember-email" style="font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;margin:0;font-weight:400">이메일 기억하기</label>
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <button class="btn-login" id="login-btn" onclick="doLogin()">로그인</button>
+    <div style="text-align:center;margin-top:14px">
+      <button onclick="showLoginPanel('reset')" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:12.5px;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0">비밀번호를 잊으셨나요?</button>
+    </div>
+    <div class="login-footer">SSGLIVE 인플루언서 마케팅 허브 · 내부 전용 시스템</div>
+    <div style="text-align:center;margin-top:12px;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px">
+      <div style="font-size:10.5px;color:rgba(255,255,255,0.35);margin-bottom:8px;letter-spacing:.4px">🔍 데모 미리보기</div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button onclick="enterDemoMode('admin')" style="background:rgba(108,92,231,0.18);border:1px solid rgba(108,92,231,0.4);color:rgba(180,170,255,0.9);font-size:11.5px;cursor:pointer;font-family:inherit;padding:6px 16px;border-radius:20px">👑 관리자 데모</button>
+        <button onclick="enterDemoMode('manager')" style="background:rgba(8,116,212,0.18);border:1px solid rgba(8,116,212,0.4);color:rgba(100,180,255,0.9);font-size:11.5px;cursor:pointer;font-family:inherit;padding:6px 16px;border-radius:20px">📋 매니저 데모</button>
+        <button onclick="enterDemoMode('md')" style="background:rgba(0,168,128,0.18);border:1px solid rgba(0,168,128,0.4);color:rgba(80,220,180,0.9);font-size:11.5px;cursor:pointer;font-family:inherit;padding:6px 16px;border-radius:20px">🗂️ MD 데모</button>
+      </div>
+      <div style="margin-top:10px">
+        <button onclick="downloadFile()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);font-size:11px;cursor:pointer;font-family:inherit;padding:5px 14px;border-radius:20px">⬇️ 파일 다운로드</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 패널 B: 비밀번호 재설정 ══ -->
+  <div class="login-box" id="login-panel-reset" style="display:none">
+    <div class="login-logo">
+      <div class="login-logo-name">SSGLIVE</div>
+      <div class="login-logo-sub">인플루언서 마케팅 허브</div>
+    </div>
+    <h2 style="text-align:center">🔑 비밀번호 재설정</h2>
+    <p style="font-size:12.5px;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:20px;line-height:1.6">가입한 이메일 주소를 입력하면<br>비밀번호 재설정 링크를 보내드립니다.</p>
+    <div class="login-fr">
+      <label>이메일</label>
+      <input type="email" id="reset-email" placeholder="example@company.com" onkeydown="if(event.key==='Enter')doSendReset()">
+    </div>
+    <div id="reset-msg" style="font-size:12px;border-radius:6px;padding:9px 12px;margin-bottom:12px;display:none"></div>
+    <button class="btn-login" id="reset-btn" onclick="doSendReset()">재설정 메일 발송</button>
+    <div style="text-align:center;margin-top:14px">
+      <button onclick="showLoginPanel('login')" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:12.5px;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0">← 로그인으로 돌아가기</button>
+    </div>
+  </div>
+
+  <!-- ══ 패널 C: 내 정보 수정 (로그인 후 접근) ══ -->
+  <div class="login-box" id="login-panel-profile" style="display:none;width:460px;max-width:96vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#fff">👤 내 정보 수정</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">MCN업체코드·권한코드 외 모든 정보 수정 가능</div>
+      </div>
+      <button onclick="closeProfilePanel()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div class="login-fr">
+      <label>이름</label>
+      <input type="text" id="profile-name" placeholder="홍길동">
+    </div>
+    <div class="login-fr">
+      <label>이메일 <span style="font-size:10.5px;color:rgba(255,255,255,0.35)">(변경 불가)</span></label>
+      <input type="email" id="profile-email" disabled style="opacity:.5;cursor:not-allowed">
+    </div>
+    <!-- 비밀번호 변경 -->
+    <div style="border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleProfilePw()">
+        <span style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,0.7)">🔑 비밀번호 변경</span>
+        <span id="profile-pw-arr" style="color:rgba(255,255,255,0.4);font-size:11px">▶ 펼치기</span>
+      </div>
+      <div id="profile-pw-body" style="display:none;margin-top:12px">
+        <div class="login-fr" style="margin-bottom:10px">
+          <label>새 비밀번호 <span style="font-size:10.5px;color:rgba(255,255,255,0.35)">(8자 이상)</span></label>
+          <input type="password" id="profile-pw-new" placeholder="새 비밀번호">
+        </div>
+        <div class="login-fr" style="margin-bottom:0">
+          <label>새 비밀번호 확인</label>
+          <input type="password" id="profile-pw-confirm" placeholder="비밀번호 재입력">
+        </div>
+      </div>
+    </div>
+    <div id="profile-msg" style="font-size:12px;border-radius:6px;padding:9px 12px;margin-bottom:12px;display:none"></div>
+    <button class="btn-login" id="profile-save-btn" onclick="saveMyProfile()">저장</button>
+  </div>
+
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-wrap">
+
+      <div>
+        <div class="logo-name" style="font-size:15px;font-weight:900;letter-spacing:.5px;color:#C8102E">SSGLIVE</div>
+        <div class="logo-ver">인플루언서 마케팅 허브</div>
+      </div>
+    </div>
+  </div>
+  <div class="online-bar">
+    <span class="online-dot"></span>
+    <span id="online-text">나 혼자 접속 중</span>
+  </div>
+  <nav>
+    <div class="nav-sec">메인</div>
+    <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard',this)"><span class="ico">▦</span> 대시보드</div>
+    <div class="nav-sec">7단계 업무 흐름</div>
+    <div class="nav-item" data-page="s1" id="nav-s1" onclick="goPage('s1',this)"><span class="ico">📋</span> 1단계 · 캠페인요청</div>
+    <div class="nav-item" data-page="s2" id="nav-s2" onclick="goPage('s2',this)"><span class="ico">✅</span> 2단계 · 캠페인확정 <span class="nbadge orange" id="b-s2">0</span></div>
+    <div class="nav-item" data-page="s3" id="nav-s3" onclick="goPage('s3',this)"><span class="ico">📦</span> 3단계 · 상품정보등록 <span class="nbadge" id="b-s3">0</span></div>
+    <div class="nav-item" data-page="s4" id="nav-s4" onclick="goPage('s4',this)"><span class="ico">📨</span> 4단계 · MCN요청 <span class="nbadge" id="b-s4">0</span></div>
+    <div class="nav-item" data-page="s5" id="nav-s5" onclick="goPage('s5',this)"><span class="ico">👤</span> 5단계 · 인플루언서확정 <span class="nbadge orange" id="b-s5">0</span></div>
+    <div class="nav-item" data-page="s6" id="nav-s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 6단계 · APP마케팅 <span class="nbadge" id="b-s6">0</span></div>
+    <div class="nav-item" data-page="s7" id="nav-s7" onclick="goPage('s7',this)"><span class="ico">💰</span> 7단계 · 정산 <span class="nbadge" id="b-s7">0</span></div>
+    <div class="nav-item" data-page="s8" id="nav-s8" onclick="goPage('s8',this)"><span class="ico">📈</span> 8단계 · 성과분석</div>
+    <div class="nav-sec">관리</div>
+    <div class="nav-item" data-page="influencers" id="nav-influencers" onclick="goPage('influencers',this)"><span class="ico">🗂️</span> 인플루언서 DB</div>
+    <div class="nav-item" data-page="campaigns" id="nav-campaigns" onclick="goPage('campaigns',this)"><span class="ico">🚀</span> 전체 캠페인 <span class="nbadge" id="b-camp">3</span></div>
+    <div class="nav-item" data-page="basemgmt" id="nav-basemgmt" style="display:none" onclick="goPage('basemgmt',this)"><span class="ico">⚙️</span> 기본정보 관리</div>
+  </nav>
+  <div class="sidebar-foot">
+    <div style="padding:0 12px 8px">
+      <button onclick="openProfilePanel()" style="background:rgba(108,92,231,0.12);border:1px solid rgba(108,92,231,0.25);border-radius:6px;padding:5px 10px;color:var(--accent2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='rgba(108,92,231,0.22)'" onmouseout="this.style.background='rgba(108,92,231,0.12)'">👤 내 정보 수정</button>
+    </div>
+    <div class="user-row">
+      <div class="user-av" id="sidebar-av">?</div>
+      <div>
+        <div class="user-name" id="sidebar-name">로딩 중...</div>
+        <div class="user-role" id="sidebar-role-label">-</div>
+      </div>
+      <button onclick="doLogout()" title="로그아웃" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3);padding:4px;" title="로그아웃">🚪</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- 모바일 오버레이 -->
+  <div id="mob-overlay" onclick="closeMobMenu()"></div>
+
+  <div class="topbar">
+    <!-- 모바일 뒤로가기 (콘텐츠→사이드바) -->
+    <button id="mob-back-btn" onclick="closeMobContent()" style="display:none;margin-right:8px">← 메뉴</button>
+    <!-- 햄버거 버튼: PC에서만 (불필요하므로 모바일에서는 뒤로가기로 대체) -->
+    <button id="mob-menu-btn" onclick="toggleMobMenu()" style="display:none;background:none;border:none;cursor:pointer;padding:4px 6px;margin-right:8px;color:var(--text);font-size:20px;line-height:1" aria-label="메뉴">☰</button>
+    <!-- 페이지 뒤로가기 버튼 (대시보드 제외 모든 페이지에서 표시) -->
+    <button id="page-back-btn" onclick="goBack()" title="이전 페이지로" style="display:none;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:5px 11px;font-size:12.5px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;margin-right:6px;transition:all .15s" onmouseover="this.style.background='var(--bg4)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--bg3)';this.style.color='var(--text2)'">&#8592; 뒤로</button>
+    <div class="page-ttl" id="page-ttl">대시보드</div>
+    <div class="topbar-r">
+      <span title="Firebase 실시간 연결 상태"><span class="sync-dot" id="fb-status-dot"></span></span>
+      <div class="notif-btn" onclick="toggleNotif()" id="notif-btn">🔔<div class="notif-pip" id="notif-pip"></div></div>
+      <button class="btn btn-ghost btn-sm mob-hide" onclick="openCampBulkModal()" title="엑셀로 캠페인 일괄 등록" style="display:inline-flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg> 엑셀등록</button>
+      <button class="btn btn-primary" onclick="openNewProd()">+ 캠페인 등록</button>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION PANEL -->
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-hd">
+      <span>알림</span>
+      <button class="btn btn-ghost btn-xs" onclick="markAllRead()">모두 읽음</button>
+    </div>
+    <div class="notif-list" id="notif-list"></div>
+  </div>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <div id="page-dashboard" class="page active">
+
+    <!-- MD 전용 대시보드 블록 (md 역할 로그인 시 표시) -->
+    <div id="dash-md-block" style="display:none;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:18px">👤</span>
+        <div style="font-size:15px;font-weight:800" id="dash-md-greeting">안녕하세요!</div>
+        <div style="font-size:12px;color:var(--text3);margin-left:4px">본인 담당 캠페인 현황</div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;padding:8px 12px;background:var(--yellow-bg);border-radius:var(--r-sm);border-left:3px solid var(--yellow)">
+        ※ 상품정보가 변경된 경우에는 좌측 <strong style="color:var(--text2);cursor:pointer;text-decoration:underline" onclick="goPage('campaigns',document.getElementById('nav-campaigns'))">전체캠페인</strong> 페이지에서 상품 정보 수정이 가능합니다.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <!-- 좌: 상품/가격 정보 입력 필요 캠페인 -->
+        <div id="dash-md-req-block"
+          onclick="dashMdGoS3()"
+          style="background:var(--bg2);border:2px solid var(--blue);border-radius:var(--r-lg);padding:22px 24px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden"
+          onmouseover="this.style.background='var(--blue-bg)'"
+          onmouseout="this.style.background='var(--bg2)'">
+          <div style="font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.4px;margin-bottom:10px">📦 상품/가격 정보 입력 캠페인</div>
+          <div style="display:flex;align-items:flex-end;gap:6px">
+            <div style="font-size:42px;font-weight:900;color:var(--blue);line-height:1" id="dash-md-req-count">0</div>
+            <div style="font-size:16px;font-weight:700;color:var(--blue);margin-bottom:6px">건</div>
+          </div>
+          <div style="font-size:11.5px;color:var(--text3);margin-top:8px">상품·가격 정보가 미입력된 본인 담당 캠페인 수</div>
+          <div style="position:absolute;right:-10px;bottom:-10px;font-size:60px;opacity:.07">📦</div>
+        </div>
+        <!-- 우: 현재 월 캠페인 실적 -->
+        <div style="background:var(--bg2);border:2px solid var(--accent);border-radius:var(--r-lg);padding:22px 24px;position:relative;overflow:hidden">
+          <div style="font-size:12px;font-weight:700;color:var(--accent2);letter-spacing:.4px;margin-bottom:10px">📈 <span id="dash-md-rev-month">3월</span> 캠페인 실적</div>
+          <div style="display:flex;align-items:flex-end;gap:6px">
+            <div style="font-size:42px;font-weight:900;color:var(--accent2);line-height:1" id="dash-md-revenue">0</div>
+            <div style="font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:6px">억원</div>
+          </div>
+          <div style="font-size:11.5px;color:var(--text3);margin-top:8px">이번 달 본인 담당 캠페인 예상 매출 합계</div>
+          <div style="position:absolute;right:-10px;bottom:-10px;font-size:60px;opacity:.07">💰</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MCN 전용 대시보드 헤더 (external_mcn 로그인 시 표시) -->
+    <div id="dash-mcn-header" style="display:none;margin-bottom:18px">
+      <!-- 업체명 + 설명 -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:18px">🏢</span>
+        <div style="font-size:15px;font-weight:800" id="dash-mcn-name">MCN 업체명</div>
+        <div style="font-size:12px;color:var(--text3);margin-left:4px">본인 업체 담당 캠페인 현황</div>
+      </div>
+      <!-- 2블록 KPI -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <!-- 좌측: 인플루언서 정보 확정 요청건 -->
+        <div id="dash-mcn-block-left"
+          onclick="goPage('s4', document.getElementById('nav-s4'))"
+          style="background:var(--bg2);border:2px solid var(--orange);border-radius:var(--r-lg);padding:22px 24px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden"
+          onmouseover="this.style.background='var(--orange-bg)'"
+          onmouseout="this.style.background='var(--bg2)'">
+          <div style="font-size:12px;font-weight:700;color:var(--orange);letter-spacing:.4px;margin-bottom:10px">📋 인플루언서 정보 확정 요청건</div>
+          <div style="display:flex;align-items:flex-end;gap:6px">
+            <div style="font-size:42px;font-weight:900;color:var(--orange);line-height:1" id="dash-mcn-inf-count">0</div>
+            <div style="font-size:16px;font-weight:700;color:var(--orange);margin-bottom:6px">건</div>
+          </div>
+          <div style="font-size:11.5px;color:var(--text3);margin-top:8px">클릭하면 4단계 화면으로 이동합니다</div>
+          <div style="position:absolute;right:-10px;bottom:-10px;font-size:60px;opacity:.07">👤</div>
+        </div>
+        <!-- 우측: 현재 월 캠페인 실적 -->
+        <div id="dash-mcn-block-right"
+          style="background:var(--bg2);border:2px solid var(--accent);border-radius:var(--r-lg);padding:22px 24px;position:relative;overflow:hidden">
+          <div style="font-size:12px;font-weight:700;color:var(--accent2);letter-spacing:.4px;margin-bottom:10px">📈 <span id="dash-mcn-rev-month">3월</span> 캠페인 실적</div>
+          <div style="display:flex;align-items:flex-end;gap:6px">
+            <div style="font-size:42px;font-weight:900;color:var(--accent2);line-height:1" id="dash-mcn-revenue">0</div>
+            <div style="font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:6px">억원</div>
+          </div>
+          <div style="font-size:11.5px;color:var(--text3);margin-top:8px">이번 달 본인 업체 캠페인 예상 매출 합계</div>
+          <div style="position:absolute;right:-10px;bottom:-10px;font-size:60px;opacity:.07">💰</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 캠페인 현황 테이블 -->
+    <div class="card" style="margin-bottom:18px" id="dash-table-section">
+      <div class="card-hd" style="position:relative">
+        <span class="card-ttl">캠페인 현황</span>
+        <div style="position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="shiftDashMonth(-1)">◀</button>
+          <span id="ds-month-range" style="font-size:13px;font-weight:700;min-width:160px;text-align:center"></span>
+          <button class="btn btn-ghost btn-sm" onclick="shiftDashMonth(1)">▶</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+          <input type="month" id="ds-month-input" class="inp" style="width:130px;font-size:12px;padding:5px 8px" value="2026-03" onchange="jumpDashMonth(this.value)">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="ds-role-table" style="table-layout:fixed;width:100%">
+          <colgroup>
+            <col style="width:80px">
+            <col style="width:160px"><col style="width:160px">
+            <col style="width:160px"><col style="width:160px">
+            <col style="width:160px"><col style="width:160px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th style="text-align:left;vertical-align:middle;padding:8px 10px" rowspan="3">캠페인 구분</th>
+              <th id="ds-th-m0" colspan="2" style="text-align:center;border-bottom:1px solid var(--border2)"></th>
+              <th id="ds-th-m1" colspan="2" style="text-align:center;border-bottom:1px solid var(--border2)"></th>
+              <th id="ds-th-m2" colspan="2" style="text-align:center;border-bottom:1px solid var(--border2)"></th>
+            </tr>
+            <tr id="ds-sum-row">
+              <td id="ds-sum-m0" colspan="2" style="text-align:center;padding:6px 4px;background:var(--bg3);font-weight:800;font-size:15px"></td>
+              <td id="ds-sum-m1" colspan="2" style="text-align:center;padding:6px 4px;background:var(--bg3);font-weight:800;font-size:15px"></td>
+              <td id="ds-sum-m2" colspan="2" style="text-align:center;padding:6px 4px;background:var(--bg3);font-weight:800;font-size:15px"></td>
+            </tr>
+            <tr>
+              <th style="text-align:center;font-size:11.5px;font-weight:700;color:var(--blue);background:var(--blue-bg);padding:5px 4px">온라인</th>
+              <th style="text-align:center;font-size:11.5px;font-weight:700;color:var(--orange);background:var(--orange-bg);padding:5px 4px">방송</th>
+              <th style="text-align:center;font-size:11.5px;font-weight:700;color:var(--blue);background:var(--blue-bg);padding:5px 4px">온라인</th>
+              <th style="text-align:center;font-size:11.5px;font-weight:700;color:var(--orange);background:var(--orange-bg);padding:5px 4px">방송</th>
+              <th style="text-align:center;font-size:11.5px;font-weight:700;color:var(--blue);background:var(--blue-bg);padding:5px 4px">온라인</th>
+              <th style="text-align:center;font-size:11.5px;font-weight:700;color:var(--orange);background:var(--orange-bg);padding:5px 4px">방송</th>
+            </tr>
+          </thead>
+          <tbody id="ds-role-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 캠페인 캘린더 -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-hd cal-hd-mob" style="position:relative">
+        <span class="card-ttl">캠페인 캘린더</span>
+        <div class="cal-nav-center" style="position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px">
+          <button class="btn btn-ghost btn-sm" onclick="prevMonth()">◀</button>
+          <span id="cal-title" style="font-size:13px;font-weight:700;min-width:90px;text-align:center"></span>
+          <button class="btn btn-ghost btn-sm" onclick="nextMonth()">▶</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-left:auto" id="cal-legend"></div>
+      </div>
+      <div style="padding:14px 18px">
+        <div id="cal-summary" style="margin-bottom:10px;padding:10px 14px;background:var(--bg3);border-radius:var(--r);display:flex;align-items:center;gap:8px;font-size:13px"></div>
+        <div id="cal-grid"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ S1: 캠페인 요청 ═══ -->
+  <div id="page-s1" class="page">
+    <div class="filter-bar">
+      <label class="filter-radio active" id="fb-all-s1"><input type="radio" name="filter-s1" value="all" checked onchange="setPageFilter('s1','all')"> 전체</label>
+      <label class="filter-radio" id="fb-target-s1"><input type="radio" name="filter-s1" value="target" onchange="setPageFilter('s1','target')"> 요청</label>
+      <div class="date-filter mob-filter-hide">
+        <label>기간</label>
+        <input type="month" class="inp" id="df-s1-from">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="month" class="inp" id="df-s1-to">
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>상태</label>
+        <select class="sel inp-sm" id="sf-s1" style="height:30px;font-size:12px">
+          <option value="">전체 상태</option>
+          <option value="1.캠페인요청">1단계 · 캠페인요청</option>
+          <option value="2.캠페인확정">2단계 · 캠페인확정</option>
+          <option value="4.MCN요청">4단계 · MCN요청</option>
+          <option value="5.인플루언서확정">5단계 · 인플루언서확정</option>
+          <option value="6.APP마케팅확정">6단계 · APP마케팅확정</option>
+          <option value="7.정산">7단계 · 정산</option>
+          <option value="8.성과분석">8단계 · 성과분석</option>
+        </select>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>캠페인담당</label>
+        <div class="fdd-wrap" id="fdd-wrap-s1-owner"><input class="inp inp-sm fdd-input" id="sf-s1-owner" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s1-owner','manager')" onkeydown="fddKey(event,'s1-owner')"><div class="fdd-list" id="fdd-list-s1-owner"><input class="fdd-search" id="fdd-search-s1-owner" placeholder="검색..." oninput="fddFilter(this,'s1-owner')"></div></div>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>담당MD</label>
+        <div class="fdd-wrap" id="fdd-wrap-s1-md"><input class="inp inp-sm fdd-input" id="sf-s1-md" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s1-md','md')" onkeydown="fddKey(event,'s1-md')"><div class="fdd-list" id="fdd-list-s1-md"><input class="fdd-search" id="fdd-search-s1-md" placeholder="검색..." oninput="fddFilter(this,'s1-md')"></div></div>
+      </div>
+
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <input class="inp inp-sm" id="sf-s1-name" placeholder="캠페인명" style="height:30px;font-size:12px;width:110px" oninput="renderS1()">
+        <button class="btn btn-primary btn-sm" onclick="applyDateFilter('s1')">조회</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-ttl">1단계 · 캠페인 요청</span>
+        <div class="card-acts">
+          <input class="search-inp" placeholder="캠페인명 검색..." oninput="filterProds(this.value)">
+          <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s1')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
+          <button class="btn btn-primary" onclick="openNewProd()">+ 캠페인 등록</button>
+        </div>
+      </div>
+      <table id="camp-req-table">
+        <thead><tr><th style="width:36px;text-align:center">#</th>
+          <th style="width:32px"><input type="checkbox" id="chk-all-s1" onchange="toggleAllCheck('s1',this.checked)" style="cursor:pointer"></th>
+          <th style="width:22%;min-width:130px">캠페인명</th><th class="mob-hide">MDCAT</th><th>역할</th>
+          <th class="mob-hide">인플루언서규모</th><th class="mob-hide">예상매출</th>
+          <th class="mob-hide">시작일</th><th class="mob-hide">종료일</th><th style="background:var(--bg)"></th>
+        </tr></thead>
+        <tbody id="prod-tbl"></tbody>
+      </table>
+      <div id="prod-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
+    </div>
+  </div>
+
+  <!-- ═══ S2: 캠페인확정 ═══ -->
+  <div id="page-s2" class="page">
+    <div class="filter-bar">
+      <label class="filter-radio active" id="fb-target-s2"><input type="radio" name="filter-s2" value="target" checked onchange="setPageFilter('s2','target')"> 확정 대상</label>
+      <label class="filter-radio" id="fb-all-s2"><input type="radio" name="filter-s2" value="all" onchange="setPageFilter('s2','all')"> 전체 보기</label>
+      <div class="date-filter mob-filter-hide">
+        <label>기간</label>
+        <input type="month" class="inp" id="df-s2-from">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="month" class="inp" id="df-s2-to">
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>캠페인담당</label>
+        <div class="fdd-wrap" id="fdd-wrap-s2-owner"><input class="inp inp-sm fdd-input" id="sf-s2-owner" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s2-owner','manager')" onkeydown="fddKey(event,'s2-owner')"><div class="fdd-list" id="fdd-list-s2-owner"><input class="fdd-search" id="fdd-search-s2-owner" placeholder="검색..." oninput="fddFilter(this,'s2-owner')"></div></div>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>담당MD</label>
+        <div class="fdd-wrap" id="fdd-wrap-s2-md"><input class="inp inp-sm fdd-input" id="sf-s2-md" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s2-md','md')" onkeydown="fddKey(event,'s2-md')"><div class="fdd-list" id="fdd-list-s2-md"><input class="fdd-search" id="fdd-search-s2-md" placeholder="검색..." oninput="fddFilter(this,'s2-md')"></div></div>
+      </div>
+
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <input class="inp inp-sm" id="sf-s2-name" placeholder="캠페인명" style="height:30px;font-size:12px;width:110px" oninput="renderS2()">
+        <button class="btn btn-primary btn-sm" onclick="applyDateFilter('s2')">조회</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-hd">
+        <span class="card-ttl">2단계 · 캠페인 확정</span>
+        <div class="card-acts"><button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s2')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button></div>
+      </div>
+      <div class="stage-table-wrap"><table class="stage-table">
+        <thead><tr>
+          <th style="width:36px;text-align:center;color:var(--text3)">#</th>
+          <th style="width:32px"><input type="checkbox" id="chk-all-s2" onchange="toggleAllCheck('s2',this.checked)" style="cursor:pointer"></th>
+          <th style="width:22%;min-width:130px">캠페인명</th>
+          <th style="width:9%;min-width:70px">MDCAT</th>
+          <th>역할</th>
+          <th style="width:12%;min-width:90px">확정 사유</th>
+          <th>인플루언서규모</th>
+          <th style="width:9%;min-width:75px">예상매출</th>
+          <th style="width:8%;min-width:65px">시작일</th>
+          <th style="width:8%;min-width:65px">종료일</th>
+          <th style="width:99vw;background:var(--bg)"></th>
+        </tr></thead>
+        <tbody id="s2-tbl"></tbody>
+      </table>
+      </div><div id="s2-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
+    </div>
+  </div>
+
+  <!-- ═══ S3: MCN요청 ═══ -->
+  <!-- ═══ S3: 상품정보등록 ═══ -->
+  <div id="page-s3" class="page">
+    <div class="filter-bar">
+      <label class="filter-radio active" id="fb-target-s3"><input type="radio" name="filter-s3" value="target" checked onchange="setPageFilter('s3','target')"> 확정 대상</label>
+      <label class="filter-radio" id="fb-all-s3"><input type="radio" name="filter-s3" value="all" onchange="setPageFilter('s3','all')"> 전체 보기</label>
+      <div class="date-filter mob-filter-hide">
+        <label>기간</label>
+        <input type="month" class="inp" id="df-s3-from">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="month" class="inp" id="df-s3-to">
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>캠페인담당</label>
+        <div class="fdd-wrap" id="fdd-wrap-s3-owner"><input class="inp inp-sm fdd-input" id="sf-s3-owner" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s3-owner','manager')" onkeydown="fddKey(event,'s3-owner')"><div class="fdd-list" id="fdd-list-s3-owner"><input class="fdd-search" id="fdd-search-s3-owner" placeholder="검색..." oninput="fddFilter(this,'s3-owner')"></div></div>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>담당MD</label>
+        <div class="fdd-wrap" id="fdd-wrap-s3-md"><input class="inp inp-sm fdd-input" id="sf-s3-md" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s3-md','md')" onkeydown="fddKey(event,'s3-md')"><div class="fdd-list" id="fdd-list-s3-md"><input class="fdd-search" id="fdd-search-s3-md" placeholder="검색..." oninput="fddFilter(this,'s3-md')"></div></div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <input class="inp inp-sm" id="sf-s3-name" placeholder="캠페인명" style="height:30px;font-size:12px;width:110px" oninput="renderS3()">
+        <button class="btn btn-primary btn-sm" onclick="applyDateFilter('s3')">조회</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-ttl">3단계 · 상품정보등록 <span style="font-size:12px;font-weight:400;color:var(--text3)">(2단계 확정 후 상품/가격 정보 입력 대기)</span></span>
+        <div class="card-acts">
+          <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s3')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
+        </div>
+      </div>
+      <div class="stage-table-wrap"><table class="stage-table">
+        <thead><tr>
+          <th style="width:36px;text-align:center;color:var(--text3)">#</th>
+          <th style="width:32px"><input type="checkbox" id="chk-all-s3" onchange="toggleAllCheck('s3',this.checked)" style="cursor:pointer"></th>
+          <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>역할</th><th>상품코드</th><th>가격정보</th><th style="width:8%;min-width:65px">시작일</th><th style="width:8%;min-width:65px">종료일</th><th style="width:99vw;background:var(--bg)"></th>
+        </tr></thead>
+        <tbody id="s3-tbl"></tbody>
+      </table>
+      </div><div id="s3-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
+    </div>
+  </div>
+
+  <div id="page-s4" class="page">
+    <div class="filter-bar">
+      <label class="filter-radio active" id="fb-target-s4"><input type="radio" name="filter-s4" value="target" checked onchange="setPageFilter('s4','target')"> 확정 대상</label>
+      <label class="filter-radio" id="fb-all-s4"><input type="radio" name="filter-s4" value="all" onchange="setPageFilter('s4','all')"> 전체 보기</label>
+      <div class="date-filter mob-filter-hide">
+        <label>기간</label>
+        <input type="month" class="inp" id="df-s4-from">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="month" class="inp" id="df-s4-to">
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>캠페인담당</label>
+        <div class="fdd-wrap" id="fdd-wrap-s4-owner"><input class="inp inp-sm fdd-input" id="sf-s4-owner" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s4-owner','manager')" onkeydown="fddKey(event,'s4-owner')"><div class="fdd-list" id="fdd-list-s4-owner"><input class="fdd-search" id="fdd-search-s4-owner" placeholder="검색..." oninput="fddFilter(this,'s4-owner')"></div></div>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>담당MD</label>
+        <div class="fdd-wrap" id="fdd-wrap-s4-md"><input class="inp inp-sm fdd-input" id="sf-s4-md" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s4-md','md')" onkeydown="fddKey(event,'s4-md')"><div class="fdd-list" id="fdd-list-s4-md"><input class="fdd-search" id="fdd-search-s4-md" placeholder="검색..." oninput="fddFilter(this,'s4-md')"></div></div>
+      </div>
+
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <input class="inp inp-sm" id="sf-s4-name" placeholder="캠페인명" style="height:30px;font-size:12px;width:110px" oninput="renderS4()">
+        <button class="btn btn-primary btn-sm" onclick="applyDateFilter('s4')">조회</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-ttl">4단계 · MCN 요청 <span style="font-size:11px;color:var(--text3);font-weight:400">(3단계 상품정보 등록 완료 캠페인)</span></span>
+        <div class="card-acts">
+          <button class="btn btn-ghost btn-sm" onclick="exportExcelByStage('s4')" style="display:inline-flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
+        </div>
+      </div>
+      <div class="stage-table-wrap"><table class="stage-table">
+        <thead><tr>
+          <th style="width:36px;text-align:center;color:var(--text3)">#</th>
+          <th style="width:32px"><input type="checkbox" id="chk-all-s4" onchange="toggleAllCheck('s4',this.checked)" style="cursor:pointer"></th>
+          <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>역할</th><th>인플루언서규모</th><th style="width:9%;min-width:75px">예상매출</th><th>MCN업체 · 인플루언서</th><th style="width:8%;min-width:65px">시작일</th><th style="width:8%;min-width:65px">종료일</th><th style="width:99vw;background:var(--bg)"></th>
+        </tr></thead>
+        <tbody id="mcn-tbl"></tbody>
+      </table>
+      </div><div id="mcn-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
+    </div>
+  </div>
+
+  <!-- ═══ S4: 인플루언서확정 ═══ -->
+  <div id="page-s5" class="page">
+    <div class="filter-bar">
+      <label class="filter-radio active" id="fb-target-s5"><input type="radio" name="filter-s5" value="target" checked onchange="setPageFilter('s5','target')"> 확정 대상</label>
+      <label class="filter-radio" id="fb-all-s5"><input type="radio" name="filter-s5" value="all" onchange="setPageFilter('s5','all')"> 전체 보기</label>
+      <div class="date-filter mob-filter-hide">
+        <label>기간</label>
+        <input type="month" class="inp" id="df-s5-from">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="month" class="inp" id="df-s5-to">
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>캠페인담당</label>
+        <div class="fdd-wrap" id="fdd-wrap-s5-owner"><input class="inp inp-sm fdd-input" id="sf-s5-owner" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s5-owner','manager')" onkeydown="fddKey(event,'s5-owner')"><div class="fdd-list" id="fdd-list-s5-owner"><input class="fdd-search" id="fdd-search-s5-owner" placeholder="검색..." oninput="fddFilter(this,'s5-owner')"></div></div>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>담당MD</label>
+        <div class="fdd-wrap" id="fdd-wrap-s5-md"><input class="inp inp-sm fdd-input" id="sf-s5-md" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s5-md','md')" onkeydown="fddKey(event,'s5-md')"><div class="fdd-list" id="fdd-list-s5-md"><input class="fdd-search" id="fdd-search-s5-md" placeholder="검색..." oninput="fddFilter(this,'s5-md')"></div></div>
+      </div>
+
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <input class="inp inp-sm" id="sf-s5-name" placeholder="캠페인명" style="height:30px;font-size:12px;width:110px" oninput="renderS5()">
+        <button class="btn btn-primary btn-sm" onclick="applyDateFilter('s5')">조회</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-ttl">5단계 · 인플루언서 확정 <span style="font-size:11px;color:var(--text3);font-weight:400">(4단계 MCN요청 완료된 캠페인)</span></span>
+        <div class="card-acts"><button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s5')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button></div>
+      </div>
+      <div class="stage-table-wrap"><table class="stage-table">
+        <thead><tr>
+          <th style="width:36px;text-align:center;color:var(--text3)">#</th>
+          <th style="width:32px"><input type="checkbox" id="chk-all-s5" onchange="toggleAllCheck('s5',this.checked)" style="cursor:pointer"></th>
+          <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>역할</th>
+          <th>인플루언서규모</th><th style="width:9%;min-width:75px">예상매출</th>
+          <th>MCN업체</th><th>인플루언서</th>
+          <th style="width:8%;min-width:65px">시작일</th><th style="width:8%;min-width:65px">종료일</th><th style="width:99vw;background:var(--bg)"></th>
+        </tr></thead>
+        <tbody id="s4-tbl"></tbody>
+      </table>
+      </div><div id="s4-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
+    </div>
+  </div>
+
+  <!-- ═══ S5: APP마케팅 ═══ -->
+  <div id="page-s6" class="page">
+    <div class="filter-bar">
+      <label class="filter-radio active" id="fb-target-s6"><input type="radio" name="filter-s6" value="target" checked onchange="setPageFilter('s6','target')"> 확정 대상</label>
+      <label class="filter-radio" id="fb-all-s6"><input type="radio" name="filter-s6" value="all" onchange="setPageFilter('s6','all')"> 전체 보기</label>
+      <div class="date-filter mob-filter-hide">
+        <label>기간</label>
+        <input type="month" class="inp" id="df-s6-from">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="month" class="inp" id="df-s6-to">
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>캠페인담당</label>
+        <div class="fdd-wrap" id="fdd-wrap-s6-owner"><input class="inp inp-sm fdd-input" id="sf-s6-owner" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s6-owner','manager')" onkeydown="fddKey(event,'s6-owner')"><div class="fdd-list" id="fdd-list-s6-owner"><input class="fdd-search" id="fdd-search-s6-owner" placeholder="검색..." oninput="fddFilter(this,'s6-owner')"></div></div>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>담당MD</label>
+        <div class="fdd-wrap" id="fdd-wrap-s6-md"><input class="inp inp-sm fdd-input" id="sf-s6-md" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s6-md','md')" onkeydown="fddKey(event,'s6-md')"><div class="fdd-list" id="fdd-list-s6-md"><input class="fdd-search" id="fdd-search-s6-md" placeholder="검색..." oninput="fddFilter(this,'s6-md')"></div></div>
+      </div>
+
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <input class="inp inp-sm" id="sf-s6-name" placeholder="캠페인명" style="height:30px;font-size:12px;width:110px" oninput="renderS6()">
+        <button class="btn btn-primary btn-sm" onclick="applyDateFilter('s6')">조회</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-ttl">6단계 · APP 마케팅 <span style="font-size:11px;color:var(--text3);font-weight:400">(5단계 인플루언서 확정된 캠페인)</span></span>
+      </div>
+      <div class="stage-table-wrap"><table class="stage-table">
+        <thead><tr>
+          <th style="width:36px;text-align:center">#</th>
+          <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>인플루언서규모</th>
+          <th>인플루언서</th><th style="width:9%;min-width:75px">예상매출</th>
+          <th style="text-align:center">APP MKT 요청</th><th style="width:99vw;background:var(--bg)"></th>
+        </tr></thead>
+        <tbody id="s5-tbl"></tbody>
+      </table>
+      </div><div id="s5-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
+    </div>
+  </div>
+
+  <!-- ═══ S6: 정산 ═══ -->
+  <div id="page-s7" class="page">
+    <div class="filter-bar">
+      <label class="filter-radio active" id="fb-target-s7"><input type="radio" name="filter-s7" value="target" checked onchange="setPageFilter('s7','target')"> 확정 대상</label>
+      <label class="filter-radio" id="fb-all-s7"><input type="radio" name="filter-s7" value="all" onchange="setPageFilter('s7','all')"> 전체 보기</label>
+      <div class="date-filter mob-filter-hide">
+        <label>기간</label>
+        <input type="month" class="inp" id="df-s7-from">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="month" class="inp" id="df-s7-to">
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>캠페인담당</label>
+        <div class="fdd-wrap" id="fdd-wrap-s7-owner"><input class="inp inp-sm fdd-input" id="sf-s7-owner" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s7-owner','manager')" onkeydown="fddKey(event,'s7-owner')"><div class="fdd-list" id="fdd-list-s7-owner"><input class="fdd-search" id="fdd-search-s7-owner" placeholder="검색..." oninput="fddFilter(this,'s7-owner')"></div></div>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>담당MD</label>
+        <div class="fdd-wrap" id="fdd-wrap-s7-md"><input class="inp inp-sm fdd-input" id="sf-s7-md" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s7-md','md')" onkeydown="fddKey(event,'s7-md')"><div class="fdd-list" id="fdd-list-s7-md"><input class="fdd-search" id="fdd-search-s7-md" placeholder="검색..." oninput="fddFilter(this,'s7-md')"></div></div>
+      </div>
+
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <input class="inp inp-sm" id="sf-s7-name" placeholder="캠페인명" style="height:30px;font-size:12px;width:110px" oninput="renderS7()">
+        <button class="btn btn-primary btn-sm" onclick="applyDateFilter('s7')">조회</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-ttl">7단계 · 정산 관리</span>
+        <div style="display:flex;gap:7px">
+          <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s7')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
+        </div>
+      </div>
+      <div class="stage-table-wrap"><table class="stage-table"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck('s7',this.checked)" style="cursor:pointer"></th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr></thead>
+      <tbody id="s6-tbl"></tbody></table>
+        <div id="s6-pg-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ═══ S7: 성과분석 ═══ -->
+  <div id="page-s8" class="page">
+    <!-- 필터 바 -->
+    <div class="filter-bar" style="margin-bottom:16px">
+      <label class="filter-radio active" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" checked onchange="setS7Filter('active')"> 진행중 캠페인</label>
+      <label class="filter-radio" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" onchange="setS7Filter('done')"> 종료 캠페인</label>
+      <div class="date-filter" style="margin-left:16px">
+        <label>기간</label>
+        <input type="date" class="inp" id="s7-date-from">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="date" class="inp" id="s7-date-to">
+        <button class="btn btn-primary btn-sm" onclick="renderReports()">조회</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearS7Filter()">초기화</button>
+      </div>
+      <div style="margin-left:auto">
+        <button class="btn btn-ghost btn-sm" onclick="exportExcel('report')" style="display:inline-flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg> 리포트 내보내기</button>
+      </div>
+    </div>
+    <!-- 성과 그리드 -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-hd"><span class="card-ttl">캠페인 성과 현황</span></div>
+      <div style="overflow-x:auto">
+        <table><thead><tr>
+          <th style="width:22%;min-width:130px">캠페인명</th><th>규모</th><th style="width:9%;min-width:70px">MDCAT</th><th>카테고리</th>
+          <th>MCN업체</th><th>인플루언서</th><th>매출</th><th>건수</th><th>비용</th><th>시작~종료일</th><th></th>
+        </tr></thead>
+        <tbody id="rep-tbl"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 인플루언서 DB ═══ -->
+  <div id="page-influencers" class="page">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input class="search-inp" placeholder="이름·채널 검색..." oninput="filterInfs(this.value)">
+        <div class="chip-row" id="cat-chips"></div>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-ghost btn-sm" onclick="exportExcel('influencers')" style="display:inline-flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg> 엑셀</button>
+        <button class="btn btn-primary btn-sm" id="btn-add-inf" onclick="openMo('influencer')" style="display:none">+ 인플루언서 등록</button>
+      </div>
+    </div>
+    <div class="inf-grid" id="inf-grid" style="display:block;min-height:50px"></div>
+  </div>
+
+  <!-- ═══ 전체 캠페인 ═══ -->
+  <div id="page-campaigns" class="page">
+    <!-- 필터바 -->
+    <!-- 전체캠페인 필터바: 1행 - 목록/칸반 + 캠페인명 + 조회 -->
+    <div class="filter-bar" style="margin-bottom:6px">
+      <div class="tabs" style="margin:0;border:none;flex-shrink:0">
+        <div class="tab active" onclick="switchCampView('list',this)">목록</div>
+        <div class="tab" onclick="switchCampView('kanban',this)">칸반</div>
+      </div>
+      <div class="stage-filter mob-filter-hide" style="margin-left:12px;padding-left:12px;border-left:1px solid var(--border)">
+        <label>캠페인명</label>
+        <input class="inp inp-sm" id="sf-camp-name" placeholder="캠페인명 검색" style="height:30px;font-size:12px;width:140px" oninput="renderCamps()">
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s1')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
+        <button class="btn btn-primary btn-sm" onclick="renderCamps()">조회</button>
+      </div>
+    </div>
+    <!-- 전체캠페인 필터바: 2행 - 기간 + 단계 + 담당 + MCN -->
+    <div class="filter-bar" style="margin-bottom:12px">
+      <div class="date-filter mob-filter-hide">
+        <label>기간</label>
+        <input type="month" class="inp" id="df-camp-from">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="month" class="inp" id="df-camp-to">
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>단계</label>
+        <select class="sel inp-sm" id="sf-camp-stage" style="height:30px;font-size:12px">
+          <option value="">전체 단계</option>
+          <option value="1.캠페인요청">1단계 · 캠페인요청</option>
+          <option value="2.캠페인확정">2단계 · 캠페인확정</option>
+          <option value="4.MCN요청">4단계 · MCN요청</option>
+          <option value="5.인플루언서확정">5단계 · 인플루언서확정</option>
+          <option value="6.APP마케팅확정">6단계 · APP마케팅확정</option>
+          <option value="7.정산">7단계 · 정산</option>
+          <option value="8.성과분석">8단계 · 성과분석</option>
+        </select>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>캠페인담당</label>
+        <div class="fdd-wrap" id="fdd-wrap-camp-owner"><input class="inp inp-sm fdd-input" id="sf-camp-owner" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('camp-owner','manager')" onkeydown="fddKey(event,'camp-owner')"><div class="fdd-list" id="fdd-list-camp-owner"><input class="fdd-search" id="fdd-search-camp-owner" placeholder="검색..." oninput="fddFilter(this,'camp-owner')"></div></div>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>담당MD</label>
+        <div class="fdd-wrap" id="fdd-wrap-camp-md"><input class="inp inp-sm fdd-input" id="sf-camp-md" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('camp-md','md')" onkeydown="fddKey(event,'camp-md')"><div class="fdd-list" id="fdd-list-camp-md"><input class="fdd-search" id="fdd-search-camp-md" placeholder="검색..." oninput="fddFilter(this,'camp-md')"></div></div>
+      </div>
+      <div class="stage-filter mob-filter-hide">
+        <label>MCN</label>
+        <input class="inp inp-sm" id="sf-camp-mcn" placeholder="업체 검색" style="height:30px;font-size:12px;width:90px" oninput="renderCamps()">
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-primary btn-sm" onclick="applyDateFilter('camp')">조회</button>
+      </div>
+    </div>
+    <div id="camp-list" style="display:block">
+      <div class="card">
+        <div class="card-hd"><span class="card-ttl">전체 캠페인 <span id="camp-count" style="font-size:12px;font-weight:400;color:var(--text3)"></span></span></div>
+        <div style="overflow-x:auto;min-height:100px;display:block"><table style="width:100%;border-collapse:collapse;min-height:100px"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:22%;min-width:130px">캠페인명</th><th>기간</th><th>캠페인담당</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플루언서</th><th style="background:var(--bg)"></th></tr></thead>
+        <tbody id="camp-tbl"></tbody></table></div>
+        <div id="camp-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 18px;border-top:1px solid var(--border)"></div>
+      </div>
+    </div>
+    <div id="camp-kanban" style="display:none">
+      <!-- 칸반 월 선택 필터 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:600;color:var(--text3)">월 선택 (복수 가능):</span>
+        <div id="kanban-month-picker" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        <button class="btn btn-primary btn-sm" onclick="renderKanban()">조회</button>
+        <span id="kanban-filter-label" style="font-size:12px;color:var(--text3)"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <div class="kanban" id="kanban-bd" style="min-width:900px;display:grid;grid-template-columns:repeat(8,1fr);gap:10px;align-items:start"></div>
+      </div>
+    </div>
+  </div>
+
+
+
+<!-- ════ 사용자 관리 페이지 (admin 전용) ════ -->
+<!-- ════ 기본정보 관리 페이지 (admin 전용) ════ -->
+<div id="page-usermgmt" class="page" style="padding:24px"></div>
+  <div id="page-mcnmgmt" class="page" style="padding:24px"></div>
+  <div id="page-basemgmt" class="page">
+  <div style="padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div>
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:4px">⚙️ 기본정보 관리</h2>
+        <p style="font-size:12.5px;color:var(--text3)">MDCAT 코드 · 사용자 · MCN 업체를 관리합니다.</p>
+      </div>
+      <div id="bm-action-area" style="display:flex;gap:8px"></div>
+    </div>
+    <!-- 탭 -->
+    <div class="tabs" style="margin-bottom:20px">
+      <div class="tab active" id="bm-tab-mdcat" onclick="switchBmTab('mdcat',this)">🏷️ MDCAT 코드</div>
+      <div class="tab" id="bm-tab-users" onclick="switchBmTab('users',this)">👥 사용자</div>
+      <div class="tab" id="bm-tab-roles" onclick="switchBmTab('roles',this)">🔑 역할·권한</div>
+      <div class="tab" id="bm-tab-mcn" onclick="switchBmTab('mcn',this)">🏢 MCN 업체</div>
+    </div>
+
+    <!-- 탭: MDCAT 코드 -->
+    <div id="bm-panel-mdcat">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:12.5px;color:var(--text3)">캠페인 등록 시 선택 가능한 MDCAT 코드를 관리합니다.</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddMdcatModal()">+ MDCAT 추가</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th style="width:40px;text-align:center">#</th><th>카테고리명</th><th>설명</th><th>상태</th><th>등록일</th><th style="background:var(--bg)"></th></tr></thead>
+          <tbody id="mdcat-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 탭: 사용자 -->
+    <div id="bm-panel-users" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div id="um-role-cards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;width:100%">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px">
+            <div class="role-badge role-admin" style="margin-bottom:6px">admin</div>
+            <div style="font-size:11.5px;color:var(--text2);font-weight:600">전체 관리자</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">사용자 관리 포함<br>모든 기능 접근</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px">
+            <div class="role-badge role-manager" style="margin-bottom:6px">manager</div>
+            <div style="font-size:11.5px;color:var(--text2);font-weight:600">내부 담당자</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">전체 조회<br>수정·저장</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px">
+            <div class="role-badge role-md" style="margin-bottom:6px">md</div>
+            <div style="font-size:11.5px;color:var(--text2);font-weight:600">내부 MD</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">전체 조회<br>수정·저장</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px">
+            <div class="role-badge role-viewer" style="margin-bottom:6px">viewer</div>
+            <div style="font-size:11.5px;color:var(--text2);font-weight:600">내부 조회자</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">전체 조회만<br>수정 불가</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px">
+            <div class="role-badge role-external_mcn" style="margin-bottom:6px">external_mcn</div>
+            <div style="font-size:11.5px;color:var(--text2);font-weight:600">외부 MCN</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">4·6단계 접근<br>인플루언서 정보 수정</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin:12px 0">
+        <button class="btn btn-ghost btn-sm" onclick="openUserBulkModal()" style="display:inline-flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg> 엑셀 일괄 등록</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ 사용자 추가</button>
+      </div>
+      <div class="card">
+        <div class="card-hd" style="flex-wrap:wrap;gap:10px">
+          <span class="card-ttl">사용자 목록</span>
+          <span id="user-count" style="font-size:12px;color:var(--text3)"></span>
+          <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
+            <input class="inp inp-sm" id="um-search-name" placeholder="이름 검색" style="width:100px;height:30px" oninput="renderUserTable()">
+            <input class="inp inp-sm" id="um-search-email" placeholder="이메일 검색" style="width:140px;height:30px" oninput="renderUserTable()">
+            <select class="sel" id="um-search-role" style="height:30px;font-size:12px;padding:0 8px;width:100px" onchange="renderUserTable()">
+              <option value="">전체 역할</option>
+              <option value="admin">전체 관리자</option>
+              <option value="manager">내부 담당자</option>
+              <option value="md">내부 MD</option>
+              <option value="viewer">내부 조회자</option>
+              <option value="external_mcn">외부 MCN</option>
+            </select>
+            <select class="sel" id="um-sort" style="height:30px;font-size:12px;padding:0 8px;width:110px" onchange="renderUserTable()">
+              <option value="createdAt_desc">등록일 최신순</option>
+              <option value="createdAt_asc">등록일 오래된순</option>
+              <option value="name_asc">이름 오름차순</option>
+              <option value="name_desc">이름 내림차순</option>
+            </select>
+            <button class="btn btn-ghost btn-xs" onclick="document.getElementById('um-search-name').value='';document.getElementById('um-search-email').value='';document.getElementById('um-search-role').value='';document.getElementById('um-sort').value='createdAt_desc';_umPage=1;renderUserTable()">초기화</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>이름</th><th>이메일</th><th>역할</th><th>MCN 업체명</th><th>상태</th>
+            <th style="cursor:pointer;user-select:none" onclick="umToggleSort()" id="um-th-createdAt">등록일 ▼</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="user-tbl"></tbody>
+        </table>
+        <div id="um-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 18px;border-top:1px solid var(--border)"></div>
+      </div>
+    </div>
+
+    <!-- 탭: 역할·권한 -->
+    <div id="bm-panel-roles" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-size:13.5px;font-weight:700;margin-bottom:3px">역할별 권한 매트릭스</div>
+          <div style="font-size:12px;color:var(--text3)">화면 접근 · 조회 · 저장/수정 권한을 역할별로 설정합니다.</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="openAddRoleModal()">+ 역할 추가</button>
+          <button class="btn btn-primary btn-sm" onclick="savePermMatrix()">💾 권한 저장</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;margin-bottom:14px;font-size:12px;color:var(--text2);align-items:center">
+        <span style="font-weight:700">범례:</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:18px;border-radius:4px;background:#6c5ce7;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff">✓</span> 허용</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:18px;height:18px;border-radius:4px;background:#e0e0e0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#888">✗</span> 불가</span>
+        <span style="margin-left:auto;font-size:11.5px;color:var(--text3)">● 클릭하면 허용/불가 전환</span>
+      </div>
+      <div class="card" style="overflow-x:auto;margin-bottom:20px">
+        <table id="perm-matrix-tbl" style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:700px">
+          <thead id="perm-matrix-head"></thead>
+          <tbody id="perm-matrix-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:24px">
+        <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px">역할 목록</div>
+        <div class="card">
+          <table>
+            <thead><tr>
+              <th>역할 코드</th><th>역할명</th><th>설명</th><th>상태</th><th></th>
+            </tr></thead>
+            <tbody id="role-tbl"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 탭: MCN 업체 -->
+    <div id="bm-panel-mcn" style="display:none">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn btn-primary btn-sm" onclick="openAddMcnModal()">+ 업체 추가</button>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-ttl">MCN 업체 목록</span>
+          <span id="mcn-company-count" style="font-size:12px;color:var(--text3)"></span>
+        </div>
+        <table>
+          <thead><tr>
+            <th>업체명</th><th>담당자</th><th>연락처</th><th>이메일</th><th>메모</th><th>등록일</th><th></th>
+          </tr></thead>
+          <tbody id="mcn-company-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<!-- ── 캠페인 엑셀 일괄 등록 모달 ── -->
+<div class="mo" id="mo-campbulk"><div class="mo-box" style="width:720px">
+  <div class="mo-hd">
+    <span class="mo-ttl">📥 캠페인 엑셀 일괄 등록</span>
+    <button class="mo-x" onclick="closeMo('campbulk')">✕</button>
+  </div>
+  <div class="mo-body" style="padding:20px">
+    <div style="background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--blue);line-height:1.8">
+      <b>📋 엑셀 컬럼 안내</b> (1행은 헤더 자동 스킵)<br>
+      <span style="color:var(--text3);font-size:11.5px">
+        A:캠페인명* &nbsp;B:시작일* &nbsp;C:종료일* &nbsp;D:예상매출* &nbsp;E:예산* &nbsp;F:역할(메가/앵콜/신규/시딩)* &nbsp;G:캠페인담당 &nbsp;H:담당MD &nbsp;I:브랜드 &nbsp;J:협력업체 &nbsp;K:카테고리 &nbsp;L:MDCAT &nbsp;M:MCN업체 &nbsp;N:상품코드 &nbsp;O:상품명 &nbsp;P:MD할인가 &nbsp;Q:카드할인 &nbsp;R:신규적립금 &nbsp;S:신규쿠폰 &nbsp;T:소구포인트 &nbsp;U:선정사유(쉼표구분)
+      </span>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button class="btn btn-ghost btn-sm" onclick="downloadCampTemplate()">⬇ 엑셀 템플릿 다운로드</button>
+      <span style="font-size:12px;color:var(--text3);align-self:center">* 표시는 필수값</span>
+    </div>
+    <div id="campbulk-drop" style="border:2px dashed var(--border2);border-radius:12px;padding:24px;text-align:center;cursor:pointer;margin-bottom:16px"
+      onclick="document.getElementById('campbulk-file').click()"
+      ondragover="event.preventDefault();this.style.background='var(--accent-bg)'"
+      ondragleave="this.style.background=''"
+      ondrop="event.preventDefault();this.style.background='';handleCampBulkDrop(event)">
+      <div style="font-size:28px;margin-bottom:6px">📂</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text2)">엑셀 파일 드래그 또는 클릭</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:3px">.xlsx, .xls</div>
+      <input type="file" id="campbulk-file" accept=".xlsx,.xls" style="display:none" onchange="handleCampBulkSelect(this)">
+    </div>
+    <div id="campbulk-preview" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:700">미리보기</span>
+        <span id="campbulk-count" style="font-size:12px;color:var(--accent2);font-weight:600"></span>
+      </div>
+      <div style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px">
+        <table style="width:100%;font-size:12px;min-width:600px">
+          <thead><tr style="background:var(--bg3)">
+            <th style="padding:7px 10px;text-align:left">캠페인명</th>
+            <th style="padding:7px 10px;text-align:left">기간</th>
+            <th style="padding:7px 10px;text-align:left">예상매출</th>
+            <th style="padding:7px 10px;text-align:left">역할</th>
+            <th style="padding:7px 10px;text-align:left">브랜드</th>
+            <th style="padding:7px 10px;text-align:left">상태</th>
+          </tr></thead>
+          <tbody id="campbulk-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="campbulk-result" style="display:none;margin-top:12px"></div>
+  </div>
+  <div class="mo-ft" style="justify-content:space-between">
+    <button class="btn btn-ghost" onclick="closeMo('campbulk')">닫기</button>
+    <button class="btn btn-primary" id="campbulk-submit" onclick="submitCampBulk()" style="display:none">✅ 일괄 등록</button>
+  </div>
+</div></div>
+
+<!-- ── 사용자 일괄 등록 모달 ── -->
+<div class="mo" id="mo-userbulk"><div class="mo-box" style="width:680px">
+  <div class="mo-hd">
+    <span class="mo-ttl">📥 사용자 일괄 등록 (엑셀)</span>
+    <button class="mo-x" onclick="closeMo('userbulk')">✕</button>
+  </div>
+  <div class="mo-body" style="padding:22px">
+    <!-- 안내 -->
+    <div style="background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:18px;font-size:12.5px;color:var(--blue);line-height:1.8">
+      <b>📋 엑셀 형식 안내</b><br>
+      A열: 이름 &nbsp;|&nbsp; B열: 이메일 &nbsp;|&nbsp; C열: 역할 (admin/manager/md/viewer/external_mcn) &nbsp;|&nbsp; D열: MCN업체명 (external_mcn만)<br>
+      <span style="color:var(--text3)">· 1행은 헤더로 자동 스킵 &nbsp;|&nbsp; 최초 비밀번호: <b style="color:var(--accent2)">tlstprPfkdlqm</b> &nbsp;|&nbsp; 이미 등록된 이메일은 건너뜀</span>
+    </div>
+    <!-- 템플릿 다운로드 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <button class="btn btn-ghost btn-sm" onclick="downloadUserTemplate()">⬇ 엑셀 템플릿 다운로드</button>
+      <span style="font-size:12px;color:var(--text3)">템플릿을 다운로드 후 내용 입력, 저장 후 업로드</span>
+    </div>
+    <!-- 파일 업로드 -->
+    <div id="bulk-drop-zone" style="border:2px dashed var(--border2);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px"
+      onclick="document.getElementById('bulk-file-input').click()"
+      ondragover="event.preventDefault();this.style.background='var(--accent-bg)';this.style.borderColor='var(--accent)'"
+      ondragleave="this.style.background='';this.style.borderColor='var(--border2)'"
+      ondrop="event.preventDefault();this.style.background='';this.style.borderColor='var(--border2)';handleBulkFileDrop(event)">
+      <div style="font-size:32px;margin-bottom:8px">📂</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text2)">엑셀 파일을 드래그하거나 클릭하여 선택</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">.xlsx, .xls 파일 지원</div>
+      <input type="file" id="bulk-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleBulkFileSelect(this)">
+    </div>
+    <!-- 미리보기 -->
+    <div id="bulk-preview" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;color:var(--text2)">📋 미리보기</div>
+        <span id="bulk-preview-count" style="font-size:12px;color:var(--text3)"></span>
+      </div>
+      <div style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+        <table style="width:100%;font-size:12.5px">
+          <thead><tr style="background:var(--bg3)">
+            <th style="padding:8px 12px;text-align:left">이름</th>
+            <th style="padding:8px 12px;text-align:left">이메일</th>
+            <th style="padding:8px 12px;text-align:left">역할</th>
+            <th style="padding:8px 12px;text-align:left">MCN업체</th>
+            <th style="padding:8px 12px;text-align:left">상태</th>
+          </tr></thead>
+          <tbody id="bulk-preview-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- 결과 -->
+    <div id="bulk-result" style="display:none;margin-top:14px"></div>
+  </div>
+  <div class="mo-ft" style="justify-content:space-between">
+    <button class="btn btn-ghost" onclick="closeMo('userbulk');resetBulkModal()">닫기</button>
+    <button class="btn btn-primary" id="bulk-submit-btn" onclick="submitBulkUsers()" style="display:none">✅ 일괄 등록 시작</button>
+  </div>
+</div></div>
+
+<!-- ── 섹션별 텍스트 붙여넣기 모달 ── -->
+<div class="mo" id="mo-pastefill" style="z-index:1100"><div class="mo-box" style="width:560px">
+  <div class="mo-hd">
+    <div>
+      <span class="mo-ttl" id="pf-sec-title">📋 텍스트 붙여넣기</span>
+      <div style="font-size:11.5px;color:var(--text3);margin-top:3px" id="pf-sec-desc">해당 섹션 정보를 텍스트로 붙여넣으면 자동 입력됩니다</div>
+    </div>
+    <button class="mo-x" onclick="closeMo('pastefill')">✕</button>
+  </div>
+  <div class="mo-body" style="padding:20px">
+
+    <!-- 형식 안내 (섹션별로 동적 변경) -->
+    <div id="pf-hint" style="background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;line-height:1.8;color:var(--text2)"></div>
+
+    <!-- 붙여넣기 영역 -->
+    <div class="fr" style="margin-bottom:12px">
+      <textarea id="pf-input" class="ta" placeholder="여기에 텍스트를 붙여넣으세요..." style="min-height:130px;font-size:13px;line-height:1.7"
+        oninput="parseSectionPaste()"></textarea>
+    </div>
+
+    <!-- 파싱 결과 미리보기 -->
+    <div id="pf-preview" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:700;color:var(--text2)">인식된 항목</span>
+        <span id="pf-match-count" style="font-size:12px;color:var(--accent2);font-weight:600"></span>
+      </div>
+      <div style="font-size:11.5px;color:var(--text3);margin-bottom:6px">✅ 체크된 항목만 적용됩니다. 기존값이 있는 항목은 🔄 표시됩니다.</div>
+      <div id="pf-preview-list" style="background:var(--bg3);border-radius:8px;padding:10px 12px;max-height:220px;overflow-y:auto;font-size:12px"></div>
+    </div>
+    <div id="pf-empty" style="display:none;color:var(--text3);font-size:12.5px;text-align:center;padding:12px">인식된 항목이 없습니다. 형식을 확인해 주세요.</div>
+
+  </div>
+  <div class="mo-ft" style="justify-content:space-between">
+    <button class="btn btn-ghost" onclick="closeMo('pastefill')">취소</button>
+    <button class="btn btn-primary" id="pf-apply-btn" onclick="applyPasteFill()" style="display:none">📥 적용</button>
+  </div>
+</div></div>
+
+<!-- ── TOAST ── -->
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ 역할 추가/수정 모달 ══ -->
+<div class="mo" id="mo-addrole"><div class="mo-box" style="width:520px">
+  <div class="mo-hd">
+    <span class="mo-ttl" id="addrole-title">역할 추가</span>
+    <button class="mo-x" onclick="closeMo('addrole')">✕</button>
+  </div>
+  <div class="mo-body">
+    <input type="hidden" id="edit-role-code-orig">
+    <div class="fr2">
+      <div>
+        <label>역할 코드 * <span style="font-size:10.5px;color:var(--text3);font-weight:400">(영문·숫자·_ 조합)</span></label>
+        <input class="inp" id="role-code" placeholder="예: branch_manager">
+      </div>
+      <div>
+        <label>역할명 *</label>
+        <input class="inp" id="role-label" placeholder="예: 지점 관리자">
+      </div>
+    </div>
+    <div class="fr">
+      <label>설명</label>
+      <input class="inp" id="role-desc" placeholder="이 역할의 권한 범위를 간략히 설명">
+    </div>
+    <div class="fr">
+      <label>접근 가능 단계 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(복수 선택)</span></label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="dashboard" style="accent-color:var(--accent)"> 대시보드</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="s1" style="accent-color:var(--accent)"> 1단계</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="s2" style="accent-color:var(--accent)"> 2단계</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="s3" style="accent-color:var(--accent)"> 3단계</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="s4" style="accent-color:var(--accent)"> 4단계</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="s5" style="accent-color:var(--accent)"> 5단계</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="s6" style="accent-color:var(--accent)"> 6단계</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="s7" style="accent-color:var(--accent)"> 7단계</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="campaigns" style="accent-color:var(--accent)"> 전체캠페인</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" class="role-stage-cb" value="influencers" style="accent-color:var(--accent)"> 인플루언서DB</label>
+      </div>
+    </div>
+    <div class="fr2">
+      <div>
+        <label>수정/저장 권한</label>
+        <select class="sel" id="role-can-edit">
+          <option value="true">허용</option>
+          <option value="false">조회만</option>
+        </select>
+      </div>
+      <div>
+        <label>상태</label>
+        <select class="sel" id="role-status">
+          <option value="active">활성</option>
+          <option value="inactive">비활성</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="mo-ft">
+    <button class="btn btn-ghost" onclick="closeMo('addrole')">취소</button>
+    <button class="btn btn-primary" id="addrole-save-btn" onclick="saveRole()">저장</button>
+  </div>
+</div></div>
+
+<!-- ══ MCN 업체 추가/수정 모달 ══ -->
+<div class="mo" id="mo-addmcn"><div class="mo-box" style="width:440px">
+  <div class="mo-hd">
+    <span class="mo-ttl" id="addmcn-title">MCN 업체 추가</span>
+    <button class="mo-x" onclick="closeMo('addmcn')">✕</button>
+  </div>
+  <div class="mo-body">
+    <input type="hidden" id="edit-mcn-id">
+    <div class="fr"><label>업체명 *</label><input class="inp" id="mcn-name" placeholder="(주)크리에이터스"></div>
+    <div class="fr2">
+      <div><label>담당자</label><input class="inp" id="mcn-contact" placeholder="홍길동"></div>
+      <div><label>연락처</label><input class="inp" id="mcn-phone" placeholder="010-0000-0000"></div>
+    </div>
+    <div class="fr"><label>이메일</label><input class="inp" type="email" id="mcn-email" placeholder="contact@agency.com"></div>
+    <div class="fr"><label>메모</label><textarea class="ta" id="mcn-memo" placeholder="특이사항..." style="min-height:60px"></textarea></div>
+  </div>
+  <div class="mo-ft">
+    <button class="btn btn-ghost" onclick="closeMo('addmcn')">취소</button>
+    <button class="btn btn-primary" id="addmcn-save-btn" onclick="saveMcnCompany()">저장</button>
+  </div>
+</div></div>
+
+<!-- ══ 사용자 추가/수정 모달 ══ -->
+<div class="mo" id="mo-adduser"><div class="mo-box" style="width:460px">
+  <div class="mo-hd">
+    <span class="mo-ttl" id="adduser-title">사용자 추가</span>
+    <button class="mo-x" onclick="closeMo('adduser')">✕</button>
+  </div>
+  <div class="mo-body">
+    <input type="hidden" id="edit-user-uid">
+    <div class="fr"><label>이름 *</label><input class="inp" id="au-name" placeholder="홍길동"></div>
+    <div class="fr"><label>이메일 *</label><input class="inp" id="au-email" placeholder="example@company.com"></div>
+    <!-- 신규: 초기 비밀번호 -->
+    <div class="fr" id="au-pw-fr">
+      <label>비밀번호 * <span style="font-size:10.5px;color:var(--text3);font-weight:400">(8자 이상)</span></label>
+      <input class="inp" type="password" id="au-pw" placeholder="초기 비밀번호 설정">
+    </div>
+    <!-- 수정: 비밀번호 변경 (접기/펼치기) -->
+    <div id="au-pw-change-fr" style="display:none">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:2px">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="togglePwChangeArea()">
+          <div style="font-size:12.5px;font-weight:700;color:var(--text2)">🔑 비밀번호 변경</div>
+          <span id="au-pw-change-arr" style="font-size:11px;color:var(--text3)">▶ 펼치기</span>
+        </div>
+        <div id="au-pw-change-body" style="display:none;margin-top:10px">
+          <div style="margin-bottom:8px">
+            <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">새 비밀번호 <span style="font-size:10.5px">(8자 이상)</span></label>
+            <input class="inp" type="password" id="au-pw-new" placeholder="새 비밀번호 입력" style="margin-bottom:6px">
+          </div>
+          <div style="margin-bottom:10px">
+            <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">새 비밀번호 확인</label>
+            <input class="inp" type="password" id="au-pw-new-confirm" placeholder="비밀번호 재입력">
+          </div>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="changeUserPassword()" id="au-pw-change-btn">비밀번호 변경 적용</button>
+          <div id="au-pw-change-msg" style="margin-top:6px;font-size:12px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="fr">
+      <label>역할 *</label>
+      <select class="sel" id="au-role" onchange="toggleMcnField()">
+        <option value="admin">admin · 전체 관리자</option>
+        <option value="manager" selected>manager · 내부 담당자</option>
+        <option value="md">md · 내부 MD</option>
+        <option value="viewer">viewer · 내부 조회자</option>
+        <option value="external_mcn">external_mcn · 외부 MCN</option>
+      </select>
+    </div>
+    <div class="fr" id="mcn-company-fr" style="display:none">
+      <label>MCN 업체명 *</label>
+      <select class="sel" id="au-mcn-company">
+        <option value="">-- 업체 선택 --</option>
+      </select>
+    </div>
+    <div class="fr">
+      <label>상태</label>
+      <select class="sel" id="au-status">
+        <option value="active">활성</option>
+        <option value="inactive">비활성</option>
+      </select>
+    </div>
+  </div>
+  <div class="mo-ft" style="justify-content:space-between">
+    <button class="btn btn-danger" id="au-delete-btn" style="display:none" onclick="deleteUser()">🗑 사용자 삭제</button>
+    <div style="display:flex;gap:8px;margin-left:auto">
+      <button class="btn btn-ghost" onclick="closeMo('adduser')">취소</button>
+      <button class="btn btn-primary" id="adduser-save-btn" onclick="saveUser()">저장</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- ══ MODALS ══ -->
+
+<!-- 캠페인 요청 등록 모달 (1단계) -->
+<div class="mo" id="mo-product"><div class="mo-box wide">
+  <div class="mo-hd" style="flex-wrap:wrap;gap:8px">
+    <span class="mo-ttl" id="prod-mo-title">캠페인 등록</span>
+    <div id="prod-stage-area" style="display:none;align-items:center;gap:8px;margin-left:0">
+      <span style="font-size:11px;font-weight:600;color:var(--text3)">현재 단계</span>
+      <span id="prod-stage-badge" style="font-size:12px;font-weight:800;padding:3px 12px;border-radius:20px;background:var(--accent-bg);color:var(--accent2)">-</span>
+      <span style="font-size:11px;color:var(--text3)">→ 변경:</span>
+      <select id="prod-stage-select" class="sel inp-sm" style="height:28px;font-size:12px;width:160px" onchange="changeProdStageInline(this.value)">
+        <option value="1.캠페인요청">1단계 · 캠페인요청</option>
+        <option value="2.캠페인확정">2단계 · 캠페인확정</option>
+        <option value="4.MCN요청">4단계 · MCN요청</option>
+        <option value="5.인플루언서확정">5단계 · 인플루언서확정</option>
+        <option value="6.APP마케팅확정">6단계 · APP마케팅확정</option>
+        <option value="7.정산">7단계 · 정산</option>
+        <option value="8.성과분석">8단계 · 성과분석</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+      <button class="btn btn-ghost btn-sm" onclick="openPasteFillModal()" style="font-size:12px;background:var(--accent-bg);border-color:var(--accent);color:var(--accent2)" title="모든 섹션 항목을 한번에 자동 입력">📋 전체붙여넣기</button>
+      <button class="btn btn-ghost btn-sm" onclick="openCopyCampModal()" style="font-size:12px">📋 캠페인복사</button>
+      <button class="mo-x" onclick="closeMo('product')">✕</button>
+    </div>
+  </div>
+  <input type="hidden" id="p-edit-id" value="">
+  <div class="mo-body" style="padding:0">
+
+    <!-- ══ 섹션 A: 캠페인 기본정보 (항상 펼쳐짐) ══ -->
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:.8px;text-transform:uppercase">📋 캠페인 기본정보</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost btn-xs" onclick="openSectionPaste('basic')" style="font-size:11px;padding:3px 8px;color:var(--accent2)">📋 붙여넣기</button><button class="btn btn-ghost btn-xs" onclick="copySectionFormat('basic')" style="font-size:11px;padding:3px 8px;color:var(--green)">📤 양식복사</button>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11.5px;color:var(--text3);font-weight:600" onclick="event.stopPropagation()">
+            <input type="checkbox" class="share-sec-cb" data-sec="basic" checked style="accent-color:var(--accent);width:14px;height:14px"> 공유
+          </label>
+        </div>
+      </div>
+      <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
+      <div class="fr2"><div><label>시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local"></div><div><label>종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local"></div></div>
+      <div class="fr2"><div><label>예산 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-budget" placeholder="3,000,000"></div><div><label>MDCAT <span style="color:var(--red)">*</span></label>
+        <div class="fdd-wrap" id="fdd-wrap-p-mdcat">
+          <input class="inp fdd-input" id="p-mdcat" placeholder="MDCAT 선택..." readonly style="cursor:pointer" onclick="mdcatDdOpen()" onkeydown="if(event.key==='Escape')mdcatDdClose()">
+          <div class="fdd-list" id="fdd-list-p-mdcat">
+            <input class="fdd-search" id="fdd-search-p-mdcat" placeholder="검색..." oninput="mdcatDdFilter(this.value)">
+          </div>
+        </div>
+      </div></div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin:14px 0 8px">캠페인 역할 <span style="color:var(--red)">*</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-mega">
+          <input type="radio" name="p-role" id="p-role-mega" value="메가" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
+          <div><div style="font-size:12.5px;font-weight:700">메가</div><div style="font-size:10px;color:var(--text3)">매출 견인</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-encore">
+          <input type="radio" name="p-role" id="p-role-encore" value="앵콜" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
+          <div><div style="font-size:12.5px;font-weight:700">앵콜</div><div style="font-size:10px;color:var(--text3)">재진행</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-new">
+          <input type="radio" name="p-role" id="p-role-new" value="신규" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
+          <div><div style="font-size:12.5px;font-weight:700">신규</div><div style="font-size:10px;color:var(--text3)">인지도 확보</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-seeding">
+          <input type="radio" name="p-role" id="p-role-seeding" value="시딩" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
+          <div><div style="font-size:12.5px;font-weight:700">시딩</div><div style="font-size:10px;color:var(--text3)">바이럴 확산</div></div>
+        </label>
+      </div>
+
+
+
+      <div class="fr2"><div><label>캠페인담당</label>
+<div class="search-sel-wrap" id="wrap-p-pd-single">
+  <input class="inp search-sel-input" id="p-pd-single" placeholder="이름 검색..." autocomplete="off"
+    oninput="searchSelFilter('p-pd-single','manager')"
+    onfocus="searchSelOpen('p-pd-single','manager')"
+    onkeydown="searchSelKey(event,'p-pd-single')">
+  <button class="search-sel-clear" id="clear-p-pd-single" onclick="searchSelClear('p-pd-single')" tabindex="-1">✕</button>
+  <div class="search-sel-list" id="list-p-pd-single"></div>
+</div>
+</div><div></div></div>
+
+      <div style="margin:14px 0 8px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">캠페인 선정 사유 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
+        <div style="margin-bottom:6px">
+          <div style="font-size:10.5px;font-weight:700;color:var(--blue);margin-bottom:5px">📦 상품</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-브랜드력" value="브랜드력" style="accent-color:var(--blue);width:13px;height:13px"> 브랜드력</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-가격경쟁력" value="가격경쟁력" style="accent-color:var(--blue);width:13px;height:13px"> 가격경쟁력</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-시즈널리티" value="시즈널리티" style="accent-color:var(--blue);width:13px;height:13px"> 시즈널리티</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-트렌드" value="트렌드" style="accent-color:var(--blue);width:13px;height:13px"> 트렌드</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-레퍼런스" value="레퍼런스" style="accent-color:var(--blue);width:13px;height:13px"> 레퍼런스</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-마진" value="마진" style="accent-color:var(--blue);width:13px;height:13px"> 마진</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-물량" value="물량" style="accent-color:var(--blue);width:13px;height:13px"> 물량</label>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10.5px;font-weight:700;color:var(--accent2);margin-bottom:5px">📱 SNS적합성</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-차별성" value="차별성" style="accent-color:var(--accent);width:13px;height:13px"> 차별성</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-시연성" value="시연성" style="accent-color:var(--accent);width:13px;height:13px"> 시연성</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="bas-reason-cb" id="bas-reason-이지픽" value="이지픽" style="accent-color:var(--accent);width:13px;height:13px"> 이지픽</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 섹션 B: 상품 정보 (접기/펼치기) ══ -->
+    <div class="mo-section">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-product')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="product" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
+          <span>🏷️ 상품 정보</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openSectionPaste('product')" style="font-size:11px;padding:3px 8px;color:var(--accent2)">📋 붙여넣기</button>
+          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();copySectionFormat('product')" style="font-size:11px;padding:3px 8px;color:var(--green)">📤 양식복사</button>
+          <span class="mo-sec-arr" id="arr-sec-product">▼</span>
+        </div>
+      </div>
+      <div class="mo-sec-body" id="sec-product">
+        <div class="fr">
+          <label>상품기본정보 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(자유 기재)</span></label>
+          <textarea class="ta" id="p-product-basic-info" placeholder="① 상품명/상품구성 : &#10;②가격/프로모션 조건 : MD할인가,카드즉시할인5%(5만원이상),신규가입3천원 적립, 최종공구가&#10;③이벤트 : 사전알림댓글 이벤트, 구매인증 이벤트, 모바일라이브 유무 등&#10;④참고용상품링크 : " maxlength="2000" style="min-height:120px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/2000'"></textarea>
+          <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/2000</div>
+        </div>
+        <div class="fr2"><div><label>브랜드</label><input class="inp" id="p-brand" placeholder="스킨랩"></div><div><label>협력업체</label><input class="inp" id="p-company" placeholder="(주)스킨랩"></div></div>
+        <div class="fr2"><div><label>담당 MD</label>
+<div class="search-sel-wrap" id="wrap-p-owner">
+  <input class="inp search-sel-input" id="p-owner" placeholder="이름 검색..." autocomplete="off"
+    oninput="searchSelFilter('p-owner','md')"
+    onfocus="searchSelOpen('p-owner','md')"
+    onkeydown="searchSelKey(event,'p-owner')">
+  <button class="search-sel-clear" id="clear-p-owner" onclick="searchSelClear('p-owner')" tabindex="-1">✕</button>
+  <div class="search-sel-list" id="list-p-owner"></div>
+</div>
+</div><div></div></div>
+        <div class="fr2"><div><label>카테고리</label><input class="inp" id="p-cat" placeholder="예) 뷰티, 식품, 패션"></div><div></div></div>
+        <div class="fr"><label>캠페인 소구 포인트</label>
+          <textarea class="ta" id="p-appeal" placeholder="핵심 소구 포인트, 차별화 요소, 타겟 메시지..." maxlength="500" style="min-height:80px;resize:vertical" oninput="this.nextElementSibling.textContent=this.value.length+'/500'"></textarea>
+          <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
+        </div>
+        <!-- 상세 상품코드 + 가격 통합 테이블 -->
+        <div style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:11.5px;font-weight:700;color:var(--text2)">📦 상품코드 · 가격 정보</span>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer" onclick="event.stopPropagation()">
+                <input type="checkbox" class="share-sec-cb" data-sec="price" checked style="accent-color:var(--accent);width:12px;height:12px">
+                <span style="font-size:10.5px;color:var(--text3)">공유</span>
+              </label>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="addSkuRow()" type="button" style="font-size:11px">+ 행 추가</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table id="sku-price-table" style="width:100%;font-size:12px;min-width:900px;border-collapse:collapse">
+              <thead>
+                <tr style="background:var(--bg3)">
+                  <th style="padding:6px 4px;text-align:center;white-space:nowrap;width:26px">#</th>
+                  <th style="padding:6px 4px;text-align:center;white-space:nowrap;width:30px">대표</th>
+                  <th style="padding:6px 8px;text-align:left;white-space:nowrap">상품코드</th>
+                  <th style="padding:6px 8px;text-align:left;white-space:nowrap">MDCAT</th>
+                  <th style="padding:6px 8px;text-align:left;white-space:nowrap">카테고리</th>
+                  <th style="padding:6px 8px;text-align:left;white-space:nowrap">상품명</th>
+                  <th style="padding:6px 8px;text-align:left;white-space:nowrap">브랜드</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap;border-left:2px solid var(--border2)">정가</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">MD할인가</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">카드할인</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">신규적립금</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">신규쿠폰</th>
+                  <th style="padding:6px 8px;text-align:left;white-space:nowrap">기타프로모션</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap;color:var(--accent)">최종공구가</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap;color:var(--orange)">온라인최저가</th>
+                  <th style="padding:6px 4px;width:28px"></th>
+                </tr>
+              </thead>
+              <tbody id="sku-list"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:8px;background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--r-sm);padding:7px 12px;font-size:11px;color:var(--blue)">
+            💡 최종공구가 = MD할인가 - 카드할인 - 신규적립금 - 신규쿠폰 &nbsp;|&nbsp; 상품코드 입력 시 MDCAT·카테고리·상품명·브랜드 자동완성
+          </div>
+        </div>
+        <!-- CS정보 / 배송정보 -->
+        <div style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px;display:flex;flex-direction:column;gap:12px">
+          <div class="fr">
+            <label>CS 정보 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 500자)</span></label>
+            <textarea class="ta" id="p-cs-info" placeholder="1)과세/면세 : &#10;2)제조사/원산지 : &#10;3)반품.교환정책 : &#10;4)반품교환문의 : 1800-0850&#10;5)출고지/교환반품주소&#10;6)CS고객센터 협의사항:" maxlength="500" style="min-height:110px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/500'"></textarea>
+            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
+          </div>
+          <div class="fr">
+            <label>배송 정보</label>
+            <!-- 배송 구조화 항목 -->
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">택배사</label>
+                  <input class="inp inp-sm" id="p-courier" placeholder="예) CJ대한통운, 롯데택배" style="width:100%">
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">당일출고 마감시간</label>
+                  <input class="inp inp-sm" id="p-ship-cutoff" type="time" style="width:100%">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">배송비</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap">
+                      <input type="checkbox" id="p-ship-free" style="accent-color:var(--accent);cursor:pointer" onchange="document.getElementById('p-ship-fee').disabled=this.checked;if(this.checked)document.getElementById('p-ship-fee').value=''">무료
+                    </label>
+                    <input class="inp inp-sm inp-money" id="p-ship-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
+                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
+                  </div>
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">제주·도서산간 배송료</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap">
+                      <input type="checkbox" id="p-island-free" style="accent-color:var(--accent);cursor:pointer" onchange="document.getElementById('p-island-fee').disabled=this.checked;if(this.checked)document.getElementById('p-island-fee').value=''">없음
+                    </label>
+                    <input class="inp inp-sm inp-money" id="p-island-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
+                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">교환 배송비</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input class="inp inp-sm inp-money" id="p-exchange-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
+                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
+                  </div>
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">반품비</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input class="inp inp-sm inp-money" id="p-return-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
+                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">배송정보 및 기타사항 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 300자)</span></label>
+            <textarea class="ta" id="p-delivery-info" placeholder="기타 배송 관련 안내 사항..." maxlength="300" style="min-height:60px;resize:vertical" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/300'"></textarea>
+            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/300</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ 섹션 D: 인플루언서 정보 ══ -->
+    <div class="mo-section">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-inf')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="inf" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
+          <span>👤 인플루언서 정보</span>
+          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();addInfBlock()" type="button" style="font-size:11px;padding:3px 8px">+추가</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openSectionPaste('inf')" style="font-size:11px;padding:3px 8px;color:var(--accent2)">📋 붙여넣기</button>
+          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();copySectionFormat('inf')" style="font-size:11px;padding:3px 8px;color:var(--green)">📤 양식복사</button>
+          <span class="mo-sec-arr" id="arr-sec-inf">▼</span>
+        </div>
+      </div>
+      <div class="mo-sec-body" id="sec-inf">
+        <div id="inf-blocks-container"></div>
+        <div class="fr" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
+          <label>인플루언서 요청사항 및 기타 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 300자)</span></label>
+          <textarea class="ta" id="p-inf-request" placeholder="인플루언서에게 전달할 요청사항, 특이사항 등을 기재하세요..." maxlength="300" style="min-height:70px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/300'"></textarea>
+          <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/300</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 섹션 F: APP 마케팅 ══ -->
+    <div class="mo-section" style="border-bottom:none">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-appmkt')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="appmkt" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
+          <span>📱 APP 마케팅</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openSectionPaste('appmkt')" style="font-size:11px;padding:3px 8px;color:var(--accent2)">📋 붙여넣기</button>
+          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();copySectionFormat('appmkt')" style="font-size:11px;padding:3px 8px;color:var(--green)">📤 양식복사</button>
+          <span class="mo-sec-arr" id="arr-sec-appmkt">▼</span>
+        </div>
+      </div>
+      <div class="mo-sec-body" id="sec-appmkt">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3)">마케팅 채널 선택 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;font-weight:700;background:var(--orange-bg);border:1.5px solid var(--orange);border-radius:var(--r-sm);padding:5px 12px;transition:all .15s;user-select:none" id="appmkt-na-label">
+            <input type="checkbox" id="appmkt-na" style="accent-color:var(--orange);width:14px;height:14px;cursor:pointer" onchange="toggleAppMktNa()">
+            <span style="color:var(--orange)">⊘ 해당없음 (정산으로 이동)</span>
+          </label>
+        </div>
+        <div id="appmkt-channels-area" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="팝업"> 팝업</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="최상단배너"> 최상단배너</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="PUSH"> PUSH</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="카톡플친"> 카톡플친</label>
+        </div>
+        <div id="appmkt-super-fields" style="display:none;margin-bottom:12px">
+          <div class="fr2">
+            <div><label>슈퍼브랜드 시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-super-start" type="date"></div>
+            <div><label>슈퍼브랜드 종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-super-end" type="date"></div>
+          </div>
+        </div>
+        <div id="appmkt-live-fields" style="display:none;margin-bottom:4px">
+          <div class="fr">
+            <label>모바일라이브 방송일시 <span style="color:var(--red)">*</span></label>
+            <input class="inp" id="appmkt-live-dt" type="datetime-local">
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+          <div class="fr">
+            <label>🔗 인플루언서 랜딩 페이지 <span style="font-size:10px;color:var(--text3);font-weight:400">(시크릿코드)</span></label>
+            <input class="inp" id="appmkt-landing-url" placeholder="https://" style="font-size:12px">
+          </div>
+          <div class="fr">
+            <label>🛍️ 기획전(딜) 페이지</label>
+            <input class="inp" id="appmkt-deal-url" placeholder="https://" style="font-size:12px">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ 섹션 G: 정산 정보 ══ -->
+    <div class="mo-section" style="border-bottom:none">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-settle')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="settle" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
+          <span>💰 정산 정보</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openSectionPaste('settle')" style="font-size:11px;padding:3px 8px;color:var(--accent2)">📋 붙여넣기</button>
+          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();copySectionFormat('settle')" style="font-size:11px;padding:3px 8px;color:var(--green)">📤 양식복사</button>
+          <span class="mo-sec-arr" id="arr-sec-settle">▼</span>
+        </div>
+      </div>
+      <div class="mo-sec-body" id="sec-settle">
+        <div class="fr2" style="margin-bottom:12px">
+          <div><label>DA 광고료 (원)</label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
+          <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
+            <input type="checkbox" id="p-settle-done" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer">
+            <label for="p-settle-done" style="font-size:13px;font-weight:600;cursor:pointer">✅ 정산 완료</label>
+          </div>
+        </div>
+        <div class="fr2" style="margin-bottom:12px">
+          <div><label>정산처리일 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(캠페인 종료+14일 자동)</span></label><input class="inp" id="p-settle-process-date" type="date"></div>
+          <div><label>비용지불일</label><input class="inp" id="p-settle-payment-date" type="date"></div>
+        </div>
+        <div id="settle-blocks-container"></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="mo-ft" style="gap:6px;flex-wrap:wrap;justify-content:flex-end">
+    <div id="kakao-share-btn" style="display:none;align-items:center;gap:6px;margin-right:auto">
+      <span style="font-size:11px;color:var(--text3)">공유:</span>
+      <button onclick="copyShareText()" class="btn btn-ghost btn-sm" style="font-size:12px">📋 텍스트복사</button>
+      <button onclick="shareToKakao()" style="background:#FEE500;border:none;border-radius:8px;padding:7px 12px;color:#3A1D1D;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:5px">💬 카카오톡</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="closeMo('product')">취소</button>
+    <button class="btn btn-primary btn-sm" id="prod-save-btn" onclick="saveProd()">캠페인 등록</button>
+  </div>
+</div></div>
+
+<!-- Campaign (2단계 캠페인확정) -->
+<div class="mo" id="mo-campaign"><div class="mo-box">
+  <div class="mo-hd"><span class="mo-ttl" id="camp-mo-title">캠페인 확정 (2단계 · 캠페인확정)</span><button class="mo-x" onclick="closeMo('campaign')">✕</button></div>
+  <input type="hidden" id="c-edit-id" value="">
+  <div class="mo-body">
+    <div class="fr"><label>캠페인명 *</label><input class="inp" id="c-name" placeholder="여름 선크림 체험단"></div>
+    <div class="fr2"><div><label>연결 캠페인 요청 (1단계)</label><select class="sel" id="c-prod" onchange="updateCampRoleDisplay(this.value)"></select></div><div><label>예산 (원)</label><input class="inp" id="c-budget" type="number" placeholder="2000000"></div></div>
+    <div class="fr2"><div><label>시작일</label><input class="inp" id="c-start" type="date"></div><div><label>종료일</label><input class="inp" id="c-end" type="date"></div></div>
+    <div class="fr">
+      <label>확정 사유 <span style="color:var(--text3);font-weight:400;font-size:11px">(복수 선택 가능)</span></label>
+      <div style="margin-top:8px">
+        <div style="margin-bottom:6px">
+          <div style="font-size:10.5px;font-weight:700;color:var(--blue);margin-bottom:5px">📦 상품</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-브랜드력" value="브랜드력" style="accent-color:var(--blue);width:13px;height:13px"> 브랜드력</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-가격경쟁력" value="가격경쟁력" style="accent-color:var(--blue);width:13px;height:13px"> 가격경쟁력</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-시즈널리티" value="시즈널리티" style="accent-color:var(--blue);width:13px;height:13px"> 시즈널리티</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-트렌드" value="트렌드" style="accent-color:var(--blue);width:13px;height:13px"> 트렌드</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-레퍼런스" value="레퍼런스" style="accent-color:var(--blue);width:13px;height:13px"> 레퍼런스</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-마진" value="마진" style="accent-color:var(--blue);width:13px;height:13px"> 마진</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-물량" value="물량" style="accent-color:var(--blue);width:13px;height:13px"> 물량</label>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10.5px;font-weight:700;color:var(--accent2);margin-bottom:5px">📱 SNS적합성</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-차별성" value="차별성" style="accent-color:var(--accent);width:13px;height:13px"> 차별성</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-시연성" value="시연성" style="accent-color:var(--accent);width:13px;height:13px"> 시연성</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="c-reason-cb" id="c-reason-이지픽" value="이지픽" style="accent-color:var(--accent);width:13px;height:13px"> 이지픽</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fr">
+      <label>캠페인 역할 <span style="font-size:11px;color:var(--text3);font-weight:400">(1단계에서 설정됨)</span></label>
+      <div id="c-role-display" style="margin-top:6px;font-size:13.5px;font-weight:700;color:var(--accent2)">-</div>
+    </div>
+    <div class="fr2"><div><label>프로모션 항목</label><input class="inp" id="c-promo" placeholder="체험단, 공동구매 등"></div><div><label>카드/경품/쿠폰</label><input class="inp" id="c-gift" placeholder="10% 할인쿠폰 등"></div></div>
+    <div class="fr2"><div><label>목표 인원</label><input class="inp" id="c-target" type="number" placeholder="10"></div><div><label>담당자</label><select class="sel" id="c-owner"><option value="">-- 담당자 선택 --</option></select></div></div>
+    <div class="fr"><label>캠페인 목표</label><textarea class="ta" id="c-desc" placeholder="방향, 목표, 콘텐츠 가이드..."></textarea></div>
+    <div class="fr"><label>해시태그</label><input class="inp" id="c-tags" placeholder="#브랜드 #여름"></div>
+  </div>
+  <div class="mo-ft"><button class="btn btn-ghost" onclick="closeMo('campaign')">취소</button><button class="btn btn-primary" id="camp-save-btn" onclick="saveCamp()">캠페인 확정</button></div>
+</div></div>
+
+<!-- Matching (4단계) -->
+<div class="mo" id="mo-matching"><div class="mo-box">
+  <div class="mo-hd"><span class="mo-ttl">인플루언서 매칭 (4단계)</span><button class="mo-x" onclick="closeMo('matching')">✕</button></div>
+  <div class="mo-body">
+    <div class="fr"><label>캠페인</label><select class="sel" id="mc-camp"></select></div>
+    <div class="fr"><label>인플루언서</label><select class="sel" id="mc-inf"></select></div>
+    <div class="fr"><label>제공 상품</label><select class="sel" id="mc-prod"></select></div>
+    <div class="fr"><label>담당자</label><select class="sel" id="mc-owner"><option>김담당</option><option>이소연</option><option>박민준</option><option>최현우</option></select></div>
+    <div class="fr"><label>메모</label><textarea class="ta" id="mc-memo" placeholder="매칭 사유..."></textarea></div>
+  </div>
+  <div class="mo-ft"><button class="btn btn-ghost" onclick="closeMo('matching')">취소</button><button class="btn btn-primary" onclick="addMatch()">매칭 요청 생성</button></div>
+</div></div>
+
+<!-- APP Marketing (5단계) -->
+<div class="mo" id="mo-appmarketing"><div class="mo-box">
+  <div class="mo-hd"><span class="mo-ttl">APP마케팅 요청 (6단계)</span><button class="mo-x" onclick="closeMo('appmarketing')">✕</button></div>
+  <div class="mo-body">
+    <div class="fr"><label>캠페인 선택</label><select class="sel" id="app-camp"></select></div>
+    <div class="fr2"><div><label>전시기획</label><input class="inp" id="app-display" placeholder="메인배너, 기획전 등"></div><div><label>전시 리소스</label><select class="sel" id="app-resource"><option>팝업</option><option>홈구좌</option><option>GNB</option><option>기타</option></select></div></div>
+    <div class="fr2"><div><label>외부 DA 광고</label><select class="sel" id="app-da"><option>미신청</option><option>신청</option><option>집행중</option></select></div><div><label>APP PUSH</label><select class="sel" id="app-push"><option>미신청</option><option>신청</option><option>발송완료</option></select></div></div>
+    <div class="fr2"><div><label>CRM 요청</label><select class="sel" id="app-crm"><option>미신청</option><option>신청</option><option>완료</option></select></div><div><label>담당자</label><select class="sel" id="app-owner"><option>김담당</option><option>이소연</option><option>박민준</option><option>최현우</option></select></div></div>
+    <div class="fr"><label>메모</label><textarea class="ta" id="app-memo" placeholder="요청 사항..."></textarea></div>
+  </div>
+  <div class="mo-ft"><button class="btn btn-ghost" onclick="closeMo('appmarketing')">취소</button><button class="btn btn-primary" onclick="saveAppMarketing()">등록</button></div>
+</div></div>
+
+<!-- Settlement (6단계) -->
+<div class="mo" id="mo-settlement"><div class="mo-box">
+  <div class="mo-hd"><span class="mo-ttl">정산 등록 (6단계)</span><button class="mo-x" onclick="closeMo('settlement')">✕</button></div>
+  <div class="mo-body">
+    <div class="fr2"><div><label>캠페인</label><select class="sel" id="st-camp"></select></div><div><label>인플루언서</label><select class="sel" id="st-inf"></select></div></div>
+    <div class="fr2"><div><label>전체 매출 (원)</label><input class="inp inp-money" id="st-revenue" placeholder="0"></div><div><label>인플루언서 수수료 (원)</label><input class="inp inp-money" id="st-inf-fee" placeholder="0"></div></div>
+    <div class="fr2"><div><label>에이전시 수수료 (원)</label><input class="inp inp-money" id="st-agency-fee" placeholder="0"></div><div><label>DA 광고비 (원)</label><input class="inp inp-money" id="st-da-fee" placeholder="0"></div></div>
+    <div class="fr"><label>정산 상태</label><select class="sel" id="st-status"><option>정산예정</option><option>정산중</option><option>정산완료</option></select></div>
+    <div class="fr"><label>메모</label><textarea class="ta" id="st-memo" placeholder="정산 관련 메모..."></textarea></div>
+  </div>
+  <div class="mo-ft"><button class="btn btn-ghost" onclick="closeMo('settlement')">취소</button><button class="btn btn-primary" onclick="saveSettlement()">등록</button></div>
+</div></div>
+
+<!-- Influencer -->
+<div class="mo" id="mo-influencer"><div class="mo-box">
+  <div class="mo-hd"><span class="mo-ttl">인플루언서 등록</span><button class="mo-x" onclick="closeMo('influencer')">✕</button></div>
+  <div class="mo-body">
+    <div class="fr2"><div><label>이름 *</label><input class="inp" id="i-name" placeholder="홍길동"></div><div><label>채널/아이디</label><input class="inp" id="i-handle" placeholder="@hong_beauty"></div></div>
+    <div class="fr2"><div><label>플랫폼</label><select class="sel" id="i-plat"><option>인스타그램</option><option>유튜브</option><option>틱톡</option><option>X(트위터)</option><option>블로그</option><option>복합</option></select></div><div><label>팔로워</label><input class="inp" id="i-flw" type="number" placeholder="50000"></div></div>
+    <div class="fr2"><div><label>참여율 (%)</label><input class="inp" id="i-eng" placeholder="3.2"></div><div><label>카테고리</label><select class="sel" id="i-cat"><option>뷰티</option><option>식품/맛집</option><option>패션</option><option>라이프스타일</option><option>IT/테크</option><option>여행</option><option>육아</option><option>기타</option></select></div></div>
+    <div class="fr2"><div><label>연락처</label><input class="inp" id="i-contact" placeholder="이메일 또는 DM"></div><div><label>광고 단가 (원)</label><input class="inp inp-money" id="i-fee" placeholder="300,000"></div></div>
+    <div class="fr"><label>메모</label><textarea class="ta" id="i-memo" placeholder="협업 이력, 특이사항..."></textarea></div>
+  </div>
+  <div class="mo-ft"><button class="btn btn-ghost" onclick="closeMo('influencer')">취소</button><button class="btn btn-primary" onclick="saveInf()">등록</button></div>
+</div></div>
+
+<!-- Quick Register -->
+<div class="mo" id="mo-quick"><div class="mo-box">
+  <div class="mo-hd"><span class="mo-ttl">빠른 등록</span><button class="mo-x" onclick="closeMo('quick')">✕</button></div>
+  <div class="mo-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;text-align:center;transition:all .15s" onclick="closeMo('quick');openNewProd()" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:24px;margin-bottom:6px">📦</div><div style="font-weight:700;font-size:12.5px">캠페인 요청</div><div style="font-size:11px;color:var(--text3);margin-top:2px">1단계</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;text-align:center;transition:all .15s" onclick="closeMo('quick');openMo('campaign')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:24px;margin-bottom:6px">✅</div><div style="font-weight:700;font-size:12.5px">캠페인 생성</div><div style="font-size:11px;color:var(--text3);margin-top:2px">2단계</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;text-align:center;transition:all .15s" onclick="closeMo('quick');openMo('influencer')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:24px;margin-bottom:6px">👤</div><div style="font-weight:700;font-size:12.5px">인플루언서</div><div style="font-size:11px;color:var(--text3);margin-top:2px">DB 추가</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;text-align:center;transition:all .15s" onclick="closeMo('quick');openMo('matching')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:24px;margin-bottom:6px">🔗</div><div style="font-weight:700;font-size:12.5px">매칭 추가</div><div style="font-size:11px;color:var(--text3);margin-top:2px">4단계</div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- Email -->
+<div class="mo" id="mo-email"><div class="mo-box">
+  <div class="mo-hd"><span class="mo-ttl">✉️ 이메일 발송 초안</span><button class="mo-x" onclick="closeMo('email')">✕</button></div>
+  <div class="mo-body">
+    <div class="fr"><label>수신자 (인플루언서 선택)</label><select class="sel" id="em-inf" onchange="genEmail()"></select></div>
+    <div class="fr"><label>템플릿</label>
+      <select class="sel" id="em-type" onchange="genEmail()">
+        <option value="invite">협업 제안 (3단계 MCN요청)</option>
+        <option value="confirm">인플루언서 확정 안내 (4단계)</option>
+        <option value="brief">브리핑 전달</option>
+        <option value="review">콘텐츠 검수 요청</option>
+      </select>
+    </div>
+    <div class="fr"><label>제목</label><input class="inp" id="em-subject"></div>
+    <div class="fr"><label>내용</label><textarea class="ta" id="em-body" style="min-height:200px"></textarea></div>
+  </div>
+  <div class="mo-ft">
+    <button class="btn btn-ghost" onclick="closeMo('email')">닫기</button>
+    <button class="btn btn-orange" onclick="copyEmail()">📋 복사</button>
+    <button class="btn btn-primary" onclick="sendEmail()">✉️ 메일 앱으로 열기</button>
+  </div>
+</div></div>
+
