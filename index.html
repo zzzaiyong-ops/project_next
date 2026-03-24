@@ -1305,7 +1305,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s7')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
         </div>
       </div>
-      <div class="stage-table-wrap"><table class="stage-table"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck('s7',this.checked)" style="cursor:pointer"></th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr></thead>
+      <div class="stage-table-wrap"><table class="stage-table"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck('s7',this.checked)" style="cursor:pointer"></th><th>캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr></thead>
       <tbody id="s6-tbl"></tbody></table>
         <div id="s6-pg-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
     </div>
@@ -2502,15 +2502,15 @@ let DB = {
 };
 let nid={products:1,campaigns:1,influencers:1,matches:1,progress:1,mcn:1,app:1,settle:1};
 
-// ── 캠페인코드 자동생성: CP-YYMM-NNN ──
+// ── 캠페인코드 자동생성: YYMMNNN ──
 function generateCampCode(startDate){
   var d = startDate ? new Date(startDate) : new Date();
   if(isNaN(d.getTime())) d = new Date();
   var yy = String(d.getFullYear()).slice(2);
   var mm = String(d.getMonth()+1).padStart(2,'0');
-  var prefix = 'CP-'+yy+mm+'-';
+  var prefix = yy+mm;
   var existing = DB.campaigns.filter(function(c){
-    return c.campCode && c.campCode.startsWith(prefix);
+    return c.campCode && c.campCode.startsWith(prefix) && /^\d+$/.test(c.campCode);
   });
   var maxSeq = 0;
   existing.forEach(function(c){
@@ -2833,13 +2833,13 @@ function initAfterLogin(){
       }
       return c;
     });
-    // campCode 마이그레이션: 기존 캠페인에 코드 부여
-    var needsCampCode = DB.campaigns.some(function(c){ return !c.campCode; });
-    if(needsCampCode){
-      DB.campaigns.forEach(function(c){
-        if(!c.campCode) c.campCode = generateCampCode(c.start || c.startDate);
-      });
-    }
+    // campCode 마이그레이션: 기존 캠페인에 코드 부여 + 구형식(CP-YYMM-NNN) → 신형식(YYMMNNN) 변환
+    DB.campaigns.forEach(function(c){
+      if(c.campCode && /^CP-/.test(c.campCode)){
+        c.campCode = c.campCode.replace(/[^0-9]/g,'');
+      }
+      if(!c.campCode) c.campCode = generateCampCode(c.start || c.startDate);
+    });
     var now2 = new Date();
     var campWithDate = DB.campaigns.filter(function(c){ return c.start && c.start.length>=4; });
     var needsMigration = campWithDate.some(function(c){
