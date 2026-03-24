@@ -1848,7 +1848,7 @@ function renderCalendar(){
   var monthStart = y+'-'+String(m+1).padStart(2,'0')+'-01';
   var monthEnd   = y+'-'+String(m+1).padStart(2,'0')+'-'+String(daysInMonth).padStart(2,'0');
   var monthCamps = DB.campaigns.filter(function(c){
-    var cs=c.start||c.startDate, ce=c.end||c.endDate;
+    var cs=(c.start||c.startDate||'').slice(0,10), ce=(c.end||c.endDate||'').slice(0,10);
     if(!cs||!ce) return false;
     if(isExtMcn() && !campHasMcn(c, ME_MCN_COMPANY)) return false;
     if(ME_ROLE==='md'){
@@ -1859,7 +1859,7 @@ function renderCalendar(){
     return cs<=monthEnd && ce>=monthStart;
   });
   monthCamps.sort(function(a,b){
-    return (a.start||a.startDate||'') > (b.start||b.startDate||'') ? 1 : -1;
+    return (a.start||a.startDate||'').slice(0,10) > (b.start||b.startDate||'').slice(0,10) ? 1 : -1;
   });
 
   // ── 모바일: 리스트형 캘린더 ──
@@ -1869,8 +1869,8 @@ function renderCalendar(){
       listHtml = '<div style="text-align:center;color:var(--text3);padding:24px;font-size:13px">이번 달 캠페인이 없습니다</div>';
     } else {
       listHtml = monthCamps.map(function(c){
-        var cs = c.start||c.startDate||'';
-        var ce = c.end||c.endDate||'';
+        var cs = (c.start||c.startDate||'').slice(0,10);
+        var ce = (c.end||c.endDate||'').slice(0,10);
         var ic = infSizeColor(c.infSize||'');
         var stageColor = '#888';
         var stages = [{id:'1.캠페인요청',color:'#a29bfe'},{id:'2.캠페인확정',color:'#74b9ff'},{id:'3.상품정보등록',color:'#55efc4'},{id:'4.MCN요청',color:'#ffeaa7'},{id:'5.인플루언서확정',color:'#fd79a8'},{id:'6.APP마케팅확정',color:'#fdcb6e'},{id:'7.정산',color:'#e17055'}];
@@ -1893,7 +1893,7 @@ function renderCalendar(){
 
     // summary (모바일 동일)
     var today3b = new Date(); today3b.setHours(0,0,0,0);
-    var activeCnt = monthCamps.filter(function(c){ var cs=new Date(c.start||c.startDate||'9999'), ce=new Date(c.end||c.endDate||'0000'); return cs<=today3b && ce>=today3b; }).length;
+    var activeCnt = monthCamps.filter(function(c){ var cs=new Date((c.start||c.startDate||'9999').slice(0,10)), ce=new Date((c.end||c.endDate||'0000').slice(0,10)); return cs<=today3b && ce>=today3b; }).length;
     var sumEl = document.getElementById('cal-summary');
     if(sumEl) sumEl.innerHTML = '<span style="color:var(--accent2);font-weight:700">'+monthCamps.length+'개</span> 캠페인 중 <span style="color:var(--green);font-weight:700">'+activeCnt+'개</span> 진행중';
     return;
@@ -1904,8 +1904,8 @@ function renderCalendar(){
   var campSlot = {};
   var slotUsed = [];
   monthCamps.forEach(function(c){
-    var cs = c.start||c.startDate;
-    var ce = c.end||c.endDate;
+    var cs = (c.start||c.startDate||'').slice(0,10);
+    var ce = (c.end||c.endDate||'').slice(0,10);
     for(var row=0; row<MAX_ROWS; row++){
       var ok = true;
       var cur = new Date(cs);
@@ -1945,7 +1945,7 @@ function renderCalendar(){
     var slotBars = {};
     var overflowCount = 0;
     monthCamps.forEach(function(c){
-      var cs=c.start||c.startDate, ce=c.end||c.endDate;
+      var cs=(c.start||c.startDate||'').slice(0,10), ce=(c.end||c.endDate||'').slice(0,10);
       if(cs>dateStr||ce<dateStr) return;
       var row = campSlot[c.id];
       if(row===undefined||row>=MAX_ROWS){ overflowCount++; return; }
@@ -1993,11 +1993,11 @@ function renderCalendar(){
     ? DB.campaigns.filter(function(c){ return campHasMcn(c, ME_MCN_COMPANY); })
     : DB.campaigns;
   var doneCamps = calCamps.filter(function(c){
-    var endD = c.end ? new Date(c.end) : null;
+    var endD = c.end||c.endDate ? new Date((c.end||c.endDate).slice(0,10)) : null;
     return endD && endD < today3 && c.settleRevenue > 0;
   });
   var doneAll = calCamps.filter(function(c){
-    var endD = c.end ? new Date(c.end) : null;
+    var endD = c.end||c.endDate ? new Date((c.end||c.endDate).slice(0,10)) : null;
     return endD && endD < today3;
   });
   var doneRev = doneCamps.reduce(function(s,c){return s+(c.settleRevenue||0);},0);
@@ -2059,7 +2059,7 @@ function renderDash(){
       var msStart = curY+'-'+String(curM+1).padStart(2,'0')+'-01';
       var msEnd   = curY+'-'+String(curM+1).padStart(2,'0')+'-'+String(new Date(curY,curM+1,0).getDate()).padStart(2,'0');
       var monthRevCamps = myCamps.filter(function(c){
-        var cs=c.start||c.startDate||'', ce=c.end||c.endDate||'';
+        var cs=(c.start||c.startDate||'').slice(0,10), ce=(c.end||c.endDate||'').slice(0,10);
         return cs && ce && cs<=msEnd && ce>=msStart;
       });
       var totalRev = monthRevCamps.reduce(function(sum,c){ return sum+(c.revenue||0); }, 0);
@@ -2106,8 +2106,8 @@ function renderDash(){
       var curY = now.getFullYear();
       var curM = now.getMonth(); // 0-based
       var monthRevCamps = myAllCamps.filter(function(c){
-        var cs = c.start||c.startDate||'';
-        var ce = c.end  ||c.endDate  ||'';
+        var cs = (c.start||c.startDate||'').slice(0,10);
+        var ce = (c.end  ||c.endDate  ||'').slice(0,10);
         if(!cs||!ce) return false;
         // 캠페인 기간이 현재 월에 걸쳐 있으면 포함
         var msStart = curY+'-'+String(curM+1).padStart(2,'0')+'-01';
