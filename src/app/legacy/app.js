@@ -64,6 +64,25 @@ let DB = {
   notifications:[],
 };
 let nid={products:1,campaigns:1,influencers:1,matches:1,progress:1,mcn:1,app:1,settle:1};
+
+// ── 캠페인코드 자동생성: CP-YYMM-NNN ──
+function generateCampCode(startDate){
+  var d = startDate ? new Date(startDate) : new Date();
+  if(isNaN(d.getTime())) d = new Date();
+  var yy = String(d.getFullYear()).slice(2);
+  var mm = String(d.getMonth()+1).padStart(2,'0');
+  var prefix = 'CP-'+yy+mm+'-';
+  var existing = DB.campaigns.filter(function(c){
+    return c.campCode && c.campCode.startsWith(prefix);
+  });
+  var maxSeq = 0;
+  existing.forEach(function(c){
+    var seq = parseInt(c.campCode.slice(prefix.length));
+    if(!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+  });
+  return prefix + String(maxSeq+1).padStart(3,'0');
+}
+
 let activeCampId=null;
 let infFilter={text:'',cat:''};
 
@@ -377,6 +396,13 @@ function initAfterLogin(){
       }
       return c;
     });
+    // campCode 마이그레이션: 기존 캠페인에 코드 부여
+    var needsCampCode = DB.campaigns.some(function(c){ return !c.campCode; });
+    if(needsCampCode){
+      DB.campaigns.forEach(function(c){
+        if(!c.campCode) c.campCode = generateCampCode(c.start || c.startDate);
+      });
+    }
     var now2 = new Date();
     var campWithDate = DB.campaigns.filter(function(c){ return c.start && c.start.length>=4; });
     var needsMigration = campWithDate.some(function(c){
@@ -2366,6 +2392,7 @@ function renderS1(filter=''){
     rows+=`<tr onclick="openCampReqDetail(${c.id})" style="cursor:pointer">
       <td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">${rowNum}</td>
       <td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="${c.id}" data-stage="s1" style="cursor:pointer"></td>
+      <td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">${c.campCode||'-'}</td>
       <td><strong>${c.name}</strong></td>
       <td style="color:var(--text3);font-size:12px;font-family:monospace">${mdcatVal}</td>
       <td>${c.role?`<span style="background:${roleBg};color:${roleColor};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">${c.role}</span>`:'-'}</td>
@@ -2382,7 +2409,7 @@ function renderS1(filter=''){
   });
   
   _renderPagination('prod-pagination', s1Camps.length, 's1', 'renderS1()');
-  document.getElementById('prod-tbl').innerHTML=rows||'<tr><td colspan="10" class="empty" style="padding:32px;text-align:center;color:var(--text3)">등록된 캠페인 요청이 없습니다</td></tr>';
+  document.getElementById('prod-tbl').innerHTML=rows||'<tr><td colspan="11" class="empty" style="padding:32px;text-align:center;color:var(--text3)">등록된 캠페인 요청이 없습니다</td></tr>';
 }
 function filterProds(v2){ renderS1(v2); }
 function delProd(id){
@@ -2404,6 +2431,9 @@ function editProd(id){
   openMo('product');
   // 상태 배지 표시
   updateProdStageBadge(p.stage||'1.캠페인요청');
+  // 캠페인코드 표시
+  var campCodeEl = document.getElementById('p-campcode');
+  if(campCodeEl){ campCodeEl.textContent = p.campCode||'-'; campCodeEl.style.display = p.campCode ? '' : 'none'; }
   // 카카오 공유 버튼 표시
   showKakaoShareBtn(id);
 
@@ -2540,6 +2570,7 @@ function openCampReqDetail(id){
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;font-size:12.5px">
+      <div><div style="color:var(--text3);margin-bottom:2px">캠페인코드</div><div style="font-family:monospace;font-weight:700;color:var(--accent2)">${p.campCode||'-'}</div></div>
       <div><div style="color:var(--text3);margin-bottom:2px">업체</div><div>${p.company||'-'}</div></div>
       <div><div style="color:var(--text3);margin-bottom:2px">담당MD</div><div>${p.owner||'-'}</div></div>
       <div><div style="color:var(--text3);margin-bottom:2px">캠페인담당</div><div>${(p.pds||[]).join(', ')||'-'}</div></div>
@@ -2653,6 +2684,7 @@ function renderS2(){
     var isAlreadyConfirmed = c.stage==='2.캠페인확정'||c.stage==='4.MCN요청'||c.stage==='5.인플루언서확정'||c.stage==='6.APP마케팅확정'||c.stage==='7.정산'||c.stage==='7.정산완료';
     rows+='<tr style="cursor:pointer" onclick="editProd('+c.id+')">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
       +'<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+c.id+'" data-stage="s2" style="cursor:pointer"></td>'
+      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="white-space:normal;min-width:80px;max-width:150px"><strong>'+c.name+'</strong>'+(isAlreadyConfirmed?'<br><span style="font-size:10px;color:var(--green)">✓ 확정</span>':'<br><span style="font-size:10px;color:var(--text3)">미확정</span>')+'</td>'
       +'<td style="color:var(--text3);font-size:12px;font-family:monospace">'+mdcatVal+'</td>'
       +'<td>'+(c.role?'<span style="background:'+roleBg+';color:'+roleColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+c.role+'</span>':'-')+'</td>'
@@ -2671,7 +2703,7 @@ function renderS2(){
   });
   
   _renderPagination('s2-pagination', s2Camps.length, 's2', 'renderS2()');
-  document.getElementById('s2-tbl').innerHTML=rows||'<tr><td colspan="10" class="empty">캠페인 없음</td></tr>';
+  document.getElementById('s2-tbl').innerHTML=rows||'<tr><td colspan="11" class="empty">캠페인 없음</td></tr>';
 }
 
 // ═══════════════════════════════════════
@@ -2798,6 +2830,7 @@ function renderS3(){
                                : '<span style="background:var(--orange-bg);color:var(--orange);padding:2px 7px;border-radius:12px;font-size:10.5px;font-weight:700">미입력</span>';
     rows += '<tr onclick="editProd('+c.id+')">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
       +'<td><input type="checkbox" class="row-chk" data-stage="s3" data-id="'+c.id+'" onclick="event.stopPropagation()"></td>'
+      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="font-weight:600;white-space:normal;min-width:80px;max-width:160px">'+escHtml(c.name||'-')+'</td>'
       +'<td style="color:var(--text3);font-size:12px">'+escHtml(mdcat)+'</td>'
       +'<td><span style="font-size:12px;font-weight:600;color:var(--accent2)">'+escHtml(c.role||'-')+'</span></td>'
@@ -2813,7 +2846,7 @@ function renderS3(){
   });
   _renderPagination('s3-pagination', filtered.length, 's3', 'renderS3()');
   var tbl = document.getElementById('s3-tbl');
-  if(tbl) tbl.innerHTML = rows || '<tr><td colspan="9" class="empty">2단계 확정된 캠페인이 없습니다</td></tr>';
+  if(tbl) tbl.innerHTML = rows || '<tr><td colspan="10" class="empty">2단계 확정된 캠페인이 없습니다</td></tr>';
 }
 
 function renderS4(){
@@ -2865,6 +2898,7 @@ function renderS4(){
 
     rows += '<tr onclick="editProd('+c.id+')" style="cursor:pointer">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
       +'<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+c.id+'" data-stage="s4" style="cursor:pointer"></td>'
+      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="white-space:nowrap"><strong>'+c.name+'</strong>'
       +(c.stage==='4.MCN요청'?'&nbsp;<span style="font-size:10px;color:var(--blue)">▶ MCN완료</span>':'')+'</td>'
       +'<td style="color:var(--text3);font-size:12px;white-space:nowrap">'+mdcatVal+'</td>'
@@ -2883,7 +2917,7 @@ function renderS4(){
   
   _renderPagination('mcn-pagination', confirmedCamps.length, 's4', 'renderS4()');
   document.getElementById('mcn-tbl').innerHTML = rows ||
-    '<tr><td colspan="10" class="empty" style="padding:28px;text-align:center;color:var(--text3)">2단계 확정된 캠페인이 없습니다</td></tr>';
+    '<tr><td colspan="11" class="empty" style="padding:28px;text-align:center;color:var(--text3)">2단계 확정된 캠페인이 없습니다</td></tr>';
 }
 
 // ── MCN 복수 등록 팝업 ──────────────────────────────────────────
@@ -3059,40 +3093,40 @@ function exportExcelByStage(stage){
   // 일반 그리드 엑셀
   var headers, rows;
   if(stage==='s1'){
-    headers = ['캠페인명','MDCAT','역할','인플루언서규모','예상매출','시작일','종료일'];
+    headers = ['캠페인코드','캠페인명','MDCAT','역할','인플루언서규모','예상매출','시작일','종료일'];
     rows = camps.map(function(c){
       var mdcat = c.mdcat||(c.skus&&c.skus[0]?c.skus[0].mdcat:'')||'';
       var rev = c.revenue ? (c.revenue/100000000).toFixed(1)+'억' : '-';
-      return [c.name, mdcat, c.role||'', c.infSize||'', rev, c.start||'', c.end||''];
+      return [c.campCode||'', c.name, mdcat, c.role||'', c.infSize||'', rev, c.start||'', c.end||''];
     });
   } else if(stage==='s2'){
-    headers = ['캠페인명','MDCAT','역할','확정사유','인플루언서규모','예상매출','시작일','종료일'];
+    headers = ['캠페인코드','캠페인명','MDCAT','역할','확정사유','인플루언서규모','예상매출','시작일','종료일'];
     rows = camps.map(function(c){
       var mdcat = c.mdcat||(c.skus&&c.skus[0]?c.skus[0].mdcat:'')||'';
       var rev = c.revenue ? (c.revenue/100000000).toFixed(1)+'억' : '-';
-      return [c.name, mdcat, c.role||'', (c.reasons||[]).join(', '), c.infSize||'', rev, c.start||'', c.end||''];
+      return [c.campCode||'', c.name, mdcat, c.role||'', (c.reasons||[]).join(', '), c.infSize||'', rev, c.start||'', c.end||''];
     });
   } else if(stage==='s4'){
-    headers = ['캠페인명','MDCAT','역할','인플루언서규모','예상매출','MCN업체','인플루언서','시작일','종료일'];
+    headers = ['캠페인코드','캠페인명','MDCAT','역할','인플루언서규모','예상매출','MCN업체','인플루언서','시작일','종료일'];
     rows = camps.map(function(c){
       var mdcat = c.mdcat||(c.skus&&c.skus[0]?c.skus[0].mdcat:'')||'';
       var rev = c.revenue ? (c.revenue/100000000).toFixed(1)+'억' : '-';
       var mcnList = _mcnListFromCamp(c).filter(function(m){return m.agency;});
       var mcnStr = mcnList.map(function(m){return m.agency;}).join(' / ') || '-';
       var infStr = mcnList.map(function(m){return m.infName;}).filter(Boolean).join(' / ') || c.infName || '-';
-      return [c.name, mdcat, c.role||'', c.infSize||'', rev, mcnStr, infStr, c.start||'', c.end||''];
+      return [c.campCode||'', c.name, mdcat, c.role||'', c.infSize||'', rev, mcnStr, infStr, c.start||'', c.end||''];
     });
   } else if(stage==='s5'){
-    headers = ['캠페인명','MDCAT','역할','MCN업체','인플루언서','수수료율(%)','원고료(원)','시작일','종료일'];
+    headers = ['캠페인코드','캠페인명','MDCAT','역할','MCN업체','인플루언서','수수료율(%)','원고료(원)','시작일','종료일'];
     rows = camps.map(function(c){
       var mdcat = c.mdcat||(c.skus&&c.skus[0]?c.skus[0].mdcat:'')||'';
       var mcnList = _mcnListFromCamp(c).filter(function(m){return m.agency;});
       var mcnStr = mcnList.map(function(m){return m.agency;}).join(' / ') || c.mcn || '-';
       var infStr = mcnList.map(function(m){return m.infName;}).filter(Boolean).join(' / ') || c.infName || '-';
-      return [c.name, mdcat, c.role||'', mcnStr, infStr, c.feeRate||'', c.feeAmount||'', c.start||'', c.end||''];
+      return [c.campCode||'', c.name, mdcat, c.role||'', mcnStr, infStr, c.feeRate||'', c.feeAmount||'', c.start||'', c.end||''];
     });
   } else if(stage==='s7'){
-    headers = ['캠페인명','시작~종료일','MDCAT','캠페인규모','MCN업체','인플루언서','전체매출','전체비용','정산상태'];
+    headers = ['캠페인코드','캠페인명','시작~종료일','MDCAT','캠페인규모','MCN업체','인플루언서','전체매출','전체비용','정산상태'];
     rows = camps.map(function(camp){
       var mdcat = camp.mdcat||(camp.skus&&camp.skus[0]?camp.skus[0].mdcat:'')||'';
       var rev = camp.settleRevenue || 0;
@@ -3105,7 +3139,7 @@ function exportExcelByStage(stage){
       var mcnList2 = _mcnListFromCamp(camp).filter(function(m){return m.agency;});
       var mcnStr2 = mcnList2.map(function(m){return m.agency;}).join(' / ') || camp.mcn || '-';
       var infStr2 = mcnList2.map(function(m){return m.infName;}).filter(Boolean).join(' / ') || camp.infName || '-';
-      return [camp.name, (camp.start||'').slice(5)+' ~ '+(camp.end||'').slice(5), mdcat, camp.infSize||camp.role||'', mcnStr2, infStr2, revStr, costStr, status];
+      return [camp.campCode||'', camp.name, (camp.start||'').slice(5)+' ~ '+(camp.end||'').slice(5), mdcat, camp.infSize||camp.role||'', mcnStr2, infStr2, revStr, costStr, status];
     });
   } else {
     showToast('지원하지 않는 단계입니다'); return;
@@ -3403,6 +3437,7 @@ function renderS5(){
 
     rows += '<tr onclick="editProd('+c.id+')" style="cursor:pointer">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
       +'<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+c.id+'" data-stage="s5" style="cursor:pointer"></td>'
+      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="white-space:normal;min-width:80px;max-width:150px"><strong>'+c.name+'</strong>'
       +(c.stage==='5.인플루언서확정' && !c.sampleSent?'<br><span style="font-size:10px;color:var(--orange);font-weight:700">📦 샘플발송 필요</span>':c.stage==='5.인플루언서확정'?'<br><span style="font-size:10px;color:var(--green)">✓ 인플루언서 확정</span>':'')+'</td>'
       +'<td style="color:var(--text3);font-size:12px;font-family:monospace">'+mdcatVal+'</td>'
@@ -3427,7 +3462,7 @@ function renderS5(){
   
   _renderPagination('s4-pagination', mcnCamps.length, 's5', 'renderS5()');
   document.getElementById('s4-tbl').innerHTML = rows ||
-    '<tr><td colspan="11" class="empty" style="padding:28px;text-align:center;color:var(--text3)">3단계 MCN요청 완료된 캠페인이 없습니다</td></tr>';
+    '<tr><td colspan="12" class="empty" style="padding:28px;text-align:center;color:var(--text3)">3단계 MCN요청 완료된 캠페인이 없습니다</td></tr>';
 }
 
 // 4단계 인플루언서 등록 팝업
@@ -3602,6 +3637,7 @@ function renderS6(){
       : '<span style="color:var(--text3);font-size:12px">미등록</span>';
 
     rows+='<tr onclick="editProd('+c.id+')" style="cursor:pointer">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
+      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="white-space:normal;min-width:80px;max-width:150px"><strong>'+c.name+'</strong>'+(hasApp?'<br><span style="font-size:10px;color:var(--blue)">✓ APP MKT 확정</span>':'<br><span style="font-size:10px;color:var(--orange)">📱 APP MKT 미등록</span>')+'</td>'
       +'<td style="color:var(--text3);font-size:12px;font-family:monospace">'+mdcatVal+'</td>'
       +'<td style="color:var(--text2);font-size:12.5px">'+(c.infSize||'-')+'</td>'
@@ -3617,7 +3653,7 @@ function renderS6(){
   });
   
   _renderPagination('s5-pagination', infCamps.length, 's6', 'renderS6()');
-  document.getElementById('s5-tbl').innerHTML=rows||'<tr><td colspan="7" class="empty" style="padding:28px;text-align:center;color:var(--text3)">4단계 인플루언서 확정된 캠페인이 없습니다</td></tr>';
+  document.getElementById('s5-tbl').innerHTML=rows||'<tr><td colspan="8" class="empty" style="padding:28px;text-align:center;color:var(--text3)">4단계 인플루언서 확정된 캠페인이 없습니다</td></tr>';
 }
 
 // APP MKT 정보 등록 팝업 (3/4단계 스타일)
@@ -3883,6 +3919,7 @@ function renderS7(){
         rows += '<tr style="cursor:pointer" onclick="editProd('+camp.id+')">'
       + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px" rowspan="'+rowspan+'">'+rowNum+'</td>'
           +'<td rowspan="'+rowspan+'" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+camp.id+'" data-stage="s7" style="cursor:pointer"></td>'
+          +'<td rowspan="'+rowspan+'" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap;vertical-align:top;padding-top:10px">'+(camp.campCode||'-')+'</td>'
           +'<td rowspan="'+rowspan+'" style="font-weight:600;vertical-align:top;padding-top:10px">'
             +'<div>'+camp.name+'</div>'
             +(rowspan>1?'<div style="font-size:10px;color:var(--accent);margin-top:3px;font-weight:700">👥 인플루언서 '+rowspan+'명</div>':'')
@@ -3910,7 +3947,7 @@ function renderS7(){
     });
   });
   _renderPagination('s6-pagination', campList.length, 's7', 'renderS7()');
-  document.getElementById('s6-tbl').innerHTML=rows||'<tr><td colspan="13" class="empty">정산 대상 캠페인 없음</td></tr>';
+  document.getElementById('s6-tbl').innerHTML=rows||'<tr><td colspan="14" class="empty">정산 대상 캠페인 없음</td></tr>';
 }
 
 function openSettleByCamp(campId){
@@ -4051,6 +4088,7 @@ function renderCamps(){
     var infCount = (c.infData&&c.infData.length>0) ? c.infData.filter(function(d){return d.infName;}).length : (c.infName?1:0);
     rows += '<tr onclick="editProd('+c.id+')">'
       + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
+      + '<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       + '<td><strong>'+escHtml(c.name)+'</strong><br><span style="font-size:11px;color:var(--text3)">'+(mdNm?'MD:'+mdNm:'')+'</span></td>'
       + '<td style="font-size:12px;color:var(--text3)">'+(c.start||'').slice(5)+'~'+(c.end||'').slice(5)+'</td>'
       + '<td style="color:var(--text2)">'+pdName+'</td>'
@@ -4069,7 +4107,7 @@ function renderCamps(){
   console.log('[renderCamps] rows length:', rows.length, 'paged:', paged.length);
   var campTbl = document.getElementById('camp-tbl');
   if(campTbl){
-    campTbl.innerHTML=rows||'<tr><td colspan="8" class="empty">캠페인 없음</td></tr>';
+    campTbl.innerHTML=rows||'<tr><td colspan="9" class="empty">캠페인 없음</td></tr>';
   }
   _renderCampPagination(filtered.length);
 }
@@ -4955,8 +4993,9 @@ function openNewProd(){
   document.getElementById('p-edit-id').value='';
   document.getElementById('prod-mo-title').textContent='캠페인 등록';
   document.getElementById('prod-save-btn').textContent='캠페인 등록';
-  // 신규 등록 시 상태 배지 + 공유 버튼 숨김
+  // 신규 등록 시 상태 배지 + 캠페인코드 + 공유 버튼 숨김
   var sa=document.getElementById('prod-stage-area'); if(sa) sa.style.display='none';
+  var ccEl=document.getElementById('p-campcode'); if(ccEl) ccEl.style.display='none';
   showKakaoShareBtn(null);
   // 담당자 드롭다운 갱신
   refreshManagerDropdowns();
@@ -5385,6 +5424,7 @@ function saveProd(){
     }
   } else {
     newData.id = nid.campaigns++;
+    newData.campCode = generateCampCode(newData.start || newData.startDate);
     DB.campaigns.push(newData);
     addAct('📋', name+' 캠페인 요청 등록', nowStr(), v('p-owner'));
     addNotif('📋', name+' 캠페인 요청 등록됨', '방금 전');
