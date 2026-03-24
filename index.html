@@ -1329,7 +1329,8 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <div class="card-hd"><span class="card-ttl">캠페인 성과 현황</span></div>
       <div style="overflow-x:auto">
         <table><thead><tr>
-          <th style="width:22%;min-width:130px">캠페인명</th><th>규모</th><th style="width:9%;min-width:70px">MDCAT</th><th>카테고리</th>
+          <th style="width:30px;text-align:center"><input type="checkbox" id="s7-check-all" checked onchange="toggleS7CheckAll(this.checked)"></th>
+          <th style="width:20%;min-width:130px">캠페인명</th><th>규모</th><th style="width:9%;min-width:70px">MDCAT</th><th>카테고리</th>
           <th>MCN업체</th><th>인플루언서</th><th>매출</th><th>건수</th><th>비용</th><th>시작~종료일</th><th></th>
         </tr></thead>
         <tbody id="rep-tbl"></tbody></table>
@@ -7133,6 +7134,7 @@ function renderReports(){
   });
 
   var rows = '';
+  _s7FilteredCamps = camps; // 엑셀 다운로드용 캐시
   camps.forEach(function(camp){
     var mdcatVal = camp.mdcat||(camp.skus&&camp.skus[0]?camp.skus[0].mdcat:'')||'-';
     var revenue  = camp.settleRevenue || 0;
@@ -7144,12 +7146,15 @@ function renderReports(){
     var infFee   = Math.round(revenue * feeRate / 100);
     var agFee    = Math.round(revenue * agRate  / 100);
     var totalCost= infFee + feeAmt + agFee + daFee;
-    var dateStr  = ((camp.start||'-').slice(5))+' ~ '+((camp.end||'-').slice(5));
+    var startOnly = (camp.start||camp.startDate||'-').slice(0,10);
+    var endOnly   = (camp.end||camp.endDate||'-').slice(0,10);
+    var dateStr  = (startOnly!=='-' ? startOnly.slice(5) : '-')+' ~ '+(endOnly!=='-' ? endOnly.slice(5) : '-');
     var roleColor= camp.role==='메가'?'var(--pink)':camp.role==='앵콜'?'var(--orange)':camp.role==='신규'?'var(--blue)':'var(--green)';
     var roleBg   = camp.role==='메가'?'var(--pink-bg)':camp.role==='앵콜'?'var(--orange-bg)':camp.role==='신규'?'var(--blue-bg)':'var(--green-bg)';
 
-    rows += '<tr style="cursor:pointer" onclick="editProd('+camp.id+')">'
-      + '<td style="font-weight:700">'+camp.name+'</td>'
+    rows += '<tr style="cursor:pointer">'
+      + '<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="s7-camp-cb" value="'+camp.id+'" checked onchange="updateS7CheckAll()"></td>'
+      + '<td style="font-weight:700" onclick="editProd('+camp.id+')">'+camp.name+'</td>'
       + '<td>'+(camp.infSize||camp.role ? '<span style="background:'+roleBg+';color:'+roleColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+(camp.infSize||camp.role)+'</span>' : '-')+'</td>'
       + '<td style="font-size:12px;font-family:monospace;color:var(--text3)">'+mdcatVal+'</td>'
       + '<td style="font-size:12px;color:var(--text2)">'+(camp.cat||'-')+'</td>'
@@ -7159,12 +7164,26 @@ function renderReports(){
       + '<td style="color:var(--text2)">'+(orders||'-')+'</td>'
       + '<td style="font-weight:600;color:var(--orange)">'+(totalCost ? totalCost.toLocaleString('ko-KR')+'원' : '-')+'</td>'
       + '<td style="font-size:12px;color:var(--text3)">'+dateStr+'</td>'
-      + '<td><button class="btn btn-ghost btn-xs" onclick="openS7Detail('+camp.id+')">상세</button></td>'
+      + '<td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+camp.id+')">상세</button></td>'
       + '</tr>';
   });
 
   document.getElementById('rep-tbl').innerHTML = rows ||
-    '<tr><td colspan="11" class="empty" style="padding:32px;text-align:center;color:var(--text3)">해당 조건의 캠페인이 없습니다</td></tr>';
+    '<tr><td colspan="12" class="empty" style="padding:32px;text-align:center;color:var(--text3)">해당 조건의 캠페인이 없습니다</td></tr>';
+  // 전체선택 체크박스 동기화
+  var allCb = document.getElementById('s7-check-all'); if(allCb) allCb.checked = true;
+}
+
+var _s7FilteredCamps = [];
+
+function toggleS7CheckAll(checked){
+  document.querySelectorAll('.s7-camp-cb').forEach(function(cb){ cb.checked = checked; });
+}
+
+function updateS7CheckAll(){
+  var cbs = document.querySelectorAll('.s7-camp-cb');
+  var all = document.getElementById('s7-check-all');
+  if(all) all.checked = [...cbs].every(function(cb){ return cb.checked; });
 }
 
 // 캠페인 성과 상세 팝업
@@ -7334,7 +7353,21 @@ function exportExcel(type){
     ws=XLSX.utils.json_to_sheet((DB.settlements||[]).map(s=>({캠페인:getCamp(s.campaign).name,인플루언서:getInf(s.inf).name,전체매출:s.revenue,인플루언서수수료:s.infFee,에이전시수수료:s.agencyFee,DA광고비:s.daFee,정산상태:s.status})));
     name='정산';
   } else if(type==='report'){
-    ws=XLSX.utils.json_to_sheet(DB.influencers.map(i=>({이름:i.name,채널:i.handle,플랫폼:i.platform,팔로워:i.followers,참여율:i.engage,카테고리:i.cat,단가:i.fee,협업횟수:DB.matches.filter(m=>m.inf===i.id&&m.status==='승인').length})));
+    var selectedIds = {};
+    document.querySelectorAll('.s7-camp-cb:checked').forEach(function(cb){ selectedIds[cb.value]=true; });
+    var selectedCamps = _s7FilteredCamps.filter(function(c){ return selectedIds[c.id]; });
+    if(!selectedCamps.length){ showToast('선택된 캠페인이 없습니다'); return; }
+    ws=XLSX.utils.json_to_sheet(selectedCamps.map(function(c){
+      var revenue=c.settleRevenue||0, orders=c.settleOrders||0;
+      var feeRate=parseFloat(c.feeRate)||0, feeAmt=parseInt(c.feeAmount)||0;
+      var agRate=parseFloat(c.agencyRate)||0, daFee=parseInt(c.settleDa)||0;
+      var infFee=Math.round(revenue*feeRate/100), agFee=Math.round(revenue*agRate/100);
+      return {캠페인명:c.name,규모:c.infSize||c.role||'',MDCAT:c.mdcat||'',카테고리:c.cat||'',
+        MCN업체:c.mcn||'',인플루언서:c.infName||'',매출:revenue,건수:orders,
+        인플루언서수수료:infFee,원고료:feeAmt,에이전시수수료:agFee,DA광고료:daFee,
+        비용합계:infFee+feeAmt+agFee+daFee,
+        시작일:(c.start||c.startDate||'').slice(0,10),종료일:(c.end||c.endDate||'').slice(0,10)};
+    }));
     name='성과리포트';
   }
   if(!ws){ showToast('내보낼 데이터 없음'); return; }
