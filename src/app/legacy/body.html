@@ -650,13 +650,13 @@
   <div id="page-s8" class="page">
     <!-- 필터 바 -->
     <div class="filter-bar" style="margin-bottom:16px">
-      <label class="filter-radio active" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" checked onchange="setS7Filter('active')"> 진행중 캠페인</label>
-      <label class="filter-radio" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" onchange="setS7Filter('done')"> 종료 캠페인</label>
+      <label class="filter-radio" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" onchange="setS7Filter('active')"> 진행중 캠페인</label>
+      <label class="filter-radio active" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" checked onchange="setS7Filter('done')"> 종료 캠페인</label>
       <div class="date-filter" style="margin-left:16px">
         <label>기간</label>
-        <input type="date" class="inp" id="s7-date-from">
+        <input type="month" class="inp" id="s7-date-from">
         <span style="font-size:12px;color:var(--text3)">~</span>
-        <input type="date" class="inp" id="s7-date-to">
+        <input type="month" class="inp" id="s7-date-to">
         <button class="btn btn-primary btn-sm" onclick="renderReports()">조회</button>
         <button class="btn btn-ghost btn-sm" onclick="clearS7Filter()">초기화</button>
       </div>

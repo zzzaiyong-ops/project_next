@@ -1310,13 +1310,13 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   <div id="page-s8" class="page">
     <!-- 필터 바 -->
     <div class="filter-bar" style="margin-bottom:16px">
-      <label class="filter-radio active" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" checked onchange="setS7Filter('active')"> 진행중 캠페인</label>
-      <label class="filter-radio" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" onchange="setS7Filter('done')"> 종료 캠페인</label>
+      <label class="filter-radio" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" onchange="setS7Filter('active')"> 진행중 캠페인</label>
+      <label class="filter-radio active" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" checked onchange="setS7Filter('done')"> 종료 캠페인</label>
       <div class="date-filter" style="margin-left:16px">
         <label>기간</label>
-        <input type="date" class="inp" id="s7-date-from">
+        <input type="month" class="inp" id="s7-date-from">
         <span style="font-size:12px;color:var(--text3)">~</span>
-        <input type="date" class="inp" id="s7-date-to">
+        <input type="month" class="inp" id="s7-date-to">
         <button class="btn btn-primary btn-sm" onclick="renderReports()">조회</button>
         <button class="btn btn-ghost btn-sm" onclick="clearS7Filter()">초기화</button>
       </div>
@@ -3257,7 +3257,7 @@ function _getCurrentCampData(){
   return {
     name: v('p-name'), brand: v('p-brand'), company: v('p-company'),
     cat: v('p-cat'), mdcat: v('p-mdcat'), appeal: v('p-appeal'),
-    start: v('p-start'), end: v('p-end'),
+    start: v('p-start').slice(0,10), end: v('p-end').slice(0,10),
     revenue: iv('p-revenue'), budget: iv('p-budget'),
     role: document.querySelector('input[name="p-role"]:checked')?.value||'',
     pdSingle: v('p-pd-single'), owner: v('p-owner'),
@@ -4223,7 +4223,7 @@ function renderPage(p){
   if(p==='s5')          renderS5();
   if(p==='s6')          renderS6();
   if(p==='s7')          renderS7();
-  if(p==='s8')          renderReports();
+  if(p==='s8')          { initS7DateFilter(); renderReports(); }
   if(p==='influencers') renderInfs();
   if(p==='campaigns')   renderCamps();
   if(p==='usermgmt')    renderUserTable();
@@ -7066,7 +7066,7 @@ function copyCampData(campId){
 // ═══════════════════════════════════════
 // S7: 성과분석
 // ═══════════════════════════════════════
-var s7Filter = 'active';
+var s7Filter = 'done';
 
 function setS7Filter(val){
   s7Filter = val;
@@ -7077,9 +7077,18 @@ function setS7Filter(val){
   renderReports();
 }
 
+function initS7DateFilter(){
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth();
+  var df = document.getElementById('s7-date-from');
+  var dt = document.getElementById('s7-date-to');
+  if(df) df.value = y+'-'+String(m+1).padStart(2,'0');
+  var nm = m+1; var ny = y; if(nm>11){ nm=0; ny++; }
+  if(dt) dt.value = ny+'-'+String(nm+1).padStart(2,'0');
+}
+
 function clearS7Filter(){
-  var df = document.getElementById('s7-date-from'); if(df) df.value='';
-  var dt = document.getElementById('s7-date-to');   if(dt) dt.value='';
+  initS7DateFilter();
   renderReports();
 }
 
@@ -7087,26 +7096,39 @@ function renderReports(){
   var today = new Date(); today.setHours(0,0,0,0);
   var fromVal = document.getElementById('s7-date-from')?.value;
   var toVal   = document.getElementById('s7-date-to')?.value;
-  var fromD = fromVal ? new Date(fromVal) : null;
-  var toD   = toVal   ? new Date(toVal)   : null;
+  // 월 필터: fromVal='2026-03' → 해당월 1일, toVal='2026-04' → 해당월 말일
+  var fromD = null, toD = null;
+  if(fromVal) fromD = new Date(fromVal+'-01');
+  if(toVal){
+    var tp = toVal.split('-'); var ty=parseInt(tp[0]), tm=parseInt(tp[1]);
+    toD = new Date(ty, tm, 0); // 해당월 마지막 날
+  }
 
-  // 시작일이 지난 캠페인 필터
   var camps = DB.campaigns.filter(function(camp){
-    var startD = camp.start ? new Date(camp.start) : null;
-    var endD   = camp.end   ? new Date(camp.end)   : null;
-    if(!startD) return false;
-    if(startD > today) return false; // 아직 시작 안 한 캠페인 제외
+    var startStr = (camp.start||camp.startDate||'').slice(0,10);
+    var endStr   = (camp.end||camp.endDate||'').slice(0,10);
+    var startD = startStr ? new Date(startStr) : null;
+    var endD   = endStr   ? new Date(endStr)   : null;
 
     // 진행중/종료 필터
     if(s7Filter === 'active'){
-      if(endD && endD < today) return false; // 종료된 캠페인 제외
+      if(endD && endD < today) return false;
     } else {
-      if(!endD || endD >= today) return false; // 종료 안 된 캠페인 제외
+      if(!endD || endD >= today) return false;
     }
 
-    // 날짜 범위 필터
-    if(fromD && startD < fromD) return false;
-    if(toD   && startD > toD)   return false;
+    // 월 범위 필터 — 캠페인 기간이 조회 범위와 겹치면 표시
+    if(fromD && toD){
+      if(!startD) return false;
+      var campEnd = endD || startD;
+      if(campEnd < fromD || startD > toD) return false;
+    } else if(fromD){
+      if(!startD) return false;
+      var campEnd2 = endD || startD;
+      if(campEnd2 < fromD) return false;
+    } else if(toD){
+      if(startD && startD > toD) return false;
+    }
     return true;
   });
 
@@ -7126,7 +7148,7 @@ function renderReports(){
     var roleColor= camp.role==='메가'?'var(--pink)':camp.role==='앵콜'?'var(--orange)':camp.role==='신규'?'var(--blue)':'var(--green)';
     var roleBg   = camp.role==='메가'?'var(--pink-bg)':camp.role==='앵콜'?'var(--orange-bg)':camp.role==='신규'?'var(--blue-bg)':'var(--green-bg)';
 
-    rows += '<tr style="cursor:pointer" onclick="editProd('+c.id+')">' 
+    rows += '<tr style="cursor:pointer" onclick="editProd('+camp.id+')">'
       + '<td style="font-weight:700">'+camp.name+'</td>'
       + '<td>'+(camp.infSize||camp.role ? '<span style="background:'+roleBg+';color:'+roleColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+(camp.infSize||camp.role)+'</span>' : '-')+'</td>'
       + '<td style="font-size:12px;font-family:monospace;color:var(--text3)">'+mdcatVal+'</td>'
@@ -7547,8 +7569,8 @@ function saveProd(){
     settleData:    getSettleBlocksData(),
     settleRevenue: getSettleBlocksData().reduce(function(s,d){return s+(d.revenue||0);},0),
     settleOrders:  getSettleBlocksData().reduce(function(s,d){return s+(d.orders||0);},0),
-    start:v('p-start'), end:v('p-end'),
-    startDate:v('p-start'), endDate:v('p-end'),
+    start:v('p-start').slice(0,10), end:v('p-end').slice(0,10),
+    startDate:v('p-start').slice(0,10), endDate:v('p-end').slice(0,10),
     appeal:v('p-appeal'), productBasicInfo:v('p-product-basic-info'), csInfo:v('p-cs-info'), deliveryInfo:v('p-delivery-info'), infRequest:v('p-inf-request'),
     settleProcessDate:v('p-settle-process-date'), settlePaymentDate:v('p-settle-payment-date'),
     promos:promos,
