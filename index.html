@@ -1616,7 +1616,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div style="background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--blue);line-height:1.8">
       <b>📋 엑셀 컬럼 안내</b> (1행은 헤더 자동 스킵)<br>
       <span style="color:var(--text3);font-size:11.5px">
-        A:캠페인명* &nbsp;B:시작일* &nbsp;C:종료일* &nbsp;D:예상매출* &nbsp;E:예산* &nbsp;F:역할(메가/앵콜/신규/시딩)* &nbsp;G:캠페인담당 &nbsp;H:담당MD &nbsp;I:브랜드 &nbsp;J:협력업체 &nbsp;K:카테고리 &nbsp;L:MDCAT &nbsp;M:MCN업체 &nbsp;N:상품코드 &nbsp;O:상품명 &nbsp;P:MD할인가 &nbsp;Q:카드할인 &nbsp;R:신규적립금 &nbsp;S:신규쿠폰 &nbsp;T:소구포인트 &nbsp;U:선정사유(쉼표구분)
+        A:캠페인명* &nbsp;B:시작일* &nbsp;C:종료일* &nbsp;D:예상매출* &nbsp;E:예산* &nbsp;F:역할(메가/앵콜/미들/시딩)* &nbsp;G:캠페인담당 &nbsp;H:담당MD &nbsp;I:브랜드 &nbsp;J:협력업체 &nbsp;K:카테고리 &nbsp;L:MDCAT &nbsp;M:MCN업체 &nbsp;N:상품코드 &nbsp;O:상품명 &nbsp;P:MD할인가 &nbsp;Q:카드할인 &nbsp;R:신규적립금 &nbsp;S:신규쿠폰 &nbsp;T:소구포인트 &nbsp;U:선정사유(쉼표구분)
       </span>
     </div>
     <div style="display:flex;gap:10px;margin-bottom:16px">
@@ -1973,8 +1973,8 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <div><div style="font-size:12.5px;font-weight:700">앵콜</div><div style="font-size:10px;color:var(--text3)">재진행</div></div>
         </label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-new">
-          <input type="radio" name="p-role" id="p-role-new" value="신규" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
-          <div><div style="font-size:12.5px;font-weight:700">신규</div><div style="font-size:10px;color:var(--text3)">인지도 확보</div></div>
+          <input type="radio" name="p-role" id="p-role-new" value="미들" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
+          <div><div style="font-size:12.5px;font-weight:700">미들</div><div style="font-size:10px;color:var(--text3)">인지도 확보</div></div>
         </label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-seeding">
           <input type="radio" name="p-role" id="p-role-seeding" value="시딩" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
@@ -2839,6 +2839,8 @@ function initAfterLogin(){
         c.campCode = c.campCode.replace(/[^0-9]/g,'');
       }
       if(!c.campCode) c.campCode = generateCampCode(c.start || c.startDate);
+      // 역할명 마이그레이션: 신규 → 미들
+      if(c.role === '신규') c.role = '미들';
     });
     var now2 = new Date();
     var campWithDate = DB.campaigns.filter(function(c){ return c.start && c.start.length>=4; });
@@ -3123,7 +3125,7 @@ var _pfParsed = {};
 var PF_SECTIONS = {
   basic: {
     title: '📋 캠페인 기본정보 붙여넣기',
-    hint: ['캠페인명: 2026 여름 선케어','시작일: 2026-06-01','종료일: 2026-07-15','예상매출: 150,000,000','예산: 5,000,000','역할: 신규','캠페인담당: 홍길동','소구포인트: 워터프루프 SPF50+'],
+    hint: ['캠페인명: 2026 여름 선케어','시작일: 2026-06-01','종료일: 2026-07-15','예상매출: 150,000,000','예산: 5,000,000','역할: 미들','캠페인담당: 홍길동','소구포인트: 워터프루프 SPF50+'],
     fields: [
       { keys:['캠페인명','캠페인이름','캠페인 이름'], id:'p-name', label:'캠페인명', type:'text' },
       { keys:['시작일','시작','start','진행시작'], id:'p-start', label:'시작일', type:'datetime' },
@@ -4107,14 +4109,14 @@ function _demoSampleCampaigns(){
   return [
     {id:1001,name:'봄 신상 뷰티 캠페인',stage:'1.캠페인요청',cat:'뷰티',role:'메가',infSize:'메가',revenue:50000000,start:add(5),end:add(12),owner:'이소연',pdSingle:'박민준',mcn:'뷰티MCN',infName:'뷰티크리에이터A',campType:'온라인',mdcat:'온라인',infData:[{infName:'뷰티크리에이터A',infSize:'메가',feeRate:15}]},
     {id:1002,name:'여름 패션 앵콜',stage:'1.캠페인요청',cat:'패션',role:'앵콜',infSize:'미들',revenue:30000000,start:add(3),end:add(10),owner:'김담당',pdSingle:'이소연',mcn:'패션MCN',infName:'패션스타B',campType:'방송',mdcat:'패션',infData:[{infName:'패션스타B',infSize:'미들',feeRate:12}]},
-    {id:1003,name:'신세계 맨즈컬렉션',stage:'2.캠페인확정',cat:'패션',role:'신규',infSize:'메가',revenue:80000000,start:add(7),end:add(14),owner:'박민준',pdSingle:'박민준',mcn:'패션MCN',infName:'멘즈패션C',campType:'방송',mdcat:'패션',infData:[{infName:'멘즈패션C',infSize:'메가',feeRate:18}]},
+    {id:1003,name:'신세계 맨즈컬렉션',stage:'2.캠페인확정',cat:'패션',role:'미들',infSize:'메가',revenue:80000000,start:add(7),end:add(14),owner:'박민준',pdSingle:'박민준',mcn:'패션MCN',infName:'멘즈패션C',campType:'방송',mdcat:'패션',infData:[{infName:'멘즈패션C',infSize:'메가',feeRate:18}]},
     {id:1004,name:'까사미아 소파 1차',stage:'3.상품정보등록',cat:'생활/인테리어',role:'메가',infSize:'메가',revenue:120000000,start:add(10),end:add(17),owner:'최현우',pdSingle:'최현우',mcn:'뷰티MCN',infName:'인테리어D',campType:'온라인',mdcat:'온라인',infData:[{infName:'인테리어D',infSize:'메가',feeRate:20}]},
     {id:1005,name:'태국망고 라이브',stage:'5.인플루언서확정',cat:'식품',role:'메가',infSize:'메가',revenue:50000000,start:add(-5),end:add(2),owner:'이소연',pdSingle:'이소연',mcn:'푸드MCN',infName:'암암해혜야',infData:[{infName:'암암해혜야',infSize:'메가',feeRate:15}]},
     {id:1006,name:'제스프리 루비 키위',stage:'5.인플루언서확정',cat:'식품',role:'앵콜',infSize:'미들',revenue:10000000,start:add(2),end:add(9),owner:'김담당',pdSingle:'김담당',mcn:'스타MCN',infName:'위드허니',infData:[{infName:'위드허니',infSize:'미들',feeRate:10}]},
     {id:1007,name:'크리스프파워 프레첼',stage:'6.APP마케팅확정',cat:'식품',role:'메가',infSize:'메가',revenue:150000000,start:add(1),end:add(8),owner:'박민준',pdSingle:'박민준',mcn:'푸드MCN',infName:'건강푸드E',campType:'방송',mdcat:'식품',infData:[{infName:'건강푸드E',infSize:'메가',feeRate:17}]},
     {id:1008,name:'모두투어 방콕 패키지',stage:'7.정산',cat:'여행',role:'미들',infSize:'미들',revenue:20000000,start:add(-10),end:add(-3),owner:'최현우',pdSingle:'최현우',mcn:'트래블MCN',infName:'여행유튜버F',settleRevenue:18500000,settleOrders:120,infData:[{infName:'여행유튜버F',infSize:'미들',feeRate:13}]},
     {id:1009,name:'SSG 뷰티페스타',stage:'2.캠페인확정',cat:'뷰티',role:'메가',infSize:'메가',revenue:200000000,start:add(14),end:add(21),owner:'이소연',pdSingle:'이소연',mcn:'뷰티MCN',infName:'뷰티퀸G',campType:'온라인',mdcat:'온라인',infData:[{infName:'뷰티퀸G',infSize:'메가',feeRate:20}]},
-    {id:1010,name:'나이키 러닝화 신상',stage:'4.MCN요청',cat:'패션',role:'신규',infSize:'미들',revenue:45000000,start:add(8),end:add(15),owner:'박민준',pdSingle:'박민준',mcn:'스타MCN',infName:'스포츠H',infData:[{infName:'스포츠H',infSize:'미들',feeRate:14}]},
+    {id:1010,name:'나이키 러닝화 신상',stage:'4.MCN요청',cat:'패션',role:'미들',infSize:'미들',revenue:45000000,start:add(8),end:add(15),owner:'박민준',pdSingle:'박민준',mcn:'스타MCN',infName:'스포츠H',infData:[{infName:'스포츠H',infSize:'미들',feeRate:14}]},
     {id:1011,name:'다이슨 헤어드라이어',stage:'3.상품정보등록',cat:'IT/가전',role:'메가',infSize:'메가',revenue:90000000,start:add(6),end:add(13),owner:'김담당',pdSingle:'김담당',mcn:'테크MCN',infName:'테크리뷰어I',infData:[{infName:'테크리뷰어I',infSize:'메가',feeRate:16}]},
     {id:1012,name:'제주삼다수 정기배송',stage:'1.캠페인요청',cat:'식품',role:'앵콜',infSize:'시딩',revenue:8000000,start:add(4),end:add(11),owner:'최현우',pdSingle:'최현우',mcn:'푸드MCN',infName:'일상유튜버J',infData:[{infName:'일상유튜버J',infSize:'시딩',feeRate:8}]},
   ];
@@ -4651,7 +4653,7 @@ function renderDash(){
   var ROLES = [
     {key:'메가',  color:'var(--pink)',   bg:'var(--pink-bg)'},
     {key:'앵콜',  color:'var(--orange)', bg:'var(--orange-bg)'},
-    {key:'신규',  color:'var(--blue)',   bg:'var(--blue-bg)'},
+    {key:'미들',  color:'var(--blue)',   bg:'var(--blue-bg)'},
     {key:'시딩',  color:'var(--green)',  bg:'var(--green-bg)'},
   ];
 
@@ -4812,8 +4814,8 @@ function renderS1(filter=''){
     var rowNum = _pg_s1.startIdx + _pi + 1;
     var skuCount = (c.skus||[]).length;
     var pdNames = (c.pds||[]).join(', ') || '-';
-    var roleColor = c.role==='메가'?'var(--pink)':c.role==='앵콜'?'var(--orange)':c.role==='신규'?'var(--blue)':c.role==='시딩'?'var(--green)':'var(--text3)';
-    var roleBg   = c.role==='메가'?'var(--pink-bg)':c.role==='앵콜'?'var(--orange-bg)':c.role==='신규'?'var(--blue-bg)':c.role==='시딩'?'var(--green-bg)':'var(--bg4)';
+    var roleColor = c.role==='메가'?'var(--pink)':c.role==='앵콜'?'var(--orange)':c.role==='미들'?'var(--blue)':c.role==='시딩'?'var(--green)':'var(--text3)';
+    var roleBg   = c.role==='메가'?'var(--pink-bg)':c.role==='앵콜'?'var(--orange-bg)':c.role==='미들'?'var(--blue-bg)':c.role==='시딩'?'var(--green-bg)':'var(--bg4)';
     // 예상매출 억단위 변환 (소수점 1자리)
     var revStr = '-';
     if(c.revenue){
@@ -5107,8 +5109,8 @@ function renderS2(){
       : '<span style="background:var(--bg4);color:var(--text3);padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600">미확정</span>';
 
     // 역할 배지
-    var roleColor = c.role==='메가'?'var(--pink)':c.role==='앵콜'?'var(--orange)':c.role==='신규'?'var(--blue)':c.role==='시딩'?'var(--green)':'var(--text3)';
-    var roleBg    = c.role==='메가'?'var(--pink-bg)':c.role==='앵콜'?'var(--orange-bg)':c.role==='신규'?'var(--blue-bg)':c.role==='시딩'?'var(--green-bg)':'var(--bg4)';
+    var roleColor = c.role==='메가'?'var(--pink)':c.role==='앵콜'?'var(--orange)':c.role==='미들'?'var(--blue)':c.role==='시딩'?'var(--green)':'var(--text3)';
+    var roleBg    = c.role==='메가'?'var(--pink-bg)':c.role==='앵콜'?'var(--orange-bg)':c.role==='미들'?'var(--blue-bg)':c.role==='시딩'?'var(--green-bg)':'var(--bg4)';
 
     // 예상매출 억단위
     var revStr = '-';
@@ -5308,8 +5310,8 @@ function renderS4(){
   _pg_s4.items.forEach(function(c, _pi){
     var rowNum = _pg_s4.startIdx + _pi + 1;
     var mdcatVal = c.mdcat || (c.skus&&c.skus[0] ? c.skus[0].mdcat : '') || '-';
-    var roleColor = c.role==='메가'?'var(--pink)':c.role==='앵콜'?'var(--orange)':c.role==='신규'?'var(--blue)':c.role==='시딩'?'var(--green)':'var(--text3)';
-    var roleBg    = c.role==='메가'?'var(--pink-bg)':c.role==='앵콜'?'var(--orange-bg)':c.role==='신규'?'var(--blue-bg)':c.role==='시딩'?'var(--green-bg)':'var(--bg4)';
+    var roleColor = c.role==='메가'?'var(--pink)':c.role==='앵콜'?'var(--orange)':c.role==='미들'?'var(--blue)':c.role==='시딩'?'var(--green)':'var(--text3)';
+    var roleBg    = c.role==='메가'?'var(--pink-bg)':c.role==='앵콜'?'var(--orange-bg)':c.role==='미들'?'var(--blue-bg)':c.role==='시딩'?'var(--green-bg)':'var(--bg4)';
     var reasons   = c.reasons||[];
     var reasonCell = reasons.length
       ? reasons.map(function(r){
@@ -5862,8 +5864,8 @@ function renderS5(){
   _pg_s5.items.forEach(function(c, _pi){
     var rowNum = _pg_s5.startIdx + _pi + 1;
     var mdcatVal  = c.mdcat||(c.skus&&c.skus[0]?c.skus[0].mdcat:'')||'-';
-    var roleColor = c.role==='메가'?'var(--pink)':c.role==='앵콜'?'var(--orange)':c.role==='신규'?'var(--blue)':c.role==='시딩'?'var(--green)':'var(--text3)';
-    var roleBg    = c.role==='메가'?'var(--pink-bg)':c.role==='앵콜'?'var(--orange-bg)':c.role==='신규'?'var(--blue-bg)':c.role==='시딩'?'var(--green-bg)':'var(--bg4)';
+    var roleColor = c.role==='메가'?'var(--pink)':c.role==='앵콜'?'var(--orange)':c.role==='미들'?'var(--blue)':c.role==='시딩'?'var(--green)':'var(--text3)';
+    var roleBg    = c.role==='메가'?'var(--pink-bg)':c.role==='앵콜'?'var(--orange-bg)':c.role==='미들'?'var(--blue-bg)':c.role==='시딩'?'var(--green-bg)':'var(--bg4)';
     var revStr = '-';
     if(c.revenue){ var u=c.revenue/100000000; revStr=u>=0.1?u.toFixed(1)+'억':(c.revenue/10000).toFixed(0)+'만'; }
     var infName = c.infName && c.infName.trim() ? c.infName : '미정';
@@ -6999,8 +7001,8 @@ function renderCopyCampList(keyword){
   }
 
   el.innerHTML = list.map(function(camp){
-    var roleColor = camp.role==='메가'?'var(--pink)':camp.role==='앵콜'?'var(--orange)':camp.role==='신규'?'var(--blue)':'var(--green)';
-    var roleBg    = camp.role==='메가'?'var(--pink-bg)':camp.role==='앵콜'?'var(--orange-bg)':camp.role==='신규'?'var(--blue-bg)':'var(--green-bg)';
+    var roleColor = camp.role==='메가'?'var(--pink)':camp.role==='앵콜'?'var(--orange)':camp.role==='미들'?'var(--blue)':'var(--green)';
+    var roleBg    = camp.role==='메가'?'var(--pink-bg)':camp.role==='앵콜'?'var(--orange-bg)':camp.role==='미들'?'var(--blue-bg)':'var(--green-bg)';
     var revStr = camp.revenue ? (camp.revenue/100000000).toFixed(1)+'억' : '-';
     var dateStr = ((camp.start||'-').slice(5)) + ' ~ ' + ((camp.end||'-').slice(5));
     return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .15s" '
@@ -7194,8 +7196,8 @@ function renderReports(){
     var startOnly = (camp.start||camp.startDate||'-').slice(0,10);
     var endOnly   = (camp.end||camp.endDate||'-').slice(0,10);
     var dateStr  = (startOnly!=='-' ? startOnly.slice(5) : '-')+' ~ '+(endOnly!=='-' ? endOnly.slice(5) : '-');
-    var roleColor= camp.role==='메가'?'var(--pink)':camp.role==='앵콜'?'var(--orange)':camp.role==='신규'?'var(--blue)':'var(--green)';
-    var roleBg   = camp.role==='메가'?'var(--pink-bg)':camp.role==='앵콜'?'var(--orange-bg)':camp.role==='신규'?'var(--blue-bg)':'var(--green-bg)';
+    var roleColor= camp.role==='메가'?'var(--pink)':camp.role==='앵콜'?'var(--orange)':camp.role==='미들'?'var(--blue)':'var(--green)';
+    var roleBg   = camp.role==='메가'?'var(--pink-bg)':camp.role==='앵콜'?'var(--orange-bg)':camp.role==='미들'?'var(--blue-bg)':'var(--green-bg)';
 
     rows += '<tr style="cursor:pointer">'
       + '<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="s7-camp-cb" value="'+camp.id+'" checked onchange="updateS7CheckAll()"></td>'
@@ -9997,7 +9999,7 @@ function openCampBulkModal(){
 function downloadCampTemplate(){
   var wb = XLSX.utils.book_new();
   var headers = ['캠페인명*','시작일*','종료일*','예상매출*','예산*','역할*','캠페인담당','담당MD','브랜드','협력업체','카테고리','MDCAT','MCN업체','상품코드','상품명','MD할인가','카드할인','신규적립금','신규쿠폰','소구포인트','선정사유(쉼표구분)'];
-  var sample  = ['2026 여름 선케어','2026-06-01','2026-07-15','150000000','5000000','신규','홍길동','김민지','선케어랩','(주)선케어랩','뷰티','BEAUTY-01','(주)크리에이터스','SKU-001','UV선크림50ml','89000','5000','3000','2000','워터프루프 SPF50+','브랜드력,가격경쟁력'];
+  var sample  = ['2026 여름 선케어','2026-06-01','2026-07-15','150000000','5000000','미들','홍길동','김민지','선케어랩','(주)선케어랩','뷰티','BEAUTY-01','(주)크리에이터스','SKU-001','UV선크림50ml','89000','5000','3000','2000','워터프루프 SPF50+','브랜드력,가격경쟁력'];
   var ws = XLSX.utils.aoa_to_sheet([headers, sample]);
   ws['!cols'] = headers.map(function(){ return {wch:14}; });
   XLSX.utils.book_append_sheet(wb, ws, '캠페인목록');
@@ -10049,7 +10051,7 @@ function parseCampBulkFile(file){
         if(!end)     err.push('종료일 오류');
         if(!revenue) err.push('예상매출 없음');
         if(!budget)  err.push('예산 없음');
-        if(!['메가','앵콜','신규','시딩'].includes(role)) err.push('역할 오류('+role+')');
+        if(!['메가','앵콜','미들','시딩'].includes(role)) err.push('역할 오류('+role+')');
 
         var skus = skuCode ? [{
           code: skuCode, productName: skuName, isMain: true,
