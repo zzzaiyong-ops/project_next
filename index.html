@@ -4707,7 +4707,8 @@ function renderDash(){
     var campsByMonth = months.map(function(m){
       return DB.campaigns.filter(function(c){
         var rm = r.key==='(미정)'?(!c.role||c.role===''):c.role===r.key;
-        return rm&&campInMonth(c,m.year,m.month);
+        var confirmed = c.stage && c.stage !== '1.캠페인요청';
+        return rm&&confirmed&&campInMonth(c,m.year,m.month);
       });
     });
     var roleId = 'role-expand-'+r.key;
@@ -4782,6 +4783,71 @@ function renderDash(){
       roleRows += '</tr>';
     }
   });
+
+  // ── 미확정 구분 (stage === '1.캠페인요청') ──
+  var unconfirmed = {key:'미확정', color:'var(--text3)', bg:'var(--bg4)'};
+  var ucByMonth = months.map(function(m){
+    return DB.campaigns.filter(function(c){
+      return (!c.stage || c.stage === '1.캠페인요청') && campInMonth(c,m.year,m.month);
+    });
+  });
+  var ucId = 'role-expand-unconfirmed';
+  roleRows += '<tr style="border-top:2px solid var(--border);cursor:pointer" onclick="toggleRoleExpand(\''+ucId+'\')">'
+    +'<td style="padding:8px 10px;white-space:nowrap">'
+    +'<span style="background:'+unconfirmed.bg+';color:'+unconfirmed.color+';padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700">'+unconfirmed.key+'</span>'
+    +' <span id="'+ucId+'-arrow" style="font-size:10px;color:var(--text3)">▶</span>'
+    +'</td>'
+    +ucByMonth.map(function(arr){
+      var onl = arr.filter(function(c){return isOnline(c);});
+      var brd = arr.filter(function(c){return isBroadcast(c);});
+      var onlRev = fmtRev2(onl.reduce(function(s,c){return s+(c.revenue||0);},0));
+      var brdRev = fmtRev2(brd.reduce(function(s,c){return s+(c.revenue||0);},0));
+      var onlC = onl.length>0?'var(--blue)':'var(--text3)';
+      var brdC = brd.length>0?'var(--orange)':'var(--text3)';
+      var onlHtml = onl.length>0 ? '<span style="font-size:14px;font-weight:800;color:'+onlC+'">'+onl.length+'</span>'+(onlRev?'<span style="font-size:13px;font-weight:600;color:'+onlC+'">('+onlRev+'억)</span>':'') : '<span style="font-size:13px;color:var(--text3)">0</span>';
+      var brdHtml = brd.length>0 ? '<span style="font-size:14px;font-weight:800;color:'+brdC+'">'+brd.length+'</span>'+(brdRev?'<span style="font-size:13px;font-weight:600;color:'+brdC+'">('+brdRev+'억)</span>':'') : '<span style="font-size:13px;color:var(--text3)">0</span>';
+      return '<td style="text-align:center;padding:7px 4px">'+onlHtml+'</td>'
+        +'<td style="text-align:center;padding:7px 4px">'+brdHtml+'</td>';
+    }).join('')
+    +'</tr>';
+  // 미확정 상세 펼침
+  var ucAllCamps = []; var ucSeen = {};
+  ucByMonth.forEach(function(arr){ arr.forEach(function(camp){
+    if(!ucSeen[camp.id]){ ucSeen[camp.id]=true; ucAllCamps.push(camp); }
+  }); });
+  if(ucAllCamps.length===0){
+    roleRows += '<tr id="'+ucId+'-r0" style="display:none;background:var(--bg3)">'
+      +'<td colspan="'+(months.length*2)+'" style="padding:8px 10px;color:var(--text3);text-align:center;font-size:12px">캠페인 없음</td></tr>';
+  } else {
+    roleRows += '<tr class="'+ucId+'-detail" style="display:none;background:var(--bg3);border-top:1px solid var(--border)">';
+    roleRows += '<td style="padding:5px 10px;vertical-align:top"></td>';
+    months.forEach(function(mo, moIdx){
+      var onlCamps = ucByMonth[moIdx].filter(function(c){ return isOnline(c); });
+      var brdCamps = ucByMonth[moIdx].filter(function(c){ return !isOnline(c); });
+      roleRows += '<td style="text-align:center;padding:5px 6px;vertical-align:top">';
+      if(onlCamps.length){
+        onlCamps.forEach(function(camp){
+          var rev=(camp.revenue||0); var revStr=rev>0?'('+(rev/100000000).toFixed(1)+'억)':'';
+          roleRows += '<div style="margin-bottom:5px;padding:4px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="editProd('+camp.id+')">';
+          roleRows += '<div style="font-size:11.5px;font-weight:700;color:var(--blue)">'+escHtml(camp.name||'-')+' <span style="font-size:12px">'+revStr+'</span></div>';
+          roleRows += '</div>';
+        });
+      } else { roleRows += '<span style="color:var(--border2);font-size:11px">-</span>'; }
+      roleRows += '</td>';
+      roleRows += '<td style="text-align:center;padding:5px 6px;vertical-align:top">';
+      if(brdCamps.length){
+        brdCamps.forEach(function(camp){
+          var rev=(camp.revenue||0); var revStr=rev>0?'('+(rev/100000000).toFixed(1)+'억)':'';
+          roleRows += '<div style="margin-bottom:5px;padding:4px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="editProd('+camp.id+')">';
+          roleRows += '<div style="font-size:11.5px;font-weight:700;color:var(--orange)">'+escHtml(camp.name||'-')+' <span style="font-size:12px">'+revStr+'</span></div>';
+          roleRows += '</div>';
+        });
+      } else { roleRows += '<span style="color:var(--border2);font-size:11px">-</span>'; }
+      roleRows += '</td>';
+    });
+    roleRows += '</tr>';
+  }
+
   document.getElementById('ds-role-tbl').innerHTML=sumRow+roleRows;
 
   renderCalendar();
