@@ -4365,13 +4365,13 @@ function renderCalendar(){
   }
 
   // ── PC: 기존 그리드 캘린더 ──
-  var MAX_ROWS = 5;
   var campSlot = {};
   var slotUsed = [];
+  var maxSlotUsed = 0;
   monthCamps.forEach(function(c){
     var cs = (c.start||c.startDate||'').slice(0,10);
     var ce = (c.end||c.endDate||'').slice(0,10);
-    for(var row=0; row<MAX_ROWS; row++){
+    for(var row=0; ; row++){
       var ok = true;
       var cur = new Date(cs);
       var end = new Date(ce);
@@ -4382,6 +4382,7 @@ function renderCalendar(){
       }
       if(ok){
         campSlot[c.id] = row;
+        if(row > maxSlotUsed) maxSlotUsed = row;
         var cur2 = new Date(cs);
         var end2 = new Date(ce);
         while(cur2<=end2){
@@ -4393,7 +4394,6 @@ function renderCalendar(){
         break;
       }
     }
-    if(campSlot[c.id]===undefined) campSlot[c.id] = MAX_ROWS;
   });
 
   var html='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">'
@@ -4408,12 +4408,11 @@ function renderCalendar(){
     var isToday = today2.getFullYear()===y && today2.getMonth()===m && today2.getDate()===d;
 
     var slotBars = {};
-    var overflowCount = 0;
     monthCamps.forEach(function(c){
       var cs=(c.start||c.startDate||'').slice(0,10), ce=(c.end||c.endDate||'').slice(0,10);
       if(cs>dateStr||ce<dateStr) return;
       var row = campSlot[c.id];
-      if(row===undefined||row>=MAX_ROWS){ overflowCount++; return; }
+      if(row===undefined) return;
       var prod = DB.products.find(function(p){return p.id===c.product;});
       var infSize = prod ? prod.infSize : (c.infSize||'');
       var ic = infSizeColor(infSize);
@@ -4436,12 +4435,9 @@ function renderCalendar(){
     });
 
     var barsHtml = '';
-    for(var row2=0;row2<MAX_ROWS;row2++){
+    for(var row2=0;row2<=maxSlotUsed;row2++){
       if(slotBars[row2]) barsHtml += slotBars[row2];
       else barsHtml += '<div style="height:16px;margin-bottom:0"></div>';
-    }
-    if(overflowCount>0){
-      barsHtml += '<div style="font-size:9px;color:var(--text3);padding:1px 2px">+'+overflowCount+'개</div>';
     }
 
     html+='<div style="min-height:80px;background:'+(isToday?'rgba(108,92,231,0.12)':'var(--bg3)')+';border-radius:4px;padding:3px 2px 3px;border:1px solid '+(isToday?'var(--accent)':'transparent')+'">'
