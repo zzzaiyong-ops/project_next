@@ -4624,24 +4624,16 @@ function renderDash(){
   if(rangeEl) rangeEl.textContent=months[0].year+'년 '+months[0].label+' ~ '+months[2].label;
 
   function campInMonth(c, yr, mo){
-    // start/startDate 둘 다 체크
+    // 시작일 기준으로만 해당 월 귀속 (월 걸침 시 중복 카운팅 방지)
     var cStart = c.start || c.startDate || null;
-    var cEnd   = c.end   || c.endDate   || null;
-    // 날짜 없으면 → 등록 월에 표시 (현재 월 포함)
-    if(!cStart && !cEnd){
+    if(!cStart){
       var now3=new Date(); return now3.getFullYear()===yr&&now3.getMonth()===mo;
     }
-    var s=cStart?new Date(cStart):null;
-    var e=cEnd?new Date(cEnd):null;
-    // Invalid Date 방어
-    if(s&&isNaN(s.getTime())) s=null;
-    if(e&&isNaN(e.getTime())) e=null;
-    if(!s&&!e){ var now4=new Date(); return now4.getFullYear()===yr&&now4.getMonth()===mo; }
-    var mS=new Date(yr,mo,1), mE=new Date(yr,mo+1,0);
-    if(s&&e) return s<=mE&&e>=mS;
-    if(s) return s.getFullYear()===yr&&s.getMonth()===mo;
-    if(e) return e.getFullYear()===yr&&e.getMonth()===mo;
-    return false;
+    var s=new Date(cStart);
+    if(isNaN(s.getTime())){
+      var now4=new Date(); return now4.getFullYear()===yr&&now4.getMonth()===mo;
+    }
+    return s.getFullYear()===yr&&s.getMonth()===mo;
   }
 
   function revenueInMonth(c, yr, mo){
