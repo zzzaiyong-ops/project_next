@@ -7505,17 +7505,28 @@ function downloadInfPdf(infName){
   var headerEl = modal ? modal.querySelector('div > div:first-child') : null;
   var headerHtml = headerEl ? '<div style="margin-bottom:16px">'+headerEl.innerHTML.replace(/<button[^>]*>.*?<\/button>/g,'')+'</div>' : '';
 
-  // iframe 내용도 추출
+  // iframe 내용을 추출하여 inline으로 병합
   var contentHtml = '';
   var iframe = body.querySelector('iframe');
   if(iframe && iframe.contentDocument){
-    contentHtml = body.innerHTML.replace(/<iframe[^>]*>.*?<\/iframe>/g, iframe.contentDocument.documentElement.outerHTML);
+    // iframe 앞뒤 내용 분리
+    var clone = body.cloneNode(true);
+    var iframeClone = clone.querySelector('iframe');
+    // iframe의 head(style) + body 내용 추출
+    var iframeDoc = iframe.contentDocument;
+    var iframeStyles = '';
+    iframeDoc.querySelectorAll('style').forEach(function(s){ iframeStyles += s.outerHTML; });
+    var iframeBody = iframeDoc.body ? iframeDoc.body.innerHTML : '';
+    // iframe을 내용으로 교체
+    var placeholder = document.createElement('div');
+    placeholder.innerHTML = iframeStyles + iframeBody;
+    if(iframeClone) iframeClone.replaceWith(placeholder);
+    contentHtml = clone.innerHTML;
   } else {
     contentHtml = body.innerHTML;
   }
-  // 버튼 제거
-  contentHtml = contentHtml.replace(/<button[^>]*>.*?<\/button>/g,'');
-  contentHtml = contentHtml.replace(/<div[^>]*display:flex[^>]*gap:8px[^>]*justify-content:center[^>]*>[\s\S]*?<\/div>\s*$/,'');
+  // 버튼/하단 액션 제거
+  contentHtml = contentHtml.replace(/<button[^>]*>[\s\S]*?<\/button>/g,'');
 
   var printWin = window.open('','_blank');
   printWin.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+escHtml(infName)+' 인플루언서 분석</title>'
