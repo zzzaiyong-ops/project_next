@@ -7321,11 +7321,27 @@ function parseInfAiText(raw){
 
 // ── Firebase 저장 ──
 function saveInfAiToDb(infName, data){
+  var key = infName.replace(/[.#$/[\]]/g,'_');
+  // localStorage 백업 (항상 저장)
+  try{ localStorage.setItem('infAi-'+key, JSON.stringify(data)); }catch(e){}
+  // Firebase 저장
   if(typeof firebase!=='undefined' && firebase.database){
-    try{ firebase.database().ref('infAiReports/'+infName.replace(/[.#$/[\]]/g,'_')).set(data); }catch(e){}
+    try{ firebase.database().ref('infAiReports/'+key).set(data); }catch(e){ console.warn('[saveInfAi] Firebase 저장 실패:', e); }
   }
 }
 function loadInfAiFromDb(){
+  // localStorage에서 먼저 로드
+  try{
+    for(var i=0; i<localStorage.length; i++){
+      var k = localStorage.key(i);
+      if(k && k.startsWith('infAi-')){
+        var name = k.slice(6);
+        var d = JSON.parse(localStorage.getItem(k));
+        if(d) _infAiCache[name] = d;
+      }
+    }
+  }catch(e){}
+  // Firebase에서도 로드 (덮어쓰기)
   if(typeof firebase!=='undefined' && firebase.database){
     try{
       firebase.database().ref('infAiReports').once('value',function(snap){
@@ -7481,7 +7497,9 @@ function renderInfAiReport(infName, data){
 }
 function resetInfAi(infName){
   delete _infAiCache[infName];
-  try{ if(typeof firebase!=='undefined'&&firebase.database) firebase.database().ref('infAiReports/'+infName.replace(/[.#$/[\]]/g,'_')).remove(); }catch(e){}
+  var key = infName.replace(/[.#$/[\]]/g,'_');
+  try{ localStorage.removeItem('infAi-'+key); }catch(e){}
+  try{ if(typeof firebase!=='undefined'&&firebase.database) firebase.database().ref('infAiReports/'+key).remove(); }catch(e){}
   // 모달 다시 열기 (초기화 상태로)
   openInfDetail(infName);
   showToast('AI 분석 초기화됨');
