@@ -4455,20 +4455,17 @@ function renderCalendar(){
     : DB.campaigns;
   var doneCamps = calCamps.filter(function(c){
     var endD = c.end||c.endDate ? new Date((c.end||c.endDate).slice(0,10)) : null;
-    return endD && endD < today3 && c.settleRevenue > 0;
-  });
-  var doneAll = calCamps.filter(function(c){
-    var endD = c.end||c.endDate ? new Date((c.end||c.endDate).slice(0,10)) : null;
     return endD && endD < today3;
   });
-  var doneRev = doneCamps.reduce(function(s,c){return s+(c.settleRevenue||0);},0);
-  var doneRevStr = doneRev > 0 ? (doneRev/100000000).toFixed(1)+'억원' : '-';
+  var doneAll = doneCamps;
+  var doneRev = doneCamps.reduce(function(s,c){return s+(c.settleRevenue||c.revenue||0);},0);
+  var doneRevStr = doneRev > 0 ? (doneRev/100000000).toFixed(1)+'억원' : '0.0억원';
   var sumEl = document.getElementById('cal-summary');
   if(sumEl){
     sumEl.innerHTML = '<span style="font-size:12px;font-weight:700;color:var(--text2)">진행완료 캠페인</span>'
       + '<span style="font-size:12px;color:var(--text3);margin-left:4px">('+doneAll.length+')</span>'
       + '<span style="font-size:13px;font-weight:800;color:var(--green);margin-left:12px">'+doneRevStr+'</span>'
-      + (doneCamps.length < doneAll.length ? '<span style="font-size:11px;color:var(--text3);margin-left:6px">※ 매출 입력된 캠페인 기준</span>' : '');
+      + '<span style="font-size:11px;color:var(--text3);margin-left:6px">※ 매출 입력된 캠페인 기준</span>';
   }
 }
 
