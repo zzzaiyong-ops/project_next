@@ -4458,7 +4458,7 @@ function renderCalendar(){
     return endD && endD < today3;
   });
   var doneAll = doneCamps;
-  var doneRev = doneCamps.reduce(function(s,c){return s+(c.settleRevenue||c.revenue||0);},0);
+  var doneRev = doneCamps.reduce(function(s,c){return s+(c.settleRevenue||0);},0);
   var doneRevStr = doneRev > 0 ? (doneRev/100000000).toFixed(1)+'억원' : '0.0억원';
   var sumEl = document.getElementById('cal-summary');
   if(sumEl){
