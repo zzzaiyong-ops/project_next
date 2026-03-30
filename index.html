@@ -7104,24 +7104,23 @@ function pasteInfAi(infName){
   richArea.addEventListener('focus', function(){ this.style.borderColor='var(--accent)'; });
   richArea.addEventListener('blur', function(){ this.style.borderColor='var(--border)'; });
 
-  // HTML 파일 업로드
+  // HTML 파일 업로드 → 바로 저장 및 적용
   wrap.querySelector('#ai-file-upload').addEventListener('change', function(e){
     var file = e.target.files[0];
     if(!file) return;
     var reader = new FileReader();
     reader.onload = function(ev){
       var content = ev.target.result;
-      // body 내용만 추출 (style+body)
+      // style + body 추출
       var bodyMatch = content.match(/<body[^>]*>([\s\S]*)<\/body>/i);
       var styleMatch = content.match(/<style[\s\S]*?<\/style>/gi);
       var htmlContent = (styleMatch ? styleMatch.join('') : '') + (bodyMatch ? bodyMatch[1] : content);
-      richArea.innerHTML = htmlContent;
-      // 서식 탭으로 전환
-      document.getElementById('ai-rich-area').style.display = '';
-      document.getElementById('ai-text-area').style.display = 'none';
-      document.getElementById('ai-tab-rich').style.borderBottom = '2px solid var(--accent)';
-      document.getElementById('ai-tab-text').style.borderBottom = 'none';
-      showToast('HTML 파일 로드됨');
+      var parsed = { _fullHtml: htmlContent };
+      _infAiCache[infName] = parsed;
+      saveInfAiToDb(infName, parsed);
+      wrap.remove();
+      renderInfAiReport(infName, parsed);
+      showToast('AI 분석 저장됨');
     };
     reader.readAsText(file, 'UTF-8');
   });
@@ -7313,7 +7312,20 @@ function renderInfAiReport(infName, data){
 
   // 원본 HTML 그대로 렌더링 모드
   if(data._fullHtml){
-    body.innerHTML = data._fullHtml
+    // Claude artifact CSS 변수 폴백 정의
+    var cssVarFallback = '<style>'
+      +'.inf-ai-wrap { '
+      +'--color-text-primary:#1a1a1a; --color-text-secondary:#666; --color-text-tertiary:#999;'
+      +'--color-text-info:#185FA5;'
+      +'--color-background-primary:#fff; --color-background-secondary:#f5f5f5; --color-background-info:#E6F1FB;'
+      +'--color-border-tertiary:#e5e5e5;'
+      +'--border-radius-lg:12px; --border-radius-md:8px;'
+      +'--font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;'
+      +'font-family: var(--font-sans); }'
+      +'.inf-ai-wrap * { box-sizing: border-box; }'
+      +'</style>';
+    body.innerHTML = cssVarFallback
+      + '<div class="inf-ai-wrap">' + data._fullHtml + '</div>'
       + '<div style="display:flex;gap:8px;justify-content:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">'
       + '<button class="btn btn-ghost btn-xs" onclick="resetInfAi(\''+escHtml(infName)+'\')">분석 초기화</button>'
       + '<button class="btn btn-ghost btn-xs" onclick="pasteInfAi(\''+escHtml(infName)+'\')">다시 붙여넣기</button>'
