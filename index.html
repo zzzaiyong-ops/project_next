@@ -392,15 +392,28 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
 ═══════════════════════════════════════════ */
 @media (max-width: 768px) {
 
-  /* ── 사이드바: 모바일에서도 좌측 고정 ── */
+  /* ── 사이드바: 모바일에서 숨김 + 오버레이 토글 ── */
   .sidebar {
-    width: 200px !important;
+    width: 260px !important;
     position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 100;
+    top: 0; left: -270px; bottom: 0;
+    z-index: 1000;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    transition: left .25s ease;
+    box-shadow: none;
   }
+  .sidebar.mob-open {
+    left: 0;
+    box-shadow: 4px 0 20px rgba(0,0,0,.15);
+  }
+  .mob-overlay {
+    display: none;
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,.3);
+    z-index: 999;
+  }
+  .mob-overlay.show { display: block; }
   /* 로고 */
   .logo-name { font-size: 20px !important; }
   .logo-ver  { font-size: 13px !important; }
@@ -423,17 +436,15 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   /* 사용자 정보 */
   .user-row { font-size: 14px !important; }
 
-  /* ── main: 모바일에서도 항상 표시 ── */
+  /* ── main: 모바일에서 전체폭 ── */
   .main {
-    margin-left: 200px !important;
+    margin-left: 0 !important;
     display: flex !important;
     flex-direction: column;
     background: var(--bg);
     position: static !important;
     transform: none !important;
-  }
-  .main.mob-content-open {
-    transform: none !important;
+    width: 100% !important;
   }
 
   /* ── 상단바 (콘텐츠 화면) ── */
@@ -442,6 +453,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     height: 52px;
   }
   #mob-menu-btn { display: none !important; }
+  #mob-hamburger { display: inline-block !important; }
   #page-ttl { font-size: 16px !important; font-weight: 800; }
   .topbar-r { gap: 8px; }
   .topbar-r .btn-primary { font-size: 13px !important; padding: 8px 14px !important; }
@@ -807,6 +819,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     </div>
   </div>
 </aside>
+<div class="mob-overlay" id="mob-overlay" onclick="toggleMobSidebar()"></div>
 
 <!-- MAIN -->
 <main class="main">
@@ -815,7 +828,8 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
 
   <div class="topbar">
     <!-- 모바일 뒤로가기 (콘텐츠→사이드바) -->
-    <button id="mob-back-btn" onclick="closeMobContent()" style="display:none;margin-right:8px">← 메뉴</button>
+    <button id="mob-back-btn" onclick="closeMobContent()" style="display:none;margin-right:8px">← 뒤로</button>
+    <button id="mob-hamburger" onclick="toggleMobSidebar()" style="display:none;margin-right:8px;font-size:18px;background:none;border:none;cursor:pointer;padding:4px 8px">☰</button>
     <!-- 햄버거 버튼: PC에서만 (불필요하므로 모바일에서는 뒤로가기로 대체) -->
     <button id="mob-menu-btn" onclick="toggleMobMenu()" style="display:none;background:none;border:none;cursor:pointer;padding:4px 6px;margin-right:8px;color:var(--text);font-size:20px;line-height:1" aria-label="메뉴">☰</button>
     <!-- 페이지 뒤로가기 버튼 (대시보드 제외 모든 페이지에서 표시) -->
@@ -4180,7 +4194,28 @@ function goBack(){
   }, 80);
 }
 
+// 모바일 사이드바 토글
+function toggleMobSidebar(){
+  var sb = document.querySelector('.sidebar');
+  var ov = document.getElementById('mob-overlay');
+  if(sb.classList.contains('mob-open')){
+    sb.classList.remove('mob-open');
+    if(ov) ov.classList.remove('show');
+  } else {
+    sb.classList.add('mob-open');
+    if(ov) ov.classList.add('show');
+  }
+}
+function closeMobSidebar(){
+  var sb = document.querySelector('.sidebar');
+  var ov = document.getElementById('mob-overlay');
+  if(sb) sb.classList.remove('mob-open');
+  if(ov) ov.classList.remove('show');
+}
+
 function goPage(page, el){
+  // 모바일 사이드바 닫기
+  if(window.innerWidth <= 768) closeMobSidebar();
   // 권한 체크
   if(isExtMcn() && !MCN_ALLOWED_PAGES.includes(page)){
     showToast('접근 권한이 없습니다.'); return;
