@@ -7077,81 +7077,53 @@ function pasteInfAi(infName){
   var wrap = document.createElement('div');
   wrap.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center';
   wrap.innerHTML = '<div style="background:var(--bg2);border-radius:12px;padding:24px;width:90%;max-width:750px;max-height:85vh;display:flex;flex-direction:column;gap:14px">'
-    +'<div style="font-size:15px;font-weight:800">AI 분석 결과 붙여넣기</div>'
-    +'<div style="font-size:12px;color:var(--text3);line-height:1.5">Claude에서 받은 인플루언서 분석 리포트를 아래 영역에 <b>Ctrl+V</b>로 붙여넣으세요.<br>텍스트, 마크다운, HTML(서식 포함) 모두 지원합니다.</div>'
-    // 탭 전환
-    +'<div style="display:flex;gap:0;border-bottom:1px solid var(--border)">'
-    +'<button id="ai-tab-rich" class="btn btn-ghost btn-xs" style="border-radius:6px 6px 0 0;border-bottom:2px solid var(--accent);font-weight:700" onclick="document.getElementById(\'ai-rich-area\').style.display=\'\';document.getElementById(\'ai-text-area\').style.display=\'none\';this.style.borderBottom=\'2px solid var(--accent)\';document.getElementById(\'ai-tab-text\').style.borderBottom=\'none\'">서식 붙여넣기 (HTML)</button>'
-    +'<button id="ai-tab-text" class="btn btn-ghost btn-xs" style="border-radius:6px 6px 0 0;border-bottom:none" onclick="document.getElementById(\'ai-rich-area\').style.display=\'none\';document.getElementById(\'ai-text-area\').style.display=\'\';this.style.borderBottom=\'2px solid var(--accent)\';document.getElementById(\'ai-tab-rich\').style.borderBottom=\'none\'">텍스트 붙여넣기</button>'
-    +'</div>'
-    // 서식(HTML) 붙여넣기 영역
-    +'<div id="ai-rich-area" contenteditable="true" style="width:100%;min-height:220px;max-height:50vh;overflow-y:auto;font-size:12.5px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);line-height:1.7;outline:none;cursor:text" data-placeholder="여기를 클릭한 후 Ctrl+V로 붙여넣으세요..."></div>'
-    // 텍스트 붙여넣기 영역
-    +'<textarea id="ai-text-area" style="display:none;width:100%;min-height:220px;max-height:50vh;font-size:12px;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;resize:vertical;line-height:1.6" placeholder="텍스트 또는 JSON을 여기에 붙여넣으세요..."></textarea>'
+    +'<div style="font-size:15px;font-weight:800">AI 분석 결과 입력</div>'
+    +'<div style="font-size:12px;color:var(--text3);line-height:1.6">아래에 텍스트 또는 <b>HTML 소스코드</b>를 붙여넣거나, HTML 파일을 업로드하세요.</div>'
+    +'<textarea id="ai-text-area" style="width:100%;min-height:250px;max-height:55vh;font-size:12px;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:monospace;resize:vertical;line-height:1.5;background:var(--bg)" placeholder="텍스트, 마크다운, HTML 소스코드, JSON 모두 가능합니다.\n\nHTML 소스: <style>...</style><div class=&quot;wrap&quot;>...</div>\n텍스트: 채널 핵심 지표\n인스타 팔로워: 86.1만\n..."></textarea>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">'
-    +'<label style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--accent2);font-weight:600"><input type="file" accept=".html,.htm" id="ai-file-upload" style="display:none"> HTML 파일 업로드</label>'
+    +'<label style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--accent2);font-weight:600;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg3)"><input type="file" accept=".html,.htm" id="ai-file-upload" style="display:none"> HTML 파일 업로드</label>'
     +'<div style="flex:1"></div>'
     +'<button class="btn btn-ghost btn-sm" id="ai-paste-cancel">취소</button>'
     +'<button class="btn btn-primary btn-sm" id="ai-paste-save">저장 및 적용</button>'
     +'</div></div>';
 
   document.body.appendChild(wrap);
-
-  var richArea = wrap.querySelector('#ai-rich-area');
   var textArea = wrap.querySelector('#ai-text-area');
 
-  // placeholder 스타일링
-  richArea.addEventListener('focus', function(){ this.style.borderColor='var(--accent)'; });
-  richArea.addEventListener('blur', function(){ this.style.borderColor='var(--border)'; });
-
-  // HTML 파일 업로드 → 바로 저장 및 적용
+  // HTML 파일 업로드
   wrap.querySelector('#ai-file-upload').addEventListener('change', function(e){
     var file = e.target.files[0];
     if(!file) return;
     var reader = new FileReader();
     reader.onload = function(ev){
       var content = ev.target.result;
-      // style + body 추출
       var bodyMatch = content.match(/<body[^>]*>([\s\S]*)<\/body>/i);
       var styleMatch = content.match(/<style[\s\S]*?<\/style>/gi);
       var htmlContent = (styleMatch ? styleMatch.join('') : '') + (bodyMatch ? bodyMatch[1] : content);
-      var parsed = { _fullHtml: htmlContent };
-      _infAiCache[infName] = parsed;
-      saveInfAiToDb(infName, parsed);
+      _applyInfAi(infName, { _fullHtml: htmlContent });
       wrap.remove();
-      renderInfAiReport(infName, parsed);
-      showToast('AI 분석 저장됨');
     };
     reader.readAsText(file, 'UTF-8');
   });
 
   wrap.querySelector('#ai-paste-cancel').onclick = function(){ wrap.remove(); };
   wrap.querySelector('#ai-paste-save').onclick = function(){
-    // 서식(HTML) 탭이 활성화된 경우
-    var isRichMode = richArea.style.display !== 'none';
-    var rawHtml = '', rawText = '';
-    if(isRichMode){
-      rawHtml = richArea.innerHTML.trim();
-      rawText = richArea.innerText.trim();
-    } else {
-      rawText = textArea.value.trim();
-    }
-    if(!rawText && !rawHtml){ alert('내용을 붙여넣어 주세요.'); return; }
-
-    var parsed;
-    if(isRichMode && rawHtml && rawHtml !== rawText){
-      // HTML 모드: 원본 HTML 그대로 저장
-      parsed = { _fullHtml: rawHtml };
-    } else {
-      parsed = parseInfAiText(rawText);
-    }
-    _infAiCache[infName] = parsed;
-    saveInfAiToDb(infName, parsed);
+    var raw = textArea.value.trim();
+    if(!raw){ alert('내용을 붙여넣어 주세요.'); return; }
+    // HTML 소스인지 판별 (<style 또는 <div 등 태그 포함)
+    var isHtmlSource = /<(style|div|span|table|h[1-6])\b/i.test(raw);
+    var parsed = isHtmlSource ? { _fullHtml: raw } : parseInfAiText(raw);
+    _applyInfAi(infName, parsed);
     wrap.remove();
-    renderInfAiReport(infName, parsed);
-    showToast('AI 분석 저장됨');
   };
-  richArea.focus();
+  textArea.focus();
+}
+
+function _applyInfAi(infName, parsed){
+  _infAiCache[infName] = parsed;
+  saveInfAiToDb(infName, parsed);
+  renderInfAiReport(infName, parsed);
+  showToast('AI 분석 저장됨');
 }
 
 // ── HTML 파싱 (서식 유지) ──
