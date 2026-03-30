@@ -4093,7 +4093,7 @@ function enterDemoMode(role){
     updateBadges();
     renderS1(); renderS2(); renderS3(); renderS4();
     renderS5(); renderS6(); renderS7();
-    renderCamps(); renderInfs();
+    renderCamps(); renderInfs(); loadInfAiFromDb();
     // 기본정보 관리
     if(typeof renderMdcatTable==='function') renderMdcatTable();
     if(typeof renderMcnTable==='function')   renderMcnTable();
@@ -6964,51 +6964,289 @@ function renderInfs(){
     '<div class="empty" style="padding:40px;text-align:center;color:var(--text3)">캠페인에 인플루언서 정보를 입력하면 자동으로 표시됩니다</div>';
 }
 
-// 인플루언서 상세 팝업
+// ── AI 분석 캐시 (인플루언서별) ──
+var _infAiCache = {};
+
+// API키 설정 팝업
+function openApiKeySetting(){
+  var cur = localStorage.getItem('ihub-claude-api-key')||'';
+  var pw = prompt('Anthropic API Key 입력 (AI 분석용):', cur);
+  if(pw !== null){ localStorage.setItem('ihub-claude-api-key', pw.trim()); showToast('API Key 저장됨'); }
+}
+
+// ── 인플루언서 상세 팝업 (8섹션 AI 분석) ──
 function openInfDetail(infName){
   var inf = buildInfList().find(function(i){ return i.name===infName; });
   if(!inf) return;
   var lc = inf.latestCamp || {};
   var channels = lc.channels || {};
-  var ytCh = channels.youtube || '';
-  var igCh = channels.insta   || '';
-  var twCh = channels.twitter || '';
+  var igCh = channels.insta||'', ytCh = channels.youtube||'', twCh = channels.twitter||'';
+  var size = lc.infSize||lc.role||'-';
+  var ic = infSizeColor(size);
 
+  // 과거 캠페인 데이터
   var twoYearsAgo = new Date(); twoYearsAgo.setFullYear(twoYearsAgo.getFullYear()-2);
-  var perfCamps = inf.campaigns.filter(function(camp){
-    var s = camp.start ? new Date(camp.start) : null;
-    return s && s >= twoYearsAgo;
-  }).sort(function(a,b){ return (b.start||'')>(a.start||'')?1:-1; });
+  var perfCamps = inf.campaigns.filter(function(c){ var s=c.start?new Date(c.start):null; return s&&s>=twoYearsAgo; })
+    .sort(function(a,b){ return (b.start||'')>(a.start||'')?1:-1; });
 
-  var perfRows = perfCamps.map(function(camp){
-    var rev = camp.settleRevenue||0;
-    var revStr = rev>=100000000?(rev/100000000).toFixed(1)+'억':rev>=10000?(rev/10000).toFixed(0)+'만':rev>0?rev.toLocaleString():'-';
-    var fr=parseFloat(camp.feeRate)||0, fa=parseInt(camp.feeAmount)||0;
-    var ar=parseFloat(camp.agencyRate)||0, da=parseInt(camp.settleDa)||0;
-    var cost=Math.round(rev*fr/100)+fa+Math.round(rev*ar/100)+da;
-    var costStr=cost>=10000?(cost/10000).toFixed(0)+'만':cost>0?cost.toLocaleString():'-';
-    var views=camp.s7Perf?(camp.s7Perf.views||0)+'만':'-';
-    return '<tr style="font-size:12px">'      +'<td style="font-weight:600;padding:6px 8px">'+camp.name+'</td>'      +'<td style="color:var(--text3);padding:6px 8px">'+(camp.brand||(camp.skus&&camp.skus[0]?camp.skus[0].brand:'')||'-')+'</td>'      +'<td style="color:var(--text3);padding:6px 8px">'+(camp.cat||'-')+'</td>'      +'<td style="color:var(--green);font-weight:700;text-align:right;padding:6px 8px">'+revStr+'</td>'      +'<td style="color:var(--text2);text-align:right;padding:6px 8px">'+(camp.settleOrders||'-')+'</td>'      +'<td style="color:var(--text3);text-align:right;padding:6px 8px">'+views+'</td>'      +'<td style="color:var(--orange);text-align:right;padding:6px 8px">'+costStr+'</td>'      +'</tr>';
-  }).join('');
+  // 뱃지 HTML
+  var badges = '<span style="background:'+ic.bg+';color:'+ic.color+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">'+size+'</span>';
+  var cats = [...new Set(inf.campaigns.map(function(c){return c.cat||'';}).filter(Boolean))];
+  if(perfCamps.some(function(c){return (c.settleRevenue||0)>0;})) badges += ' <span style="background:#fdcb6e33;color:#d68910;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">공구 경험</span>';
+  if(cats.length) badges += ' <span style="background:#00b89422;color:#00b894;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">'+(cats[0])+' 전문</span>';
 
+  var handleStr = igCh ? '@'+igCh.replace('@','') : (ytCh ? '@'+ytCh.replace('@','') : '');
+  var catStr = cats.length ? cats.join(' / ')+' 카테고리' : '';
+
+  // 모달 생성
   var existing = document.getElementById('inf-detail-modal');
   if(existing) existing.remove();
   var el = document.createElement('div');
   el.id = 'inf-detail-modal';
   el.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
 
-  var size = lc.infSize||lc.role||'-';
-  var sizeColor = size.includes('메가')?'var(--pink)':size.includes('미들')?'var(--blue)':size.includes('시딩')?'var(--green)':'var(--text3)';
-  var sizeBg    = size.includes('메가')?'var(--pink-bg)':size.includes('미들')?'var(--blue-bg)':size.includes('시딩')?'var(--green-bg)':'var(--bg4)';
-  var platHtml  = '';
-  if(ytCh) platHtml += '<a href="https://www.youtube.com/@'+ytCh.replace('@','')+'" target="_blank" style="display:inline-flex;align-items:center;gap:3px;background:#ff000022;color:#ff0000;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none;margin-right:6px">▶ 유튜브 '+ytCh+'</a>';
-  if(igCh) platHtml += '<a href="https://www.instagram.com/'+igCh.replace('@','')+'" target="_blank" style="display:inline-flex;align-items:center;gap:3px;background:#e1306c22;color:#e1306c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none">📸 인스타 '+igCh+'</a>';
-  if(twCh) platHtml += '<a href="https://x.com/'+twCh.replace('@','')+'" target="_blank" style="display:inline-flex;align-items:center;gap:3px;background:#00000015;color:#000;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none">𝕏 '+twCh+'</a>';
-
-  el.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:0;min-width:620px;max-width:800px;width:95%;max-height:85vh;display:flex;flex-direction:column">'    +'<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between">'    +'<div style="display:flex;align-items:center;gap:12px">'    +'<div class="iav" style="width:40px;height:40px;font-size:16px;background:'+avColor(inf.name)+'22;color:'+avColor(inf.name)+'">'+inf.name[0]+'</div>'    +'<div><div style="font-size:17px;font-weight:800">'+inf.name+'</div>'    +'<div style="margin-top:4px;display:flex;align-items:center;gap:8px">'    +'<span style="background:'+sizeBg+';color:'+sizeColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+size+'</span>'    +(platHtml||'')+'</div></div></div>'    +'<button class="btn btn-ghost btn-xs" onclick="document.getElementById(&quot;inf-detail-modal&quot;).remove()">✕</button>'    +'</div>'    +'<div style="padding:14px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-bottom:1px solid var(--border2)">'    +'<div style="background:var(--bg3);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:10.5px;color:var(--text3);margin-bottom:4px">수수료율</div><div style="font-weight:700;color:var(--accent2);font-size:14px">'+(lc.feeRate?lc.feeRate+'%':'-')+'</div></div>'    +'<div style="background:var(--bg3);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:10.5px;color:var(--text3);margin-bottom:4px">원고료</div><div style="font-weight:700;color:var(--accent2);font-size:14px">'+(lc.feeAmount?(lc.feeAmount/10000).toFixed(0)+'만원':'-')+'</div></div>'    +'<div style="background:var(--bg3);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:10.5px;color:var(--text3);margin-bottom:4px">카테고리</div><div style="font-weight:700;color:var(--text);font-size:14px">'+(lc.cat||'-')+'</div></div>'    +'</div>'    +'<div style="padding:14px 24px 0;font-size:13px;font-weight:700;color:var(--text2)">📋 캠페인 실적 (최근 2년)</div>'    +'<div style="overflow-y:auto;padding:0 24px 20px">'    +(perfCamps.length      ?'<table style="width:100%;margin-top:10px"><thead><tr style="background:var(--bg3)">'        +'<th style="padding:6px 8px;text-align:left;font-size:11.5px">캠페인명</th><th style="padding:6px 8px;text-align:left;font-size:11.5px">브랜드</th>'        +'<th style="padding:6px 8px;text-align:left;font-size:11.5px">카테고리</th><th style="padding:6px 8px;text-align:right;font-size:11.5px">매출</th>'        +'<th style="padding:6px 8px;text-align:right;font-size:11.5px">주문건수</th><th style="padding:6px 8px;text-align:right;font-size:11.5px">조회수</th>'        +'<th style="padding:6px 8px;text-align:right;font-size:11.5px">비용</th></tr></thead><tbody>'+perfRows+'</tbody></table>'      :'<div style="padding:24px;text-align:center;color:var(--text3)">진행 실적 없음</div>')    +'</div></div>';
+  el.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:0;min-width:620px;max-width:860px;width:95%;max-height:90vh;display:flex;flex-direction:column">'
+    // 헤더
+    +'<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
+    +'<div style="display:flex;align-items:center;gap:14px">'
+    +'<div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;background:'+avColor(inf.name)+'22;color:'+avColor(inf.name)+'">'+inf.name[0]+'</div>'
+    +'<div><div style="font-size:18px;font-weight:800">'+escHtml(inf.name)+'</div>'
+    +'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+(handleStr?escHtml(handleStr)+' · ':'')+(catStr?escHtml(catStr):'')+'</div>'
+    +'<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+badges+'</div>'
+    +'</div></div>'
+    +'<div style="display:flex;gap:6px;align-items:center">'
+    +'<button class="btn btn-ghost btn-xs" onclick="pasteInfAi(\''+escHtml(inf.name)+'\')">AI 분석 붙여넣기</button>'
+    +'<button class="btn btn-ghost btn-xs" onclick="document.getElementById(\'inf-detail-modal\').remove()">✕</button>'
+    +'</div></div>'
+    // 스크롤 바디
+    +'<div id="inf-detail-body" style="overflow-y:auto;padding:20px 24px 24px;flex:1"></div>'
+    +'</div>';
 
   document.body.appendChild(el);
-  // 외부 클릭으로 닫기 비활성화
+
+  // 캐시된 AI 분석이 있으면 렌더, 없으면 기본 뷰
+  if(_infAiCache[infName]){
+    renderInfAiReport(infName, _infAiCache[infName]);
+  } else {
+    renderInfDefaultView(inf, perfCamps);
+  }
+}
+
+// ── 기본 뷰 (AI 분석 전) ──
+function renderInfDefaultView(inf, perfCamps){
+  var body = document.getElementById('inf-detail-body');
+  if(!body) return;
+  var lc = inf.latestCamp||{};
+
+  // 기본 정보 카드
+  var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">'
+    +'<div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10.5px;color:var(--text3);margin-bottom:4px">수수료율</div><div style="font-weight:700;color:var(--accent2);font-size:15px">'+(lc.feeRate?lc.feeRate+'%':'-')+'</div></div>'
+    +'<div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10.5px;color:var(--text3);margin-bottom:4px">원고료</div><div style="font-weight:700;color:var(--accent2);font-size:15px">'+(lc.feeAmount?(lc.feeAmount/10000).toFixed(0)+'만원':'-')+'</div></div>'
+    +'<div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10.5px;color:var(--text3);margin-bottom:4px">카테고리</div><div style="font-weight:700;font-size:15px">'+(lc.cat||'-')+'</div></div>'
+    +'</div>';
+
+  // 캠페인 실적
+  html += '<div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px">캠페인 실적 (최근 2년)</div>';
+  if(perfCamps.length){
+    html += '<table style="width:100%"><thead><tr style="background:var(--bg3)"><th style="padding:6px 8px;text-align:left;font-size:11px">캠페인명</th><th style="padding:6px 8px;text-align:left;font-size:11px">카테고리</th><th style="padding:6px 8px;text-align:right;font-size:11px">매출</th><th style="padding:6px 8px;text-align:right;font-size:11px">주문건수</th><th style="padding:6px 8px;text-align:right;font-size:11px">비용</th></tr></thead><tbody>';
+    perfCamps.forEach(function(c){
+      var rev=c.settleRevenue||0; var revS=rev>=1e8?(rev/1e8).toFixed(1)+'억':rev>=1e4?(rev/1e4).toFixed(0)+'만':rev>0?rev.toLocaleString():'-';
+      var fr=parseFloat(c.feeRate)||0,fa=parseInt(c.feeAmount)||0,ar=parseFloat(c.agencyRate)||0,da=parseInt(c.settleDa)||0;
+      var cost=Math.round(rev*fr/100)+fa+Math.round(rev*ar/100)+da;
+      var costS=cost>=1e4?(cost/1e4).toFixed(0)+'만':cost>0?cost.toLocaleString():'-';
+      html+='<tr style="font-size:12px"><td style="font-weight:600;padding:6px 8px">'+escHtml(c.name)+'</td><td style="color:var(--text3);padding:6px 8px">'+(c.cat||'-')+'</td><td style="color:var(--green);font-weight:700;text-align:right;padding:6px 8px">'+revS+'</td><td style="text-align:right;padding:6px 8px">'+(c.settleOrders||'-')+'</td><td style="color:var(--orange);text-align:right;padding:6px 8px">'+costS+'</td></tr>';
+    });
+    html += '</tbody></table>';
+  } else {
+    html += '<div style="padding:24px;text-align:center;color:var(--text3)">진행 실적 없음</div>';
+  }
+
+  // AI 분석 안내
+  html += '<div style="margin-top:24px;padding:24px;background:var(--bg3);border-radius:8px;text-align:center">'
+    +'<div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text2)">AI 종합 분석 리포트</div>'
+    +'<div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6">'
+    +'Claude AI에서 분석한 내용을 붙여넣으면<br>채널 지표 · 오디언스 · 강점/리스크 · 소싱 제안 등 8개 섹션이 자동 구성됩니다.</div>'
+    +'<button class="btn btn-primary btn-sm" onclick="pasteInfAi(\''+escHtml(inf.name)+'\')">AI 분석 붙여넣기</button>'
+    +'</div>';
+
+  body.innerHTML = html;
+}
+
+// ── AI 분석 붙여넣기 ──
+function pasteInfAi(infName){
+  var ta = document.createElement('textarea');
+  ta.style.cssText = 'width:100%;height:200px;font-size:12px;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;resize:vertical';
+  ta.placeholder = 'Claude AI 분석 결과를 여기에 붙여넣으세요...\n\nJSON 또는 자유 텍스트 형식 모두 지원합니다.';
+
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center';
+  wrap.innerHTML = '<div style="background:var(--bg2);border-radius:12px;padding:24px;width:90%;max-width:700px;max-height:80vh;display:flex;flex-direction:column;gap:14px">'
+    +'<div style="font-size:15px;font-weight:800">AI 분석 결과 붙여넣기</div>'
+    +'<div style="font-size:12px;color:var(--text3);line-height:1.5">Claude에서 받은 인플루언서 분석 리포트를 아래에 붙여넣으세요.<br>JSON 형식 또는 마크다운/텍스트 형식 모두 파싱합니다.</div>'
+    +'<div id="ai-paste-area"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+    +'<button class="btn btn-ghost btn-sm" id="ai-paste-cancel">취소</button>'
+    +'<button class="btn btn-primary btn-sm" id="ai-paste-save">저장 및 적용</button>'
+    +'</div></div>';
+
+  document.body.appendChild(wrap);
+  wrap.querySelector('#ai-paste-area').appendChild(ta);
+  wrap.querySelector('#ai-paste-cancel').onclick = function(){ wrap.remove(); };
+  wrap.querySelector('#ai-paste-save').onclick = function(){
+    var raw = ta.value.trim();
+    if(!raw){ alert('내용을 붙여넣어 주세요.'); return; }
+    var parsed = parseInfAiText(raw);
+    _infAiCache[infName] = parsed;
+    // Firebase에도 저장
+    saveInfAiToDb(infName, parsed);
+    wrap.remove();
+    renderInfAiReport(infName, parsed);
+    showToast('AI 분석 저장됨');
+  };
+  ta.focus();
+}
+
+// ── AI 텍스트 파싱 ──
+function parseInfAiText(raw){
+  // JSON 시도
+  try {
+    var j = JSON.parse(raw);
+    if(j && typeof j === 'object') return j;
+  } catch(e){}
+
+  // 마크다운/텍스트 섹션 파싱
+  var result = {
+    channelMetrics: '', audience: '', contentStyle: '',
+    strengthRisk: '', pastCampaigns: '', mdSourcing: '',
+    strategy: '', conclusion: ''
+  };
+  var sectionKeys = [
+    {pattern: /채널\s*핵심\s*지표/i, key: 'channelMetrics'},
+    {pattern: /오디언스\s*분석/i, key: 'audience'},
+    {pattern: /콘텐츠\s*스타일/i, key: 'contentStyle'},
+    {pattern: /강점.*리스크|강점.*약점/i, key: 'strengthRisk'},
+    {pattern: /과거\s*캠페인|레퍼런스/i, key: 'pastCampaigns'},
+    {pattern: /소싱\s*제안|MD\s*상품/i, key: 'mdSourcing'},
+    {pattern: /캠페인\s*전략|기대\s*효과/i, key: 'strategy'},
+    {pattern: /종합\s*의견|결론/i, key: 'conclusion'}
+  ];
+
+  var lines = raw.split('\n');
+  var currentKey = '';
+  var currentBuf = [];
+
+  lines.forEach(function(line){
+    var matched = false;
+    sectionKeys.forEach(function(sk){
+      if(sk.pattern.test(line)){
+        if(currentKey && currentBuf.length) result[currentKey] = currentBuf.join('\n').trim();
+        currentKey = sk.key;
+        currentBuf = [];
+        matched = true;
+      }
+    });
+    if(!matched && currentKey) currentBuf.push(line);
+  });
+  if(currentKey && currentBuf.length) result[currentKey] = currentBuf.join('\n').trim();
+
+  // 섹션이 하나도 매칭 안되면 전체를 conclusion에
+  var hasAny = Object.values(result).some(function(v){return v;});
+  if(!hasAny) result.conclusion = raw;
+
+  return result;
+}
+
+// ── Firebase 저장 ──
+function saveInfAiToDb(infName, data){
+  if(typeof firebase!=='undefined' && firebase.database){
+    try{ firebase.database().ref('infAiReports/'+infName.replace(/[.#$/[\]]/g,'_')).set(data); }catch(e){}
+  }
+}
+function loadInfAiFromDb(){
+  if(typeof firebase!=='undefined' && firebase.database){
+    try{
+      firebase.database().ref('infAiReports').once('value',function(snap){
+        var d=snap.val(); if(d){ Object.keys(d).forEach(function(k){ _infAiCache[k]=d[k]; }); }
+      });
+    }catch(e){}
+  }
+}
+
+// ── 8섹션 AI 리포트 렌더링 ──
+function renderInfAiReport(infName, data){
+  var body = document.getElementById('inf-detail-body');
+  if(!body) return;
+
+  function sec(title, content){ return '<div style="margin-bottom:20px"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">'+title+'</div>'+content+'</div>'; }
+  function card(inner){ return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px">'+inner+'</div>'; }
+  function textBlock(txt){
+    if(!txt) return '<div style="color:var(--text3);font-size:12px">데이터 없음</div>';
+    return '<div style="font-size:12.5px;line-height:1.7;color:var(--text2);white-space:pre-wrap">'+escHtml(txt).replace(/\*\*(.*?)\*\*/g,'<strong style="color:var(--text);font-weight:700">$1</strong>').replace(/^[•●]\s*/gm,'<span style="color:var(--accent)">● </span>').replace(/^[-–]\s*/gm,'<span style="color:var(--text3)">— </span>')+'</div>';
+  }
+  function twoCol(left, right){
+    return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+card(left)+card(right)+'</div>';
+  }
+
+  var html = '';
+
+  // 1. 채널 핵심 지표
+  html += sec('채널 핵심 지표', card(textBlock(data.channelMetrics)));
+
+  // 2. 오디언스 분석
+  html += sec('오디언스 분석', card(textBlock(data.audience)));
+
+  // 3. 콘텐츠 스타일 분석
+  html += sec('콘텐츠 스타일 분석', card(textBlock(data.contentStyle)));
+
+  // 4. 강점 & 리스크
+  var srParts = (data.strengthRisk||'').split(/리스크|주의사항|약점/i);
+  if(srParts.length >= 2){
+    html += sec('강점 & 리스크', twoCol(
+      '<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">강점</div>'+textBlock(srParts[0]),
+      '<div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px">리스크 / 주의사항</div>'+textBlock(srParts[1])
+    ));
+  } else {
+    html += sec('강점 & 리스크', card(textBlock(data.strengthRisk)));
+  }
+
+  // 5. 과거 캠페인 레퍼런스
+  var inf = buildInfList().find(function(i){return i.name===infName;});
+  if(inf){
+    var perfCamps = inf.campaigns.filter(function(c){ var s=c.start?new Date(c.start):null; var ty=new Date(); ty.setFullYear(ty.getFullYear()-2); return s&&s>=ty; }).sort(function(a,b){return (b.start||'')>(a.start||'')?1:-1;});
+    if(perfCamps.length){
+      var refHtml = '<table style="width:100%"><thead><tr style="background:var(--bg)"><th style="width:30px;padding:6px 8px;font-size:11px"></th><th style="padding:6px 8px;text-align:left;font-size:11px">제품 / 브랜드</th><th style="padding:6px 8px;font-size:11px">카테고리</th><th style="padding:6px 8px;font-size:11px">반응</th></tr></thead><tbody>';
+      perfCamps.forEach(function(c, idx){
+        var catColor = (c.cat||'').includes('식품')?'#d68910':(c.cat||'').includes('주방')?'#6c5ce7':(c.cat||'').includes('뷰티')?'#e1306c':'#00b894';
+        var catBg = (c.cat||'').includes('식품')?'#fdcb6e33':(c.cat||'').includes('주방')?'#6c5ce722':(c.cat||'').includes('뷰티')?'#e1306c22':'#00b89422';
+        var rev=c.settleRevenue||0; var reaction=rev>5e7?'완판':rev>1e7?'양호':rev>0?'보통':'데이터 미공개';
+        var reactionColor=rev>5e7?'var(--green)':rev>1e7?'var(--blue)':rev>0?'var(--text2)':'var(--text3)';
+        refHtml += '<tr><td style="padding:8px;text-align:center"><span style="background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">'+(idx+1)+'</span></td>'
+          +'<td style="padding:8px"><div style="font-weight:700;font-size:12.5px">'+escHtml(c.name)+'</div></td>'
+          +'<td style="padding:8px;text-align:center"><span style="background:'+catBg+';color:'+catColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">'+(c.cat||'-')+'</span></td>'
+          +'<td style="padding:8px;text-align:center;font-weight:700;font-size:12px;color:'+reactionColor+'">'+reaction+'</td></tr>';
+      });
+      refHtml += '</tbody></table>';
+      html += sec('과거 레퍼런스 분석', card(refHtml));
+    }
+  }
+  if(data.pastCampaigns) html += sec('과거 캠페인 상세', card(textBlock(data.pastCampaigns)));
+
+  // 6. MD 소싱 제안
+  html += sec('MD 소싱 제안 (우선순위 순)', card(textBlock(data.mdSourcing)));
+
+  // 7. 캠페인 전략 및 기대 효과
+  html += sec('캠페인 전략 및 기대 효과', card(textBlock(data.strategy)));
+
+  // 8. 종합 의견 및 결론
+  html += sec('MD 소싱 종합 의견', card(textBlock(data.conclusion)));
+
+  // 하단 버튼
+  html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">'
+    +'<button class="btn btn-ghost btn-xs" onclick="delete _infAiCache[\''+escHtml(infName)+'\'];var inf2=buildInfList().find(function(i){return i.name===\''+escHtml(infName)+'\';});if(inf2){var ty=new Date();ty.setFullYear(ty.getFullYear()-2);renderInfDefaultView(inf2,inf2.campaigns.filter(function(c){var s=c.start?new Date(c.start):null;return s&&s>=ty;}).sort(function(a,b){return(b.start||\'\')<(a.start||\'\')?-1:1;}));}">분석 초기화</button>'
+    +'<button class="btn btn-ghost btn-xs" onclick="pasteInfAi(\''+escHtml(infName)+'\')">다시 붙여넣기</button>'
+    +'</div>';
+
+  body.innerHTML = html;
 }
 function filterInfs(v2){ infFilter.text=v2; renderInfs(); }
 function setCat(c){ infFilter.cat=c; renderInfs(); }
