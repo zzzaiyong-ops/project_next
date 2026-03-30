@@ -458,19 +458,9 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   .topbar-r { gap: 8px; }
   .topbar-r .btn-primary { font-size: 13px !important; padding: 8px 14px !important; }
 
-  /* ── 뒤로가기 버튼 (콘텐츠 화면 상단) ── */
+  /* ── 뒤로가기 버튼: 모바일에서 숨김 (햄버거로 대체) ── */
   #mob-back-btn {
-    display: flex !important;
-    align-items: center;
-    gap: 6px;
-    background: none;
-    border: none;
-    color: var(--accent);
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    padding: 4px 0;
-    font-family: inherit;
+    display: none !important;
   }
 
   /* ── 콘텐츠 스크롤 ── */
@@ -1047,7 +1037,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <table id="camp-req-table">
         <thead><tr><th style="width:36px;text-align:center">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s1" onchange="toggleAllCheck('s1',this.checked)" style="cursor:pointer"></th>
-          <th style="width:100px;white-space:nowrap">캠페인코드</th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th class="mob-hide">MDCAT</th><th>역할</th>
           <th class="mob-hide">인플루언서규모</th><th class="mob-hide">예상매출</th>
           <th class="mob-hide">시작일</th><th class="mob-hide">종료일</th><th style="background:var(--bg)"></th>
@@ -1092,7 +1082,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         <thead><tr>
           <th style="width:36px;text-align:center;color:var(--text3)">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s2" onchange="toggleAllCheck('s2',this.checked)" style="cursor:pointer"></th>
-          <th style="width:100px;white-space:nowrap">캠페인코드</th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th>
           <th style="width:9%;min-width:70px">MDCAT</th>
           <th>역할</th>
@@ -1145,7 +1135,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         <thead><tr>
           <th style="width:36px;text-align:center;color:var(--text3)">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s3" onchange="toggleAllCheck('s3',this.checked)" style="cursor:pointer"></th>
-          <th style="width:100px;white-space:nowrap">캠페인코드</th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>역할</th><th>상품코드</th><th>가격정보</th><th style="width:8%;min-width:65px">시작일</th><th style="width:8%;min-width:65px">종료일</th><th style="width:99vw;background:var(--bg)"></th>
         </tr></thead>
         <tbody id="s3-tbl"></tbody>
@@ -1189,7 +1179,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         <thead><tr>
           <th style="width:36px;text-align:center;color:var(--text3)">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s4" onchange="toggleAllCheck('s4',this.checked)" style="cursor:pointer"></th>
-          <th style="width:100px;white-space:nowrap">캠페인코드</th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>역할</th><th>인플루언서규모</th><th style="width:9%;min-width:75px">예상매출</th><th>MCN업체 · 인플루언서</th><th style="width:8%;min-width:65px">시작일</th><th style="width:8%;min-width:65px">종료일</th><th style="width:99vw;background:var(--bg)"></th>
         </tr></thead>
         <tbody id="mcn-tbl"></tbody>
@@ -1232,7 +1222,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         <thead><tr>
           <th style="width:36px;text-align:center;color:var(--text3)">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s5" onchange="toggleAllCheck('s5',this.checked)" style="cursor:pointer"></th>
-          <th style="width:100px;white-space:nowrap">캠페인코드</th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>역할</th>
           <th>인플루언서규모</th><th style="width:9%;min-width:75px">예상매출</th>
           <th>MCN업체</th><th>인플루언서</th>
@@ -1276,7 +1266,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <div class="stage-table-wrap"><table class="stage-table">
         <thead><tr>
           <th style="width:36px;text-align:center">#</th>
-          <th style="width:100px;white-space:nowrap">캠페인코드</th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>인플루언서규모</th>
           <th>인플루언서</th><th style="width:9%;min-width:75px">예상매출</th>
           <th style="text-align:center">APP MKT 요청</th><th style="width:99vw;background:var(--bg)"></th>
@@ -1350,7 +1340,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <div style="overflow-x:auto">
         <table><thead><tr>
           <th style="width:30px;text-align:center"><input type="checkbox" id="s7-check-all" checked onchange="toggleS7CheckAll(this.checked)"></th>
-          <th style="width:100px;white-space:nowrap">캠페인코드</th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:20%;min-width:130px">캠페인명</th><th>규모</th><th style="width:9%;min-width:70px">MDCAT</th><th>카테고리</th>
           <th>MCN업체</th><th>인플루언서</th><th>매출</th><th>건수</th><th>비용</th><th>시작~종료일</th><th></th>
         </tr></thead>
@@ -1432,7 +1422,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div id="camp-list" style="display:block">
       <div class="card">
         <div class="card-hd"><span class="card-ttl">전체 캠페인 <span id="camp-count" style="font-size:12px;font-weight:400;color:var(--text3)"></span></span></div>
-        <div style="overflow-x:auto;min-height:100px;display:block"><table style="width:100%;border-collapse:collapse;min-height:100px"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:100px;white-space:nowrap">캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>기간</th><th>캠페인담당</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플루언서</th><th style="background:var(--bg)"></th></tr></thead>
+        <div style="overflow-x:auto;min-height:100px;display:block"><table style="width:100%;border-collapse:collapse;min-height:100px"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>기간</th><th>캠페인담당</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플루언서</th><th style="background:var(--bg)"></th></tr></thead>
         <tbody id="camp-tbl"></tbody></table></div>
         <div id="camp-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 18px;border-top:1px solid var(--border)"></div>
       </div>
@@ -4919,7 +4909,7 @@ function renderS1(filter=''){
     rows+=`<tr onclick="openCampReqDetail(${c.id})" style="cursor:pointer">
       <td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">${rowNum}</td>
       <td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="${c.id}" data-stage="s1" style="cursor:pointer"></td>
-      <td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">${c.campCode||'-'}</td>
+      <td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">${c.campCode||'-'}</td>
       <td><strong>${c.name}</strong></td>
       <td style="color:var(--text3);font-size:12px;font-family:monospace">${mdcatVal}</td>
       <td>${c.role?`<span style="background:${roleBg};color:${roleColor};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">${c.role}</span>`:'-'}</td>
@@ -5211,7 +5201,7 @@ function renderS2(){
     var isAlreadyConfirmed = c.stage==='2.캠페인확정'||c.stage==='4.MCN요청'||c.stage==='5.인플루언서확정'||c.stage==='6.APP마케팅확정'||c.stage==='7.정산'||c.stage==='7.정산완료';
     rows+='<tr style="cursor:pointer" onclick="editProd('+c.id+')">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
       +'<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+c.id+'" data-stage="s2" style="cursor:pointer"></td>'
-      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
+      +'<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="white-space:normal;min-width:80px;max-width:150px"><strong>'+c.name+'</strong>'+(isAlreadyConfirmed?'<br><span style="font-size:10px;color:var(--green)">✓ 확정</span>':'<br><span style="font-size:10px;color:var(--text3)">미확정</span>')+'</td>'
       +'<td style="color:var(--text3);font-size:12px;font-family:monospace">'+mdcatVal+'</td>'
       +'<td>'+(c.role?'<span style="background:'+roleBg+';color:'+roleColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+c.role+'</span>':'-')+'</td>'
@@ -5357,7 +5347,7 @@ function renderS3(){
                                : '<span style="background:var(--orange-bg);color:var(--orange);padding:2px 7px;border-radius:12px;font-size:10.5px;font-weight:700">미입력</span>';
     rows += '<tr onclick="editProd('+c.id+')">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
       +'<td><input type="checkbox" class="row-chk" data-stage="s3" data-id="'+c.id+'" onclick="event.stopPropagation()"></td>'
-      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
+      +'<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="font-weight:600;white-space:normal;min-width:80px;max-width:160px">'+escHtml(c.name||'-')+'</td>'
       +'<td style="color:var(--text3);font-size:12px">'+escHtml(mdcat)+'</td>'
       +'<td><span style="font-size:12px;font-weight:600;color:var(--accent2)">'+escHtml(c.role||'-')+'</span></td>'
@@ -5425,7 +5415,7 @@ function renderS4(){
 
     rows += '<tr onclick="editProd('+c.id+')" style="cursor:pointer">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
       +'<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+c.id+'" data-stage="s4" style="cursor:pointer"></td>'
-      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
+      +'<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="white-space:nowrap"><strong>'+c.name+'</strong>'
       +(c.stage==='4.MCN요청'?'&nbsp;<span style="font-size:10px;color:var(--blue)">▶ MCN완료</span>':'')+'</td>'
       +'<td style="color:var(--text3);font-size:12px;white-space:nowrap">'+mdcatVal+'</td>'
@@ -5964,7 +5954,7 @@ function renderS5(){
 
     rows += '<tr onclick="editProd('+c.id+')" style="cursor:pointer">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
       +'<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+c.id+'" data-stage="s5" style="cursor:pointer"></td>'
-      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
+      +'<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="white-space:normal;min-width:80px;max-width:150px"><strong>'+c.name+'</strong>'
       +(c.stage==='5.인플루언서확정' && !c.sampleSent?'<br><span style="font-size:10px;color:var(--orange);font-weight:700">📦 샘플발송 필요</span>':c.stage==='5.인플루언서확정'?'<br><span style="font-size:10px;color:var(--green)">✓ 인플루언서 확정</span>':'')+'</td>'
       +'<td style="color:var(--text3);font-size:12px;font-family:monospace">'+mdcatVal+'</td>'
@@ -6164,7 +6154,7 @@ function renderS6(){
       : '<span style="color:var(--text3);font-size:12px">미등록</span>';
 
     rows+='<tr onclick="editProd('+c.id+')" style="cursor:pointer">'+'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
-      +'<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
+      +'<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       +'<td style="white-space:normal;min-width:80px;max-width:150px"><strong>'+c.name+'</strong>'+(hasApp?'<br><span style="font-size:10px;color:var(--blue)">✓ APP MKT 확정</span>':'<br><span style="font-size:10px;color:var(--orange)">📱 APP MKT 미등록</span>')+'</td>'
       +'<td style="color:var(--text3);font-size:12px;font-family:monospace">'+mdcatVal+'</td>'
       +'<td style="color:var(--text2);font-size:12.5px">'+(c.infSize||'-')+'</td>'
@@ -6446,7 +6436,7 @@ function renderS7(){
         rows += '<tr style="cursor:pointer" onclick="editProd('+camp.id+')">'
       + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px" rowspan="'+rowspan+'">'+rowNum+'</td>'
           +'<td rowspan="'+rowspan+'" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+camp.id+'" data-stage="s7" style="cursor:pointer"></td>'
-          +'<td rowspan="'+rowspan+'" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap;vertical-align:top;padding-top:10px">'+(camp.campCode||'-')+'</td>'
+          +'<td class="mob-hide" rowspan="'+rowspan+'" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap;vertical-align:top;padding-top:10px">'+(camp.campCode||'-')+'</td>'
           +'<td rowspan="'+rowspan+'" style="font-weight:600;vertical-align:top;padding-top:10px">'
             +'<div>'+camp.name+'</div>'
             +(rowspan>1?'<div style="font-size:10px;color:var(--accent);margin-top:3px;font-weight:700">👥 인플루언서 '+rowspan+'명</div>':'')
@@ -6615,7 +6605,7 @@ function renderCamps(){
     var infCount = (c.infData&&c.infData.length>0) ? c.infData.filter(function(d){return d.infName;}).length : (c.infName?1:0);
     rows += '<tr onclick="editProd('+c.id+')">'
       + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
-      + '<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
+      + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
       + '<td><strong>'+escHtml(c.name)+'</strong><br><span style="font-size:11px;color:var(--text3)">'+(mdNm?'MD:'+mdNm:'')+'</span></td>'
       + '<td style="font-size:12px;color:var(--text3)">'+(c.start||'').slice(5)+'~'+(c.end||'').slice(5)+'</td>'
       + '<td style="color:var(--text2)">'+pdName+'</td>'
@@ -7741,7 +7731,7 @@ function renderReports(){
 
     rows += '<tr style="cursor:pointer">'
       + '<td style="text-align:center" onclick="event.stopPropagation()"><input type="checkbox" class="s7-camp-cb" value="'+camp.id+'" checked onchange="updateS7CheckAll()"></td>'
-      + '<td style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(camp.campCode||'-')+'</td>'
+      + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(camp.campCode||'-')+'</td>'
       + '<td style="font-weight:700" onclick="editProd('+camp.id+')">'+camp.name+'</td>'
       + '<td>'+(camp.infSize||camp.role ? '<span style="background:'+roleBg+';color:'+roleColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+(camp.infSize||camp.role)+'</span>' : '-')+'</td>'
       + '<td style="font-size:12px;font-family:monospace;color:var(--text3)">'+mdcatVal+'</td>'
