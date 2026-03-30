@@ -7500,33 +7500,29 @@ function renderInfAiReport(infName, data){
 function downloadInfPdf(infName){
   var body = document.getElementById('inf-detail-body');
   if(!body) return;
-  // 헤더 정보도 포함
-  var modal = document.getElementById('inf-detail-modal');
-  var headerEl = modal ? modal.querySelector('div > div:first-child') : null;
-  var headerHtml = headerEl ? '<div style="margin-bottom:16px">'+headerEl.innerHTML.replace(/<button[^>]*>.*?<\/button>/g,'')+'</div>' : '';
 
-  // iframe 내용을 추출하여 inline으로 병합
-  var contentHtml = '';
-  var iframe = body.querySelector('iframe');
-  if(iframe && iframe.contentDocument){
-    // iframe 앞뒤 내용 분리
+  // 캐시된 AI 분석 데이터에서 직접 HTML 추출
+  var cached = _infAiCache[infName];
+  var aiHtml = '';
+  if(cached && cached._fullHtml){
+    aiHtml = cached._fullHtml;
+  } else if(cached){
+    // 텍스트 모드: body 내용 복사
     var clone = body.cloneNode(true);
-    var iframeClone = clone.querySelector('iframe');
-    // iframe의 head(style) + body 내용 추출
-    var iframeDoc = iframe.contentDocument;
-    var iframeStyles = '';
-    iframeDoc.querySelectorAll('style').forEach(function(s){ iframeStyles += s.outerHTML; });
-    var iframeBody = iframeDoc.body ? iframeDoc.body.innerHTML : '';
-    // iframe을 내용으로 교체
-    var placeholder = document.createElement('div');
-    placeholder.innerHTML = iframeStyles + iframeBody;
-    if(iframeClone) iframeClone.replaceWith(placeholder);
-    contentHtml = clone.innerHTML;
-  } else {
-    contentHtml = body.innerHTML;
+    clone.querySelectorAll('button').forEach(function(b){ b.remove(); });
+    aiHtml = clone.innerHTML;
   }
-  // 버튼/하단 액션 제거
-  contentHtml = contentHtml.replace(/<button[^>]*>[\s\S]*?<\/button>/g,'');
+
+  // 기존 실적 데이터 (buildPerfHtml 재사용 불가하므로 직접 생성)
+  var inf = buildInfList().find(function(i){return i.name===infName;});
+  var perfHtml = '';
+  if(inf){
+    var lc = inf.latestCamp||{};
+    perfHtml += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">'
+      +'<div style="background:#f5f5f5;border-radius:8px;padding:12px;text-align:center"><div style="font-size:10.5px;color:#999;margin-bottom:4px">수수료율</div><div style="font-weight:700;font-size:15px">'+(lc.feeRate?lc.feeRate+'%':'-')+'</div></div>'
+      +'<div style="background:#f5f5f5;border-radius:8px;padding:12px;text-align:center"><div style="font-size:10.5px;color:#999;margin-bottom:4px">원고료</div><div style="font-weight:700;font-size:15px">'+(lc.feeAmount?(lc.feeAmount/10000).toFixed(0)+'만원':'-')+'</div></div>'
+      +'<div style="background:#f5f5f5;border-radius:8px;padding:12px;text-align:center"><div style="font-size:10.5px;color:#999;margin-bottom:4px">카테고리</div><div style="font-weight:700;font-size:15px">'+(lc.cat||'-')+'</div></div></div>';
+  }
 
   var printWin = window.open('','_blank');
   printWin.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+escHtml(infName)+' 인플루언서 분석</title>'
@@ -7534,17 +7530,15 @@ function downloadInfPdf(infName){
     +':root{--color-text-primary:#1a1a1a;--color-text-secondary:#666;--color-text-tertiary:#999;--color-text-info:#185FA5;'
     +'--color-background-primary:#fff;--color-background-secondary:#f5f5f5;--color-background-info:#E6F1FB;'
     +'--color-border-tertiary:#e5e5e5;--border-radius-lg:12px;--border-radius-md:8px;'
-    +'--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
-    +'--bg:#fff;--bg2:#fff;--bg3:#f8f8f8;--bg4:#eee;--text:#1a1a1a;--text2:#555;--text3:#999;'
-    +'--border:#e5e5e5;--border2:#ddd;--accent:#6c5ce7;--accent2:#5a4bd1;--accent-bg:#f0eefe;'
-    +'--green:#00b894;--orange:#e17055;--pink:#d63384;--blue:#0d6efd;'
-    +'--r:8px;--r-sm:6px;--r-lg:12px;}'
+    +'--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}'
     +'*{box-sizing:border-box;margin:0;padding:0;}'
-    +'body{font-family:var(--font-sans);padding:24px;color:var(--text);font-size:13px;line-height:1.6;}'
+    +'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:24px;color:#1a1a1a;font-size:13px;line-height:1.6;}'
     +'table{width:100%;border-collapse:collapse;}th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #eee;}'
-    +'@media print{body{padding:12px;}}'
+    +'@media print{body{padding:12px;} @page{margin:15mm;}}'
     +'</style></head><body>'
-    +headerHtml+contentHtml
+    +'<h2 style="margin-bottom:4px">'+escHtml(infName)+'</h2>'
+    +'<div style="height:1px;background:#ddd;margin:12px 0"></div>'
+    +perfHtml+aiHtml
     +'</body></html>');
   printWin.document.close();
   setTimeout(function(){ printWin.print(); }, 500);
