@@ -7074,36 +7074,119 @@ function renderInfDefaultView(inf, perfCamps){
 
 // ── AI 분석 붙여넣기 ──
 function pasteInfAi(infName){
-  var ta = document.createElement('textarea');
-  ta.style.cssText = 'width:100%;height:200px;font-size:12px;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;resize:vertical';
-  ta.placeholder = 'Claude AI 분석 결과를 여기에 붙여넣으세요...\n\nJSON 또는 자유 텍스트 형식 모두 지원합니다.';
-
   var wrap = document.createElement('div');
   wrap.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center';
-  wrap.innerHTML = '<div style="background:var(--bg2);border-radius:12px;padding:24px;width:90%;max-width:700px;max-height:80vh;display:flex;flex-direction:column;gap:14px">'
+  wrap.innerHTML = '<div style="background:var(--bg2);border-radius:12px;padding:24px;width:90%;max-width:750px;max-height:85vh;display:flex;flex-direction:column;gap:14px">'
     +'<div style="font-size:15px;font-weight:800">AI 분석 결과 붙여넣기</div>'
-    +'<div style="font-size:12px;color:var(--text3);line-height:1.5">Claude에서 받은 인플루언서 분석 리포트를 아래에 붙여넣으세요.<br>JSON 형식 또는 마크다운/텍스트 형식 모두 파싱합니다.</div>'
-    +'<div id="ai-paste-area"></div>'
+    +'<div style="font-size:12px;color:var(--text3);line-height:1.5">Claude에서 받은 인플루언서 분석 리포트를 아래 영역에 <b>Ctrl+V</b>로 붙여넣으세요.<br>텍스트, 마크다운, HTML(서식 포함) 모두 지원합니다.</div>'
+    // 탭 전환
+    +'<div style="display:flex;gap:0;border-bottom:1px solid var(--border)">'
+    +'<button id="ai-tab-rich" class="btn btn-ghost btn-xs" style="border-radius:6px 6px 0 0;border-bottom:2px solid var(--accent);font-weight:700" onclick="document.getElementById(\'ai-rich-area\').style.display=\'\';document.getElementById(\'ai-text-area\').style.display=\'none\';this.style.borderBottom=\'2px solid var(--accent)\';document.getElementById(\'ai-tab-text\').style.borderBottom=\'none\'">서식 붙여넣기 (HTML)</button>'
+    +'<button id="ai-tab-text" class="btn btn-ghost btn-xs" style="border-radius:6px 6px 0 0;border-bottom:none" onclick="document.getElementById(\'ai-rich-area\').style.display=\'none\';document.getElementById(\'ai-text-area\').style.display=\'\';this.style.borderBottom=\'2px solid var(--accent)\';document.getElementById(\'ai-tab-rich\').style.borderBottom=\'none\'">텍스트 붙여넣기</button>'
+    +'</div>'
+    // 서식(HTML) 붙여넣기 영역
+    +'<div id="ai-rich-area" contenteditable="true" style="width:100%;min-height:220px;max-height:50vh;overflow-y:auto;font-size:12.5px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);line-height:1.7;outline:none;cursor:text" data-placeholder="여기를 클릭한 후 Ctrl+V로 붙여넣으세요..."></div>'
+    // 텍스트 붙여넣기 영역
+    +'<textarea id="ai-text-area" style="display:none;width:100%;min-height:220px;max-height:50vh;font-size:12px;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;resize:vertical;line-height:1.6" placeholder="텍스트 또는 JSON을 여기에 붙여넣으세요..."></textarea>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end">'
     +'<button class="btn btn-ghost btn-sm" id="ai-paste-cancel">취소</button>'
     +'<button class="btn btn-primary btn-sm" id="ai-paste-save">저장 및 적용</button>'
     +'</div></div>';
 
   document.body.appendChild(wrap);
-  wrap.querySelector('#ai-paste-area').appendChild(ta);
+
+  var richArea = wrap.querySelector('#ai-rich-area');
+  var textArea = wrap.querySelector('#ai-text-area');
+
+  // placeholder 스타일링
+  richArea.addEventListener('focus', function(){ this.style.borderColor='var(--accent)'; });
+  richArea.addEventListener('blur', function(){ this.style.borderColor='var(--border)'; });
+
   wrap.querySelector('#ai-paste-cancel').onclick = function(){ wrap.remove(); };
   wrap.querySelector('#ai-paste-save').onclick = function(){
-    var raw = ta.value.trim();
-    if(!raw){ alert('내용을 붙여넣어 주세요.'); return; }
-    var parsed = parseInfAiText(raw);
+    // 서식(HTML) 탭이 활성화된 경우
+    var isRichMode = richArea.style.display !== 'none';
+    var rawHtml = '', rawText = '';
+    if(isRichMode){
+      rawHtml = richArea.innerHTML.trim();
+      rawText = richArea.innerText.trim();
+    } else {
+      rawText = textArea.value.trim();
+    }
+    if(!rawText && !rawHtml){ alert('내용을 붙여넣어 주세요.'); return; }
+
+    var parsed;
+    if(isRichMode && rawHtml && rawHtml !== rawText){
+      // HTML 모드: HTML을 직접 저장 + 텍스트도 파싱
+      parsed = parseInfAiHtml(rawHtml, rawText);
+    } else {
+      parsed = parseInfAiText(rawText);
+    }
     _infAiCache[infName] = parsed;
-    // Firebase에도 저장
     saveInfAiToDb(infName, parsed);
     wrap.remove();
     renderInfAiReport(infName, parsed);
     showToast('AI 분석 저장됨');
   };
-  ta.focus();
+  richArea.focus();
+}
+
+// ── HTML 파싱 (서식 유지) ──
+function parseInfAiHtml(html, plainText){
+  var result = {
+    channelMetrics: '', audience: '', contentStyle: '',
+    strengthRisk: '', pastCampaigns: '', mdSourcing: '',
+    strategy: '', conclusion: '', _isHtml: true, _rawHtml: html
+  };
+  var sectionKeys = [
+    {pattern: /채널\s*핵심\s*지표/i, key: 'channelMetrics'},
+    {pattern: /오디언스\s*분석/i, key: 'audience'},
+    {pattern: /콘텐츠\s*스타일/i, key: 'contentStyle'},
+    {pattern: /강점.*리스크|강점.*약점|강점.*주의/i, key: 'strengthRisk'},
+    {pattern: /과거\s*캠페인|레퍼런스\s*분석/i, key: 'pastCampaigns'},
+    {pattern: /소싱\s*제안|MD\s*상품|MD\s*소싱/i, key: 'mdSourcing'},
+    {pattern: /캠페인\s*전략|기대\s*효과/i, key: 'strategy'},
+    {pattern: /종합\s*의견|결론|종합\s*평가/i, key: 'conclusion'}
+  ];
+
+  // HTML을 임시 DOM에 파싱
+  var tmp = document.createElement('div');
+  tmp.innerHTML = html;
+
+  // 섹션 헤더 태그들 (h1~h4, strong, b 등) 기준으로 분할
+  var allNodes = tmp.querySelectorAll('h1,h2,h3,h4,h5,h6,p,div,table,ul,ol,blockquote,hr,strong,b');
+  var currentKey = '';
+  var currentBuf = [];
+
+  function flushBuf(){ if(currentKey && currentBuf.length) result[currentKey] = currentBuf.join(''); currentBuf = []; }
+
+  // 노드 순회하며 섹션 매칭
+  var children = Array.from(tmp.childNodes);
+  children.forEach(function(node){
+    var text = (node.textContent||'').trim();
+    var matched = false;
+    sectionKeys.forEach(function(sk){
+      if(sk.pattern.test(text) && text.length < 60){
+        flushBuf();
+        currentKey = sk.key;
+        matched = true;
+      }
+    });
+    if(!matched && currentKey){
+      currentBuf.push(node.nodeType===1 ? node.outerHTML : escHtml(node.textContent));
+    }
+  });
+  flushBuf();
+
+  // 매칭 안 되면 텍스트 파싱 폴백
+  var hasAny = Object.keys(result).some(function(k){ return k[0]!=='_' && result[k]; });
+  if(!hasAny){
+    var textParsed = parseInfAiText(plainText);
+    Object.keys(textParsed).forEach(function(k){ result[k] = textParsed[k]; });
+    result._isHtml = false;
+  }
+
+  return result;
 }
 
 // ── AI 텍스트 파싱 ──
@@ -7181,6 +7264,8 @@ function renderInfAiReport(infName, data){
   function card(inner){ return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px">'+inner+'</div>'; }
   function textBlock(txt){
     if(!txt) return '<div style="color:var(--text3);font-size:12px">데이터 없음</div>';
+    // HTML 콘텐츠인 경우 그대로 렌더링
+    if(typeof txt === 'string' && txt.match(/^<[a-z]/i)) return '<div style="font-size:12.5px;line-height:1.7;color:var(--text2)">'+txt+'</div>';
     return '<div style="font-size:12.5px;line-height:1.7;color:var(--text2);white-space:pre-wrap">'+escHtml(txt).replace(/\*\*(.*?)\*\*/g,'<strong style="color:var(--text);font-weight:700">$1</strong>').replace(/^[•●]\s*/gm,'<span style="color:var(--accent)">● </span>').replace(/^[-–]\s*/gm,'<span style="color:var(--text3)">— </span>')+'</div>';
   }
   function twoCol(left, right){
