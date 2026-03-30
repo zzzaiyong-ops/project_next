@@ -7062,7 +7062,7 @@ function openInfDetail(infName){
   el.id = 'inf-detail-modal';
   el.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
 
-  el.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:0;min-width:620px;max-width:860px;width:95%;max-height:90vh;display:flex;flex-direction:column">'
+  el.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:0;min-width:620px;max-width:1120px;width:95%;max-height:90vh;display:flex;flex-direction:column">'
     // 헤더
     +'<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">'
     +'<div style="display:flex;align-items:center;gap:14px">'
@@ -7074,6 +7074,7 @@ function openInfDetail(infName){
     +'<div style="display:flex;gap:6px;align-items:center">'
     +(_infAiCache[infName]?'<button class="btn btn-ghost btn-xs" style="color:var(--orange);font-size:11px" onclick="resetInfAi(\''+escHtml(inf.name)+'\')">초기화</button>':'')
     +'<button class="btn btn-ghost btn-xs" onclick="pasteInfAi(\''+escHtml(inf.name)+'\')">AI 분석 붙여넣기</button>'
+    +'<button class="btn btn-ghost btn-xs" onclick="downloadInfPdf(\''+escHtml(inf.name)+'\')">PDF 다운로드</button>'
     +'<button class="btn btn-ghost btn-xs" onclick="document.getElementById(\'inf-detail-modal\').remove()">✕</button>'
     +'</div></div>'
     // 스크롤 바디
@@ -7495,6 +7496,49 @@ function renderInfAiReport(infName, data){
 
   body.innerHTML = html;
 }
+// PDF 다운로드 (새 창에서 인쇄)
+function downloadInfPdf(infName){
+  var body = document.getElementById('inf-detail-body');
+  if(!body) return;
+  // 헤더 정보도 포함
+  var modal = document.getElementById('inf-detail-modal');
+  var headerEl = modal ? modal.querySelector('div > div:first-child') : null;
+  var headerHtml = headerEl ? '<div style="margin-bottom:16px">'+headerEl.innerHTML.replace(/<button[^>]*>.*?<\/button>/g,'')+'</div>' : '';
+
+  // iframe 내용도 추출
+  var contentHtml = '';
+  var iframe = body.querySelector('iframe');
+  if(iframe && iframe.contentDocument){
+    contentHtml = body.innerHTML.replace(/<iframe[^>]*>.*?<\/iframe>/g, iframe.contentDocument.documentElement.outerHTML);
+  } else {
+    contentHtml = body.innerHTML;
+  }
+  // 버튼 제거
+  contentHtml = contentHtml.replace(/<button[^>]*>.*?<\/button>/g,'');
+  contentHtml = contentHtml.replace(/<div[^>]*display:flex[^>]*gap:8px[^>]*justify-content:center[^>]*>[\s\S]*?<\/div>\s*$/,'');
+
+  var printWin = window.open('','_blank');
+  printWin.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+escHtml(infName)+' 인플루언서 분석</title>'
+    +'<style>'
+    +':root{--color-text-primary:#1a1a1a;--color-text-secondary:#666;--color-text-tertiary:#999;--color-text-info:#185FA5;'
+    +'--color-background-primary:#fff;--color-background-secondary:#f5f5f5;--color-background-info:#E6F1FB;'
+    +'--color-border-tertiary:#e5e5e5;--border-radius-lg:12px;--border-radius-md:8px;'
+    +'--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
+    +'--bg:#fff;--bg2:#fff;--bg3:#f8f8f8;--bg4:#eee;--text:#1a1a1a;--text2:#555;--text3:#999;'
+    +'--border:#e5e5e5;--border2:#ddd;--accent:#6c5ce7;--accent2:#5a4bd1;--accent-bg:#f0eefe;'
+    +'--green:#00b894;--orange:#e17055;--pink:#d63384;--blue:#0d6efd;'
+    +'--r:8px;--r-sm:6px;--r-lg:12px;}'
+    +'*{box-sizing:border-box;margin:0;padding:0;}'
+    +'body{font-family:var(--font-sans);padding:24px;color:var(--text);font-size:13px;line-height:1.6;}'
+    +'table{width:100%;border-collapse:collapse;}th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #eee;}'
+    +'@media print{body{padding:12px;}}'
+    +'</style></head><body>'
+    +headerHtml+contentHtml
+    +'</body></html>');
+  printWin.document.close();
+  setTimeout(function(){ printWin.print(); }, 500);
+}
+
 function resetInfAi(infName){
   delete _infAiCache[infName];
   var key = infName.replace(/[.#$/[\]]/g,'_');
