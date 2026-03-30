@@ -7088,7 +7088,9 @@ function pasteInfAi(infName){
     +'<div id="ai-rich-area" contenteditable="true" style="width:100%;min-height:220px;max-height:50vh;overflow-y:auto;font-size:12.5px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);line-height:1.7;outline:none;cursor:text" data-placeholder="여기를 클릭한 후 Ctrl+V로 붙여넣으세요..."></div>'
     // 텍스트 붙여넣기 영역
     +'<textarea id="ai-text-area" style="display:none;width:100%;min-height:220px;max-height:50vh;font-size:12px;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;resize:vertical;line-height:1.6" placeholder="텍스트 또는 JSON을 여기에 붙여넣으세요..."></textarea>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center">'
+    +'<label style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--accent2);font-weight:600"><input type="file" accept=".html,.htm" id="ai-file-upload" style="display:none"> HTML 파일 업로드</label>'
+    +'<div style="flex:1"></div>'
     +'<button class="btn btn-ghost btn-sm" id="ai-paste-cancel">취소</button>'
     +'<button class="btn btn-primary btn-sm" id="ai-paste-save">저장 및 적용</button>'
     +'</div></div>';
@@ -7101,6 +7103,28 @@ function pasteInfAi(infName){
   // placeholder 스타일링
   richArea.addEventListener('focus', function(){ this.style.borderColor='var(--accent)'; });
   richArea.addEventListener('blur', function(){ this.style.borderColor='var(--border)'; });
+
+  // HTML 파일 업로드
+  wrap.querySelector('#ai-file-upload').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var content = ev.target.result;
+      // body 내용만 추출 (style+body)
+      var bodyMatch = content.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+      var styleMatch = content.match(/<style[\s\S]*?<\/style>/gi);
+      var htmlContent = (styleMatch ? styleMatch.join('') : '') + (bodyMatch ? bodyMatch[1] : content);
+      richArea.innerHTML = htmlContent;
+      // 서식 탭으로 전환
+      document.getElementById('ai-rich-area').style.display = '';
+      document.getElementById('ai-text-area').style.display = 'none';
+      document.getElementById('ai-tab-rich').style.borderBottom = '2px solid var(--accent)';
+      document.getElementById('ai-tab-text').style.borderBottom = 'none';
+      showToast('HTML 파일 로드됨');
+    };
+    reader.readAsText(file, 'UTF-8');
+  });
 
   wrap.querySelector('#ai-paste-cancel').onclick = function(){ wrap.remove(); };
   wrap.querySelector('#ai-paste-save').onclick = function(){
@@ -7140,43 +7164,70 @@ function parseInfAiHtml(html, plainText){
   };
   var sectionKeys = [
     {pattern: /채널\s*핵심\s*지표/i, key: 'channelMetrics'},
+    {pattern: /플랫폼별\s*영향력/i, key: 'channelMetrics'},
     {pattern: /오디언스\s*분석/i, key: 'audience'},
     {pattern: /콘텐츠\s*스타일/i, key: 'contentStyle'},
     {pattern: /강점.*리스크|강점.*약점|강점.*주의/i, key: 'strengthRisk'},
-    {pattern: /과거\s*캠페인|레퍼런스\s*분석/i, key: 'pastCampaigns'},
-    {pattern: /소싱\s*제안|MD\s*상품|MD\s*소싱/i, key: 'mdSourcing'},
+    {pattern: /과거\s*캠페인|과거\s*레퍼런스|레퍼런스\s*분석/i, key: 'pastCampaigns'},
+    {pattern: /소싱\s*제안|MD\s*상품|MD\s*소싱\s*제안/i, key: 'mdSourcing'},
     {pattern: /캠페인\s*전략|기대\s*효과/i, key: 'strategy'},
-    {pattern: /종합\s*의견|결론|종합\s*평가/i, key: 'conclusion'}
+    {pattern: /종합\s*의견|결론|종합\s*평가|소싱\s*종합/i, key: 'conclusion'}
   ];
 
   // HTML을 임시 DOM에 파싱
   var tmp = document.createElement('div');
   tmp.innerHTML = html;
 
-  // 섹션 헤더 태그들 (h1~h4, strong, b 등) 기준으로 분할
-  var allNodes = tmp.querySelectorAll('h1,h2,h3,h4,h5,h6,p,div,table,ul,ol,blockquote,hr,strong,b');
-  var currentKey = '';
-  var currentBuf = [];
+  // <style> 태그 추출 (나중에 렌더링 시 포함)
+  var styleTag = '';
+  tmp.querySelectorAll('style').forEach(function(s){ styleTag += s.outerHTML; s.remove(); });
+  if(styleTag) result._styleHtml = styleTag;
 
-  function flushBuf(){ if(currentKey && currentBuf.length) result[currentKey] = currentBuf.join(''); currentBuf = []; }
+  // 헤더 영역 추출 (첫 번째 section 전의 내용)
+  var wrap = tmp.querySelector('.wrap') || tmp;
+  var sections = wrap.querySelectorAll('.section');
 
-  // 노드 순회하며 섹션 매칭
-  var children = Array.from(tmp.childNodes);
-  children.forEach(function(node){
-    var text = (node.textContent||'').trim();
-    var matched = false;
-    sectionKeys.forEach(function(sk){
-      if(sk.pattern.test(text) && text.length < 60){
-        flushBuf();
-        currentKey = sk.key;
-        matched = true;
+  if(sections.length > 0){
+    // .section 기반 파싱 (구조화된 HTML)
+    sections.forEach(function(sec){
+      var titleEl = sec.querySelector('.section-title');
+      var titleText = titleEl ? titleEl.textContent.trim() : '';
+      // section-title 제거 후 나머지가 내용
+      var contentClone = sec.cloneNode(true);
+      var titleClone = contentClone.querySelector('.section-title');
+      if(titleClone) titleClone.remove();
+      var contentHtml = contentClone.innerHTML.trim();
+
+      sectionKeys.forEach(function(sk){
+        if(sk.pattern.test(titleText)){
+          // 같은 키에 이미 내용이 있으면 합침 (예: 채널지표 + 플랫폼 영향력)
+          if(result[sk.key]) result[sk.key] += contentHtml;
+          else result[sk.key] = contentHtml;
+        }
+      });
+    });
+  } else {
+    // .section 없는 경우: 일반 노드 순회
+    var currentKey = '';
+    var currentBuf = [];
+    function flushBuf(){ if(currentKey && currentBuf.length){ result[currentKey] = (result[currentKey]||'') + currentBuf.join(''); } currentBuf = []; }
+    var children = Array.from(wrap.childNodes);
+    children.forEach(function(node){
+      var text = (node.textContent||'').trim();
+      var matched = false;
+      sectionKeys.forEach(function(sk){
+        if(sk.pattern.test(text) && text.length < 80){
+          flushBuf();
+          currentKey = sk.key;
+          matched = true;
+        }
+      });
+      if(!matched && currentKey){
+        currentBuf.push(node.nodeType===1 ? node.outerHTML : escHtml(node.textContent));
       }
     });
-    if(!matched && currentKey){
-      currentBuf.push(node.nodeType===1 ? node.outerHTML : escHtml(node.textContent));
-    }
-  });
-  flushBuf();
+    flushBuf();
+  }
 
   // 매칭 안 되면 텍스트 파싱 폴백
   var hasAny = Object.keys(result).some(function(k){ return k[0]!=='_' && result[k]; });
@@ -7260,78 +7311,95 @@ function renderInfAiReport(infName, data){
   var body = document.getElementById('inf-detail-body');
   if(!body) return;
 
-  function sec(title, content){ return '<div style="margin-bottom:20px"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">'+title+'</div>'+content+'</div>'; }
+  // HTML 원본이 있고 섹션 파싱이 성공한 경우: 원본 스타일 포함하여 렌더링
+  var isHtml = data._isHtml && Object.keys(data).some(function(k){ return k[0]!=='_' && data[k] && (typeof data[k]==='string') && data[k].match(/<[a-z]/i); });
+
+  function sec(title, content){ return '<div style="margin-bottom:22px"><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);letter-spacing:0.03em">'+title+'</div>'+content+'</div>'; }
   function card(inner){ return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px">'+inner+'</div>'; }
+  function htmlBlock(h){ return h ? '<div>'+h+'</div>' : '<div style="color:var(--text3);font-size:12px">데이터 없음</div>'; }
   function textBlock(txt){
     if(!txt) return '<div style="color:var(--text3);font-size:12px">데이터 없음</div>';
-    // HTML 콘텐츠인 경우 그대로 렌더링
-    if(typeof txt === 'string' && txt.match(/^<[a-z]/i)) return '<div style="font-size:12.5px;line-height:1.7;color:var(--text2)">'+txt+'</div>';
+    if(typeof txt === 'string' && txt.match(/^<[a-z]/i)) return '<div style="font-size:12.5px;line-height:1.7">'+txt+'</div>';
     return '<div style="font-size:12.5px;line-height:1.7;color:var(--text2);white-space:pre-wrap">'+escHtml(txt).replace(/\*\*(.*?)\*\*/g,'<strong style="color:var(--text);font-weight:700">$1</strong>').replace(/^[•●]\s*/gm,'<span style="color:var(--accent)">● </span>').replace(/^[-–]\s*/gm,'<span style="color:var(--text3)">— </span>')+'</div>';
   }
-  function twoCol(left, right){
-    return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+card(left)+card(right)+'</div>';
-  }
+  function renderBlock(val){ return isHtml ? htmlBlock(val) : card(textBlock(val)); }
 
   var html = '';
+  // 원본 HTML 스타일 포함
+  if(data._styleHtml) html += data._styleHtml;
 
   // 1. 채널 핵심 지표
-  html += sec('채널 핵심 지표', card(textBlock(data.channelMetrics)));
+  html += sec('채널 핵심 지표', renderBlock(data.channelMetrics));
 
   // 2. 오디언스 분석
-  html += sec('오디언스 분석', card(textBlock(data.audience)));
+  html += sec('오디언스 분석', renderBlock(data.audience));
 
   // 3. 콘텐츠 스타일 분석
-  html += sec('콘텐츠 스타일 분석', card(textBlock(data.contentStyle)));
+  html += sec('콘텐츠 스타일 분석', renderBlock(data.contentStyle));
 
   // 4. 강점 & 리스크
-  var srParts = (data.strengthRisk||'').split(/리스크|주의사항|약점/i);
-  if(srParts.length >= 2){
-    html += sec('강점 & 리스크', twoCol(
-      '<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">강점</div>'+textBlock(srParts[0]),
-      '<div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px">리스크 / 주의사항</div>'+textBlock(srParts[1])
-    ));
+  if(isHtml){
+    html += sec('강점 & 리스크', htmlBlock(data.strengthRisk));
   } else {
-    html += sec('강점 & 리스크', card(textBlock(data.strengthRisk)));
+    var srParts = (data.strengthRisk||'').split(/리스크|주의사항|약점/i);
+    if(srParts.length >= 2){
+      html += sec('강점 & 리스크', '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+        +card('<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">강점</div>'+textBlock(srParts[0]))
+        +card('<div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px">리스크 / 주의사항</div>'+textBlock(srParts[1]))
+        +'</div>');
+    } else {
+      html += sec('강점 & 리스크', card(textBlock(data.strengthRisk)));
+    }
   }
 
   // 5. 과거 캠페인 레퍼런스
-  var inf = buildInfList().find(function(i){return i.name===infName;});
-  if(inf){
-    var perfCamps = inf.campaigns.filter(function(c){ var s=c.start?new Date(c.start):null; var ty=new Date(); ty.setFullYear(ty.getFullYear()-2); return s&&s>=ty; }).sort(function(a,b){return (b.start||'')>(a.start||'')?1:-1;});
-    if(perfCamps.length){
-      var refHtml = '<table style="width:100%"><thead><tr style="background:var(--bg)"><th style="width:30px;padding:6px 8px;font-size:11px"></th><th style="padding:6px 8px;text-align:left;font-size:11px">제품 / 브랜드</th><th style="padding:6px 8px;font-size:11px">카테고리</th><th style="padding:6px 8px;font-size:11px">반응</th></tr></thead><tbody>';
-      perfCamps.forEach(function(c, idx){
-        var catColor = (c.cat||'').includes('식품')?'#d68910':(c.cat||'').includes('주방')?'#6c5ce7':(c.cat||'').includes('뷰티')?'#e1306c':'#00b894';
-        var catBg = (c.cat||'').includes('식품')?'#fdcb6e33':(c.cat||'').includes('주방')?'#6c5ce722':(c.cat||'').includes('뷰티')?'#e1306c22':'#00b89422';
-        var rev=c.settleRevenue||0; var reaction=rev>5e7?'완판':rev>1e7?'양호':rev>0?'보통':'데이터 미공개';
-        var reactionColor=rev>5e7?'var(--green)':rev>1e7?'var(--blue)':rev>0?'var(--text2)':'var(--text3)';
-        refHtml += '<tr><td style="padding:8px;text-align:center"><span style="background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">'+(idx+1)+'</span></td>'
-          +'<td style="padding:8px"><div style="font-weight:700;font-size:12.5px">'+escHtml(c.name)+'</div></td>'
-          +'<td style="padding:8px;text-align:center"><span style="background:'+catBg+';color:'+catColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">'+(c.cat||'-')+'</span></td>'
-          +'<td style="padding:8px;text-align:center;font-weight:700;font-size:12px;color:'+reactionColor+'">'+reaction+'</td></tr>';
-      });
-      refHtml += '</tbody></table>';
-      html += sec('과거 레퍼런스 분석', card(refHtml));
+  if(isHtml && data.pastCampaigns){
+    html += sec('과거 레퍼런스 분석', htmlBlock(data.pastCampaigns));
+  } else {
+    var inf = buildInfList().find(function(i){return i.name===infName;});
+    if(inf){
+      var perfCamps = inf.campaigns.filter(function(c){ var s=c.start?new Date(c.start):null; var ty=new Date(); ty.setFullYear(ty.getFullYear()-2); return s&&s>=ty; }).sort(function(a,b){return (b.start||'')>(a.start||'')?1:-1;});
+      if(perfCamps.length){
+        var refHtml = '<table style="width:100%"><thead><tr style="background:var(--bg)"><th style="width:30px;padding:6px 8px;font-size:11px"></th><th style="padding:6px 8px;text-align:left;font-size:11px">제품 / 브랜드</th><th style="padding:6px 8px;font-size:11px">카테고리</th><th style="padding:6px 8px;font-size:11px">반응</th></tr></thead><tbody>';
+        perfCamps.forEach(function(c, idx){
+          var catColor = (c.cat||'').includes('식품')?'#d68910':(c.cat||'').includes('주방')?'#6c5ce7':(c.cat||'').includes('뷰티')?'#e1306c':'#00b894';
+          var catBg = (c.cat||'').includes('식품')?'#fdcb6e33':(c.cat||'').includes('주방')?'#6c5ce722':(c.cat||'').includes('뷰티')?'#e1306c22':'#00b89422';
+          var rev=c.settleRevenue||0; var reaction=rev>5e7?'완판':rev>1e7?'양호':rev>0?'보통':'데이터 미공개';
+          var reactionColor=rev>5e7?'var(--green)':rev>1e7?'var(--blue)':rev>0?'var(--text2)':'var(--text3)';
+          refHtml += '<tr><td style="padding:8px;text-align:center"><span style="background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">'+(idx+1)+'</span></td>'
+            +'<td style="padding:8px"><div style="font-weight:700;font-size:12.5px">'+escHtml(c.name)+'</div></td>'
+            +'<td style="padding:8px;text-align:center"><span style="background:'+catBg+';color:'+catColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">'+(c.cat||'-')+'</span></td>'
+            +'<td style="padding:8px;text-align:center;font-weight:700;font-size:12px;color:'+reactionColor+'">'+reaction+'</td></tr>';
+        });
+        refHtml += '</tbody></table>';
+        html += sec('과거 레퍼런스 분석', card(refHtml));
+      }
     }
+    if(data.pastCampaigns) html += sec('과거 캠페인 상세', card(textBlock(data.pastCampaigns)));
   }
-  if(data.pastCampaigns) html += sec('과거 캠페인 상세', card(textBlock(data.pastCampaigns)));
 
   // 6. MD 소싱 제안
-  html += sec('MD 소싱 제안 (우선순위 순)', card(textBlock(data.mdSourcing)));
+  html += sec('MD 소싱 제안 (우선순위 순)', renderBlock(data.mdSourcing));
 
   // 7. 캠페인 전략 및 기대 효과
-  html += sec('캠페인 전략 및 기대 효과', card(textBlock(data.strategy)));
+  if(data.strategy) html += sec('캠페인 전략 및 기대 효과', renderBlock(data.strategy));
 
   // 8. 종합 의견 및 결론
-  html += sec('MD 소싱 종합 의견', card(textBlock(data.conclusion)));
+  html += sec('MD 소싱 종합 의견', renderBlock(data.conclusion));
 
   // 하단 버튼
   html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">'
-    +'<button class="btn btn-ghost btn-xs" onclick="delete _infAiCache[\''+escHtml(infName)+'\'];var inf2=buildInfList().find(function(i){return i.name===\''+escHtml(infName)+'\';});if(inf2){var ty=new Date();ty.setFullYear(ty.getFullYear()-2);renderInfDefaultView(inf2,inf2.campaigns.filter(function(c){var s=c.start?new Date(c.start):null;return s&&s>=ty;}).sort(function(a,b){return(b.start||\'\')<(a.start||\'\')?-1:1;}));}">분석 초기화</button>'
+    +'<button class="btn btn-ghost btn-xs" onclick="resetInfAi(\''+escHtml(infName)+'\')">분석 초기화</button>'
     +'<button class="btn btn-ghost btn-xs" onclick="pasteInfAi(\''+escHtml(infName)+'\')">다시 붙여넣기</button>'
     +'</div>';
 
   body.innerHTML = html;
+}
+function resetInfAi(infName){
+  delete _infAiCache[infName];
+  try{ if(typeof firebase!=='undefined'&&firebase.database) firebase.database().ref('infAiReports/'+infName.replace(/[.#$/[\]]/g,'_')).remove(); }catch(e){}
+  var inf2=buildInfList().find(function(i){return i.name===infName;});
+  if(inf2){var ty=new Date();ty.setFullYear(ty.getFullYear()-2);renderInfDefaultView(inf2,inf2.campaigns.filter(function(c){var s=c.start?new Date(c.start):null;return s&&s>=ty;}).sort(function(a,b){return(b.start||'')<(a.start||'')?-1:1;}));}
 }
 function filterInfs(v2){ infFilter.text=v2; renderInfs(); }
 function setCat(c){ infFilter.cat=c; renderInfs(); }
