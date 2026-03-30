@@ -2381,9 +2381,11 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
 <div class="mo" id="mo-influencer"><div class="mo-box">
   <div class="mo-hd"><span class="mo-ttl">인플루언서 등록</span><button class="mo-x" onclick="closeMo('influencer')">✕</button></div>
   <div class="mo-body">
-    <div class="fr2"><div><label>이름 *</label><input class="inp" id="i-name" placeholder="홍길동"></div><div><label>채널/아이디</label><input class="inp" id="i-handle" placeholder="@hong_beauty"></div></div>
-    <div class="fr2"><div><label>플랫폼</label><select class="sel" id="i-plat"><option>인스타그램</option><option>유튜브</option><option>틱톡</option><option>X(트위터)</option><option>블로그</option><option>복합</option></select></div><div><label>팔로워</label><input class="inp" id="i-flw" type="number" placeholder="50000"></div></div>
-    <div class="fr2"><div><label>참여율 (%)</label><input class="inp" id="i-eng" placeholder="3.2"></div><div><label>카테고리</label><select class="sel" id="i-cat"><option>뷰티</option><option>식품/맛집</option><option>패션</option><option>라이프스타일</option><option>IT/테크</option><option>여행</option><option>육아</option><option>기타</option></select></div></div>
+    <div class="fr2"><div><label>이름 *</label><input class="inp" id="i-name" placeholder="홍길동"></div><div><label>카테고리</label><select class="sel" id="i-cat"><option>뷰티</option><option>식품/맛집</option><option>패션</option><option>라이프스타일</option><option>IT/테크</option><option>여행</option><option>육아</option><option>기타</option></select></div></div>
+    <div style="margin-bottom:10px"><label style="font-size:12px;font-weight:600;margin-bottom:6px;display:block">채널 정보</label>
+      <div class="fr2" style="margin-bottom:6px"><div><label style="font-size:11px;color:var(--text3)">📸 인스타그램</label><input class="inp" id="i-insta" placeholder="@계정명"></div><div><label style="font-size:11px;color:var(--text3)">▶ 유튜브</label><input class="inp" id="i-youtube" placeholder="@채널명"></div></div>
+      <div class="fr2"><div><label style="font-size:11px;color:var(--text3)">𝕏 트위터/X</label><input class="inp" id="i-twitter" placeholder="@계정명"></div><div><label style="font-size:11px;color:var(--text3)">팔로워 (대표)</label><input class="inp" id="i-flw" type="number" placeholder="50000"></div></div>
+    </div>
     <div class="fr2"><div><label>연락처</label><input class="inp" id="i-contact" placeholder="이메일 또는 DM"></div><div><label>광고 단가 (원)</label><input class="inp inp-money" id="i-fee" placeholder="300,000"></div></div>
     <div class="fr"><label>메모</label><textarea class="ta" id="i-memo" placeholder="협업 이력, 특이사항..."></textarea></div>
   </div>
@@ -4914,6 +4916,7 @@ function delProd(id){
 // 캠페인 수정 모달 열기
 function editProd(id){
   var p = DB.campaigns.find(function(x){return x.id===id;}); if(!p) return;
+  updateInfDbList();
   document.getElementById('p-edit-id').value = id;
   document.getElementById('prod-mo-title').textContent = '캠페인 수정';
   document.getElementById('prod-save-btn').textContent = '수정 저장';
@@ -6888,15 +6891,32 @@ function buildInfList(){
   (DB.influencers||[]).forEach(function(inf){
     if(!inf.name || !inf.name.trim()) return;
     var key = inf.name.trim();
+    // 플랫폼별 채널 매핑
+    var ch = { insta: inf.insta||'', youtube: inf.youtube||'', twitter: inf.twitter||'' };
+    // 구버전 호환: handle+platform 조합
+    if(inf.handle && !ch.insta && !ch.youtube && !ch.twitter){
+      var p = (inf.platform||'').toLowerCase();
+      if(p.includes('유튜브')||p.includes('youtube')) ch.youtube = inf.handle;
+      else if(p.includes('틱톡')||p.includes('tiktok')) ch.insta = ''; // 틱톡은 별도 처리 없음
+      else if(p.includes('트위터')||p.includes('twitter')||p.includes('x(')) ch.twitter = inf.handle;
+      else ch.insta = inf.handle;
+    }
     if(!map[key]){
       map[key] = {
         name: key,
         campaigns: [],
-        latestCamp: { cat: inf.cat||'', infSize: '', feeRate: 0, feeAmount: inf.fee||0, channels: { insta: inf.handle||'', youtube: '', twitter: '' } },
+        latestCamp: { cat: inf.cat||'', infSize: '', feeRate: 0, feeAmount: inf.fee||0, channels: ch },
         dbInf: inf,
       };
     } else {
       map[key].dbInf = inf;
+      // DB에 등록된 채널 정보가 있으면 latestCamp.channels 보강
+      var lc = map[key].latestCamp;
+      if(lc && lc.channels){
+        if(ch.insta && !lc.channels.insta) lc.channels.insta = ch.insta;
+        if(ch.youtube && !lc.channels.youtube) lc.channels.youtube = ch.youtube;
+        if(ch.twitter && !lc.channels.twitter) lc.channels.twitter = ch.twitter;
+      }
     }
   });
   return Object.values(map);
@@ -7914,6 +7934,7 @@ function exportExcel(type){
 // ═══════════════════════════════════════
 // 신규 캠페인 요청 등록
 function openNewProd(){
+  updateInfDbList();
   document.getElementById('p-edit-id').value='';
   document.getElementById('prod-mo-title').textContent='캠페인 등록';
   document.getElementById('prod-save-btn').textContent='캠페인 등록';
@@ -8548,6 +8569,41 @@ function renderPriceGrid(priceRows){
 // ═══════════════════════════════════════
 var infBlockCount = 0;
 
+// 인플루언서 DB datalist 갱신
+function updateInfDbList(){
+  var dl = document.getElementById('inf-db-list');
+  if(!dl){ dl=document.createElement('datalist'); dl.id='inf-db-list'; document.body.appendChild(dl); }
+  var names = {};
+  (DB.influencers||[]).forEach(function(inf){ if(inf.name) names[inf.name.trim()]=1; });
+  DB.campaigns.forEach(function(c){ if(c.infName) names[c.infName.trim()]=1; });
+  dl.innerHTML = Object.keys(names).sort().map(function(n){ return '<option value="'+escHtml(n)+'">'; }).join('');
+}
+
+// 인플루언서명 입력 시 DB에서 자동 채움
+function onInfNameInput(el, blockN){
+  var name = el.value.trim();
+  if(!name) return;
+  // DB.influencers에서 찾기
+  var dbInf = (DB.influencers||[]).find(function(i){ return i.name && i.name.trim()===name; });
+  if(dbInf){
+    var block = document.getElementById('inf-block-'+blockN);
+    if(!block) return;
+    var igEl = block.querySelector('.inf-ig-'+blockN);
+    var ytEl = block.querySelector('.inf-yt-'+blockN);
+    var twEl = block.querySelector('.inf-tw-'+blockN);
+    if(igEl && !igEl.value && (dbInf.insta||'')) igEl.value = dbInf.insta;
+    if(ytEl && !ytEl.value && (dbInf.youtube||'')) ytEl.value = dbInf.youtube;
+    if(twEl && !twEl.value && (dbInf.twitter||'')) twEl.value = dbInf.twitter;
+    // 구버전 호환: handle+platform
+    if(dbInf.handle && !dbInf.insta && !dbInf.youtube && !dbInf.twitter){
+      var p = (dbInf.platform||'').toLowerCase();
+      if(p.includes('유튜브') && ytEl && !ytEl.value) ytEl.value = dbInf.handle;
+      else if(p.includes('트위터') && twEl && !twEl.value) twEl.value = dbInf.handle;
+      else if(igEl && !igEl.value) igEl.value = dbInf.handle;
+    }
+  }
+}
+
 function addInfBlock(data){
   infBlockCount++;
   var n = infBlockCount;
@@ -8574,7 +8630,7 @@ function addInfBlock(data){
     +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">인플루언서 규모</label>'
     +'<select class="sel inf-size-'+n+'" style="width:100%">'+sizeOpts+'</select></div>'
     +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">인플루언서명</label>'
-    +'<input class="inp inf-name-'+n+'" placeholder="이름 또는 채널명" value="'+(d.infName||'')+'"></div>'
+    +'<input class="inp inf-name-'+n+'" placeholder="이름 또는 채널명 (DB 검색)" value="'+(d.infName||'')+'" list="inf-db-list" oninput="onInfNameInput(this,'+n+')" autocomplete="off"></div>'
     +'</div>'
     // 채널
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">'
@@ -9045,7 +9101,7 @@ function editCamp(id){
 function saveInf(){
   if(!canEdit() || isExtMcn()){ showToast('권한이 없습니다.'); return; }
   var name=document.getElementById('i-name').value.trim(); if(!name){alert('이름 필수');return;}
-  DB.influencers.push({id:nid.influencers++,name,handle:v('i-handle'),platform:v('i-plat'),followers:iv('i-flw'),engage:parseFloat(v('i-eng'))||0,cat:v('i-cat'),contact:v('i-contact'),fee:iv('i-fee'),memo:v('i-memo')});
+  DB.influencers.push({id:nid.influencers++,name,insta:v('i-insta'),youtube:v('i-youtube'),twitter:v('i-twitter'),followers:iv('i-flw'),cat:v('i-cat'),contact:v('i-contact'),fee:iv('i-fee'),memo:v('i-memo')});
   addAct('👤',`${name} 인플루언서 등록`,nowStr(),'');
   addNotif('👤',`${name} DB 추가됨`,'방금 전');
   broadcastData(); closeMo('influencer'); renderInfs();
