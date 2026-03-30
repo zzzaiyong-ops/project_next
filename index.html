@@ -7283,10 +7283,38 @@ function renderInfAiReport(infName, data){
   var body = document.getElementById('inf-detail-body');
   if(!body) return;
 
+  // 기존 실적 데이터 HTML 생성
+  function buildPerfHtml(){
+    var inf = buildInfList().find(function(i){return i.name===infName;});
+    if(!inf) return '';
+    var lc = inf.latestCamp||{};
+    var twoYearsAgo = new Date(); twoYearsAgo.setFullYear(twoYearsAgo.getFullYear()-2);
+    var perfCamps = inf.campaigns.filter(function(c){ var s=c.start?new Date(c.start):null; return s&&s>=twoYearsAgo; }).sort(function(a,b){return (b.start||'')>(a.start||'')?1:-1;});
+    var h = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">'
+      +'<div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10.5px;color:var(--text3);margin-bottom:4px">수수료율</div><div style="font-weight:700;color:var(--accent2);font-size:15px">'+(lc.feeRate?lc.feeRate+'%':'-')+'</div></div>'
+      +'<div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10.5px;color:var(--text3);margin-bottom:4px">원고료</div><div style="font-weight:700;color:var(--accent2);font-size:15px">'+(lc.feeAmount?(lc.feeAmount/10000).toFixed(0)+'만원':'-')+'</div></div>'
+      +'<div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10.5px;color:var(--text3);margin-bottom:4px">카테고리</div><div style="font-weight:700;font-size:15px">'+(lc.cat||'-')+'</div></div></div>';
+    if(perfCamps.length){
+      h += '<div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px">캠페인 실적 (최근 2년)</div>';
+      h += '<table style="width:100%;margin-bottom:16px"><thead><tr style="background:var(--bg3)"><th style="padding:6px 8px;text-align:left;font-size:11px">캠페인명</th><th style="padding:6px 8px;text-align:left;font-size:11px">카테고리</th><th style="padding:6px 8px;text-align:right;font-size:11px">매출</th><th style="padding:6px 8px;text-align:right;font-size:11px">주문건수</th><th style="padding:6px 8px;text-align:right;font-size:11px">비용</th></tr></thead><tbody>';
+      perfCamps.forEach(function(c){
+        var rev=c.settleRevenue||0; var revS=rev>=1e8?(rev/1e8).toFixed(1)+'억':rev>=1e4?(rev/1e4).toFixed(0)+'만':rev>0?rev.toLocaleString():'-';
+        var fr=parseFloat(c.feeRate)||0,fa=parseInt(c.feeAmount)||0,ar=parseFloat(c.agencyRate)||0,da=parseInt(c.settleDa)||0;
+        var cost=Math.round(rev*fr/100)+fa+Math.round(rev*ar/100)+da;
+        var costS=cost>=1e4?(cost/1e4).toFixed(0)+'만':cost>0?cost.toLocaleString():'-';
+        h+='<tr style="font-size:12px"><td style="font-weight:600;padding:6px 8px">'+escHtml(c.name)+'</td><td style="color:var(--text3);padding:6px 8px">'+(c.cat||'-')+'</td><td style="color:var(--green);font-weight:700;text-align:right;padding:6px 8px">'+revS+'</td><td style="text-align:right;padding:6px 8px">'+(c.settleOrders||'-')+'</td><td style="color:var(--orange);text-align:right;padding:6px 8px">'+costS+'</td></tr>';
+      });
+      h += '</tbody></table>';
+    }
+    h += '<div style="height:1px;background:var(--border);margin-bottom:16px"></div>';
+    return h;
+  }
+
   // 원본 HTML: iframe으로 격리 렌더링
   if(data._fullHtml){
     var iframeId = 'inf-ai-iframe-'+Date.now();
-    body.innerHTML = '<iframe id="'+iframeId+'" style="width:100%;border:none;border-radius:8px;background:#fff" sandbox="allow-same-origin"></iframe>'
+    body.innerHTML = buildPerfHtml()
+      + '<iframe id="'+iframeId+'" style="width:100%;border:none;border-radius:8px;background:#fff" sandbox="allow-same-origin"></iframe>'
       + '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">'
       + '<button class="btn btn-ghost btn-xs" onclick="resetInfAi(\''+escHtml(infName)+'\')">분석 초기화</button>'
       + '<button class="btn btn-ghost btn-xs" onclick="pasteInfAi(\''+escHtml(infName)+'\')">다시 붙여넣기</button>'
