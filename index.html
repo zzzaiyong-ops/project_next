@@ -7015,6 +7015,7 @@ function openInfDetail(infName){
     +'<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+badges+'</div>'
     +'</div></div>'
     +'<div style="display:flex;gap:6px;align-items:center">'
+    +(_infAiCache[infName]?'<button class="btn btn-ghost btn-xs" style="color:var(--orange);font-size:11px" onclick="resetInfAi(\''+escHtml(inf.name)+'\')">초기화</button>':'')
     +'<button class="btn btn-ghost btn-xs" onclick="pasteInfAi(\''+escHtml(inf.name)+'\')">AI 분석 붙여넣기</button>'
     +'<button class="btn btn-ghost btn-xs" onclick="document.getElementById(\'inf-detail-modal\').remove()">✕</button>'
     +'</div></div>'
@@ -7396,8 +7397,9 @@ function renderInfAiReport(infName, data){
 function resetInfAi(infName){
   delete _infAiCache[infName];
   try{ if(typeof firebase!=='undefined'&&firebase.database) firebase.database().ref('infAiReports/'+infName.replace(/[.#$/[\]]/g,'_')).remove(); }catch(e){}
-  var inf2=buildInfList().find(function(i){return i.name===infName;});
-  if(inf2){var ty=new Date();ty.setFullYear(ty.getFullYear()-2);renderInfDefaultView(inf2,inf2.campaigns.filter(function(c){var s=c.start?new Date(c.start):null;return s&&s>=ty;}).sort(function(a,b){return(b.start||'')<(a.start||'')?-1:1;}));}
+  // 모달 다시 열기 (초기화 상태로)
+  openInfDetail(infName);
+  showToast('AI 분석 초기화됨');
 }
 function filterInfs(v2){ infFilter.text=v2; renderInfs(); }
 function setCat(c){ infFilter.cat=c; renderInfs(); }
