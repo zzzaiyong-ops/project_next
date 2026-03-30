@@ -7141,8 +7141,8 @@ function pasteInfAi(infName){
 
     var parsed;
     if(isRichMode && rawHtml && rawHtml !== rawText){
-      // HTML 모드: HTML을 직접 저장 + 텍스트도 파싱
-      parsed = parseInfAiHtml(rawHtml, rawText);
+      // HTML 모드: 원본 HTML 그대로 저장
+      parsed = { _fullHtml: rawHtml };
     } else {
       parsed = parseInfAiText(rawText);
     }
@@ -7311,7 +7311,17 @@ function renderInfAiReport(infName, data){
   var body = document.getElementById('inf-detail-body');
   if(!body) return;
 
-  // HTML 원본이 있고 섹션 파싱이 성공한 경우: 원본 스타일 포함하여 렌더링
+  // 원본 HTML 그대로 렌더링 모드
+  if(data._fullHtml){
+    body.innerHTML = data._fullHtml
+      + '<div style="display:flex;gap:8px;justify-content:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">'
+      + '<button class="btn btn-ghost btn-xs" onclick="resetInfAi(\''+escHtml(infName)+'\')">분석 초기화</button>'
+      + '<button class="btn btn-ghost btn-xs" onclick="pasteInfAi(\''+escHtml(infName)+'\')">다시 붙여넣기</button>'
+      + '</div>';
+    return;
+  }
+
+  // 텍스트/JSON 파싱 데이터 렌더링 모드
   var isHtml = data._isHtml && Object.keys(data).some(function(k){ return k[0]!=='_' && data[k] && (typeof data[k]==='string') && data[k].match(/<[a-z]/i); });
 
   function sec(title, content){ return '<div style="margin-bottom:22px"><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);letter-spacing:0.03em">'+title+'</div>'+content+'</div>'; }
