@@ -7744,23 +7744,34 @@ function uploadMliveExcel(input){
   var file = input.files[0]; if(!file) return;
   var reader = new FileReader();
   reader.onload = function(e){
-    var lines = e.target.result.split('\n');
+    var raw = e.target.result;
+    var lines = raw.split('\n');
     _mliveData = [];
-    // 헤더 행 찾기 (첫 번째 행 또는 데이터가 있는 행)
-    var startRow = 0;
-    for(var h=0; h<Math.min(5,lines.length); h++){
-      var hCols = lines[h].split('\t');
-      if(hCols.length>10 && (hCols[0]||'').trim().match(/편성|No|방송/i)){ startRow=h+1; break; }
-      // 숫자로 시작하면 데이터 행
-      if(hCols[0] && hCols[0].trim().match(/^\d{10,}/)){ startRow=h; break; }
-    }
-    if(startRow===0) startRow=1; // 기본: 1행부터 데이터
 
+    // 구분자 자동 감지 (탭 vs 쉼표)
+    var firstLine = lines[0]||'';
+    var sep = firstLine.split('\t').length > firstLine.split(',').length ? '\t' : ',';
+    console.log('[M라이브] 구분자:', sep==='\t'?'TAB':'COMMA', '총 라인:', lines.length);
+
+    // 헤더 행 찾기
+    var startRow = 0;
+    for(var h=0; h<Math.min(10,lines.length); h++){
+      var hCols = lines[h].split(sep);
+      var h0 = (hCols[0]||'').trim();
+      // 헤더 키워드 발견 시 다음 행부터 데이터
+      if(h0.match(/편성|No|방송정보/i) || (hCols[1]||'').match(/방송구분|No/i)){ startRow=h+1; break; }
+      // 12자리+ 숫자로 시작하면 데이터 행
+      if(h0.match(/^\d{8,}/)){ startRow=h; break; }
+    }
+    if(startRow===0) startRow=1;
+    console.log('[M라이브] 시작행:', startRow, '첫행 컬럼수:', firstLine.split(sep).length);
+
+    var skipped = 0;
     for(var i=startRow; i<lines.length; i++){
-      var cols = lines[i].split('\t');
-      if(cols.length < 13) continue;
+      var cols = lines[i].split(sep);
+      if(cols.length < 10){ skipped++; continue; }
       var code = (cols[0]||'').trim();
-      if(!code || !code.match(/\d{5,}/)) continue; // 편성코드 없으면 스킵
+      if(!code || !code.match(/\d{4,}/)){ skipped++; continue; }
 
       // VLOOKUP 수식 기반 컬럼 매핑 (1-based → 0-based)
       // col[0]=편성코드(A), col[9]=프로그램명(10th), col[12]=순주문수량(13th), col[13]=순주문금액(14th)
@@ -7798,8 +7809,10 @@ function uploadMliveExcel(input){
       });
     }
     var sample = _mliveData[0];
-    showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?'첫건: '+sample.programName+' / '+sample.date+' / 매출:'+sample.orderAmt:'데이터 없음'));
-    console.log('[M라이브] 파싱 결과:', _mliveData.length, '건', _mliveData.slice(0,3));
+    showToast('M라이브 '+_mliveData.length+'건 로드 (스킵:'+skipped+') | '+(sample?sample.programName+' / '+sample.date:'파싱 확인 필요'));
+    console.log('[M라이브] 파싱 결과:', _mliveData.length, '건, 스킵:', skipped);
+    if(sample) console.log('[M라이브] 첫 레코드:', JSON.stringify(sample));
+    if(_mliveData.length===0) console.log('[M라이브] 디버그 - 첫 데이터행:', lines[startRow]?.substring(0,200));
     renderReports();
   };
   reader.readAsText(file, 'UTF-8');
