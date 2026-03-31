@@ -7999,7 +7999,7 @@ function renderWeeklyView(){
         mlSumOutAmt+=(m.orderAmt||0)-(m.mobOrderAmt||0); mlSumOutQty+=(m.orderQty||0)-(m.mobOrderQty||0);
         mlSumProfit+=m.profitAmt||0;
       });
-      html += '<tr class="'+wkId+'" style="display:none;background:var(--bg3);font-weight:600;cursor:pointer" onclick="event.stopPropagation();document.querySelectorAll(\'.'+mlId+'\').forEach(function(r){r.style.display=r.style.display===\'none\'?\'table-row\':\'none\'})">'
+      html += '<tr style="background:var(--bg3);font-weight:600;cursor:pointer" onclick="event.stopPropagation();document.querySelectorAll(\'.'+mlId+'\').forEach(function(r){r.style.display=r.style.display===\'none\'?\'table-row\':\'none\'})">'
         +'<td style="padding:5px 8px;text-align:center;color:var(--blue)">+</td>'
         +'<td style="padding:5px 8px;color:var(--blue)">'+wk.label+' M라이브</td>'
         +'<td colspan="3"></td>'
@@ -8014,7 +8014,7 @@ function renderWeeklyView(){
       wk.mliveItems.forEach(function(m){
         var outAmt=(m.orderAmt||0)-(m.mobOrderAmt||0);
         var outQty=(m.orderQty||0)-(m.mobOrderQty||0);
-        html += '<tr class="'+wkId+' '+mlId+'" style="display:none;font-size:11px">'
+        html += '<tr class="'+mlId+'" style="display:none;font-size:11px">'
           +'<td></td><td style="padding:4px 8px;color:var(--text3)">'+escHtml(m.date||'')+'</td>'
           +'<td style="font-size:10px">'+(m.mdCat||'-')+'</td>'
           +'<td style="font-size:10px">'+(m.cat||'-')+'</td>'
