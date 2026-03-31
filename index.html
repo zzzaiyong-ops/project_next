@@ -7745,31 +7745,56 @@ function uploadMliveExcel(input){
   var reader = new FileReader();
   reader.onload = function(e){
     var lines = e.target.result.split('\n');
-    var headers = lines[0] ? lines[0].split('\t') : [];
     _mliveData = [];
-    for(var i=1; i<lines.length; i++){
+    // 헤더 행 찾기 (첫 번째 행 또는 데이터가 있는 행)
+    var startRow = 0;
+    for(var h=0; h<Math.min(5,lines.length); h++){
+      var hCols = lines[h].split('\t');
+      if(hCols.length>10 && (hCols[0]||'').trim().match(/편성|No|방송/i)){ startRow=h+1; break; }
+      // 숫자로 시작하면 데이터 행
+      if(hCols[0] && hCols[0].trim().match(/^\d{10,}/)){ startRow=h; break; }
+    }
+    if(startRow===0) startRow=1; // 기본: 1행부터 데이터
+
+    for(var i=startRow; i<lines.length; i++){
       var cols = lines[i].split('\t');
-      if(cols.length < 10) continue;
+      if(cols.length < 13) continue;
+      var code = (cols[0]||'').trim();
+      if(!code || !code.match(/\d{5,}/)) continue; // 편성코드 없으면 스킵
+
+      // VLOOKUP 수식 기반 컬럼 매핑 (1-based → 0-based)
+      // col[0]=편성코드(A), col[9]=프로그램명(10th), col[12]=순주문수량(13th), col[13]=순주문금액(14th)
+      // col[20]=주문이익율(21st), col[21]=총시청자수(22nd)
+      // col[70]=모바일순주문수량(71st), col[71]=모바일순주문금액(72nd)
+      // col[84]=담당MD(85th), col[85]=MDCAT(86th), col[86]=카테고리(87th)
+      // col[87]=마케팅비(88th), col[88]=광고수익(89th)
+      var pInt = function(v){ return parseInt(String(v||'').replace(/,/g,''))||0; };
+      var pFlt = function(v){ var s=String(v||'').replace(/,/g,'').replace('%',''); return parseFloat(s)||0; };
+
       _mliveData.push({
-        code: (cols[0]||'').trim(),
-        no: cols[1]||'',
-        broadcastType: (cols[2]||'').trim(),
-        date: (cols[3]||'').trim(),
-        day: (cols[4]||'').trim(),
-        partnerType: (cols[5]||'').trim(),
-        mdName: (cols[7]||'').trim(),
-        pdName: (cols[8]||'').trim(),
-        programName: (cols[9]||'').trim(),
-        startTime: (cols[10]||'').trim(),
-        endTime: (cols[11]||'').trim(),
-        orderQty: parseInt(cols[12])||0,
-        orderAmt: parseInt(cols[13])||0,
-        targetAmt: parseInt(cols[14])||0,
-        profitAmt: parseInt(cols[18])||0,
-        profitRate: cols[20]||'',
-        viewers: parseInt(cols[21])||0,
-        mdCat: (cols[headers.length-2]||'').trim(),
-        cat: (cols[headers.length-1]||'').trim(),
+        code: code,
+        date: (cols[3]||'').trim(),                    // 방송일자 (D열, 4th)
+        day: (cols[4]||'').trim(),                      // 요일
+        broadcastType: (cols[2]||'').trim(),            // 방송구분 (C열, 3rd)
+        programName: (cols[9]||'').trim(),              // 프로그램명 (J열, 10th)
+        startTime: (cols[10]||'').trim(),               // 시작시간
+        endTime: (cols[11]||'').trim(),                 // 종료시간
+        orderQty: pInt(cols[12]),                       // 순주문수량 (M열, 13th)
+        orderAmt: pInt(cols[13]),                       // 순주문금액 (N열, 14th)
+        targetAmt: pInt(cols[14]),                      // 목표순주문액 (O열, 15th)
+        profitRate: pFlt(cols[20]),                     // 주문이익율 (U열, 21st)
+        viewers: pInt(cols[21]),                        // 총시청자수 (V열, 22nd)
+        // 모바일(방송중) 실적
+        mobOrderQty: pInt(cols[70]),                    // 모바일 순주문수량 (71st)
+        mobOrderAmt: pInt(cols[71]),                    // 모바일 순주문금액 (72nd)
+        // MD/카테고리 정보
+        mdName: (cols[84]||cols[7]||'').trim(),         // 담당MD (85th, 없으면 H열 폴백)
+        mdCat: (cols[85]||'').trim(),                   // MDCAT (86th)
+        cat: (cols[86]||'').trim(),                     // 카테고리 (87th)
+        marketingFee: pInt(cols[87]),                   // 마케팅비 (88th)
+        adRevenue: pInt(cols[88]),                      // 광고수익 (89th)
+        // 한계이익 (col[17]=한계이익실적 18th, col[19]=주문이익율 20th)
+        profitAmt: pInt(cols[17]),                      // 한계이익실적 (R열, 18th)
       });
     }
     showToast('M라이브 데이터 '+_mliveData.length+'건 로드됨');
@@ -7951,6 +7976,13 @@ function renderWeeklyView(){
     // M라이브 합계 행 + 상세 (주차 내 별도 그룹)
     if(s8Type!=='inf' && wk.mliveItems.length){
       var mlId = 'ml-'+wk.key.replace(/[^a-zA-Z0-9]/g,'');
+      // M라이브 합계 (방송중/방송외 분리)
+      var mlSumBrdAmt=0,mlSumBrdQty=0,mlSumOutAmt=0,mlSumOutQty=0,mlSumProfit=0;
+      wk.mliveItems.forEach(function(m){
+        mlSumBrdAmt+=m.mobOrderAmt||0; mlSumBrdQty+=m.mobOrderQty||0;
+        mlSumOutAmt+=(m.orderAmt||0)-(m.mobOrderAmt||0); mlSumOutQty+=(m.orderQty||0)-(m.mobOrderQty||0);
+        mlSumProfit+=m.profitAmt||0;
+      });
       html += '<tr class="'+wkId+'" style="display:none;background:var(--bg3);font-weight:600;cursor:pointer" onclick="event.stopPropagation();document.querySelectorAll(\'.'+mlId+'\').forEach(function(r){r.style.display=r.style.display===\'none\'?\'table-row\':\'none\'})">'
         +'<td style="padding:5px 8px;text-align:center;color:var(--blue)">+</td>'
         +'<td style="padding:5px 8px;color:var(--blue)">'+wk.label+' M라이브</td>'
@@ -7958,22 +7990,30 @@ function renderWeeklyView(){
         +'<td style="text-align:right"></td><td style="text-align:right"></td>'
         +'<td style="text-align:right;color:var(--blue)">'+fmt(t.mlRev)+'</td>'
         +'<td style="text-align:right">'+fmt(t.mlOrd)+'</td>'
-        +'<td colspan="4"></td>'
+        +'<td colspan="2" style="text-align:right;font-size:10px;color:var(--text3)">방송중: '+fmt(mlSumBrdAmt)+'</td>'
+        +'<td colspan="2" style="text-align:right;font-size:10px;color:var(--text3)">방송외: '+fmt(mlSumOutAmt)+'</td>'
         +'<td style="text-align:right;color:var(--blue)">'+fmt(t.mlRev)+'</td>'
         +'<td style="text-align:right">'+fmt(t.mlOrd)+'</td>'
         +'<td></td></tr>';
       wk.mliveItems.forEach(function(m){
+        var outAmt=(m.orderAmt||0)-(m.mobOrderAmt||0);
+        var outQty=(m.orderQty||0)-(m.mobOrderQty||0);
         html += '<tr class="'+wkId+' '+mlId+'" style="display:none;font-size:11px">'
           +'<td></td><td style="padding:4px 8px;color:var(--text3)">'+escHtml(m.date||'')+'</td>'
-          +'<td></td><td></td>'
+          +'<td style="font-size:10px">'+(m.mdCat||'-')+'</td>'
+          +'<td style="font-size:10px">'+(m.cat||'-')+'</td>'
           +'<td>'+escHtml(m.programName||'-')+'</td>'
-          +'<td></td><td></td>'
+          +'<td style="text-align:right;font-size:10px">'+(m.marketingFee?fmt(m.marketingFee):'-')+'</td>'
+          +'<td></td>'
           +'<td style="text-align:right">'+fmt(m.orderAmt)+'</td>'
           +'<td style="text-align:right">'+fmt(m.orderQty)+'</td>'
-          +'<td colspan="4"></td>'
-          +'<td style="text-align:right">'+fmt(m.orderAmt)+'</td>'
-          +'<td style="text-align:right">'+fmt(m.orderQty)+'</td>'
-          +'<td></td></tr>';
+          +'<td style="text-align:right;color:var(--blue)">'+fmt(m.mobOrderAmt)+'</td>'
+          +'<td style="text-align:right">'+fmt(m.mobOrderQty)+'</td>'
+          +'<td style="text-align:right;color:var(--text2)">'+fmt(outAmt)+'</td>'
+          +'<td style="text-align:right">'+fmt(outQty)+'</td>'
+          +'<td style="text-align:right">'+fmt(m.profitAmt)+'</td>'
+          +'<td style="text-align:right;font-size:10px">'+(m.profitRate?m.profitRate+'%':'-')+'</td>'
+          +'<td style="font-size:10px;color:var(--text3)">'+escHtml(m.code||'-')+'</td></tr>';
       });
     }
   });
