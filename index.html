@@ -2280,6 +2280,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
       <div class="mo-sec-body" id="sec-settle">
         <div class="fr2" style="margin-bottom:12px">
+          <div><label>모바일라이브 편성코드</label><input class="inp" id="p-live-code" placeholder="예: 202602022467"></div>
           <div><label>DA 광고료 (원)</label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
           <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
             <input type="checkbox" id="p-settle-done" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer">
@@ -5034,6 +5035,7 @@ function editProd(id){
     revenue: p.settleRevenue||0, orders: p.settleOrders||0
   }]);
   var sdEl=document.getElementById('p-settle-da'); if(sdEl) sdEl.value=p.settleDa ? p.settleDa.toLocaleString('ko-KR') : '';
+  var lcEl=document.getElementById('p-live-code'); if(lcEl) lcEl.value=(p.appMkt&&p.appMkt.liveCode)||'';
   var sdoneEl=document.getElementById('p-settle-done'); if(sdoneEl) sdoneEl.checked=!!(p.settleDone);
   var arEl3=document.getElementById('p-agency-rate'); if(arEl3) arEl3.value=p.agencyRate||'';
   var pbiEl=document.getElementById('p-product-basic-info'); if(pbiEl){ pbiEl.value=p.productBasicInfo||DEFAULT_PRODUCT_BASIC_INFO; pbiEl.nextElementSibling.textContent=(p.productBasicInfo||DEFAULT_PRODUCT_BASIC_INFO).length+'/2000'; }
@@ -8603,6 +8605,7 @@ function openNewProd(){
   var srEl2=document.getElementById('p-settle-revenue'); if(srEl2) srEl2.value='';
   var soEl2=document.getElementById('p-settle-orders'); if(soEl2) soEl2.value='';
   var sdEl2=document.getElementById('p-settle-da'); if(sdEl2) sdEl2.value='';
+  var lcEl2=document.getElementById('p-live-code'); if(lcEl2) lcEl2.value='';
   var sdonEl2=document.getElementById('p-settle-done'); if(sdonEl2) sdonEl2.checked=false;
   // SKU + 가격 행 초기화 (다른 캠페인 데이터 유출 방지)
   var skuListEl = document.getElementById('sku-list');
@@ -8755,6 +8758,8 @@ function saveProd(){
     // settleRevenue/settleOrders는 settleData에서 합산
     settleDa:      iv('p-settle-da'),
     settleDone:    !!(document.getElementById('p-settle-done')?.checked),
+    // 모바일라이브 편성코드 → appMkt에 병합
+    _liveCodeInput: (document.getElementById('p-live-code')?.value||'').trim(),
     settleData:    getSettleBlocksData(),
     settleRevenue: getSettleBlocksData().reduce(function(s,d){return s+(d.revenue||0);},0),
     settleOrders:  getSettleBlocksData().reduce(function(s,d){return s+(d.orders||0);},0),
@@ -8956,6 +8961,12 @@ function saveProd(){
       }
     })();
     syncInfDataToDb(_infData);
+    // 모바일라이브 편성코드 → appMkt에 병합
+    if(newData._liveCodeInput){
+      if(!newData.appMkt) newData.appMkt = {};
+      newData.appMkt.liveCode = newData._liveCodeInput;
+    }
+    delete newData._liveCodeInput;
     console.log('[saveProd] 수정 저장 실행, id:', newData.id);
     if(_noMdcat) showToast('⚠️ MDCAT을 선택해주세요 (기본정보 관리에서 추가 가능)');
     showCompleteModal('수정');  // Firebase 응답과 무관하게 즉시 표시
@@ -8978,6 +8989,11 @@ function saveProd(){
     var dsProdEl=document.getElementById('ds-prod'); if(dsProdEl) dsProdEl.textContent=DB.campaigns.length;
     // 모달 먼저 닫고
     syncInfDataToDb(_infData);
+    if(newData._liveCodeInput){
+      if(!newData.appMkt) newData.appMkt = {};
+      newData.appMkt.liveCode = newData._liveCodeInput;
+    }
+    delete newData._liveCodeInput;
     console.log('[saveProd] 신규 저장 실행, id:', newData.id);
     closeMo('product');
     // 저장 완료 팝업 즉시 표시
