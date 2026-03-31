@@ -1319,9 +1319,13 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   <!-- ═══ S7: 성과분석 ═══ -->
   <div id="page-s8" class="page">
     <!-- 필터 바 -->
-    <div class="filter-bar" style="margin-bottom:16px">
-      <label class="filter-radio" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" onchange="setS7Filter('active')"> 진행중 캠페인</label>
-      <label class="filter-radio active" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" checked onchange="setS7Filter('done')"> 종료 캠페인</label>
+    <div class="filter-bar" style="margin-bottom:16px;flex-wrap:wrap">
+      <label class="filter-radio active" id="s8-filter-all"><input type="radio" name="s8-type" value="all" checked onchange="setS8Type('all')"> 전체</label>
+      <label class="filter-radio" id="s8-filter-mlive"><input type="radio" name="s8-type" value="mlive" onchange="setS8Type('mlive')"> 모바일라이브</label>
+      <label class="filter-radio" id="s8-filter-inf"><input type="radio" name="s8-type" value="inf" onchange="setS8Type('inf')"> 인플루언서 캠페인</label>
+      <div style="border-left:1px solid var(--border);height:20px;margin:0 8px"></div>
+      <label class="filter-radio" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" onchange="setS7Filter('active')"> 진행중</label>
+      <label class="filter-radio active" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" checked onchange="setS7Filter('done')"> 종료</label>
       <div class="date-filter" style="margin-left:16px">
         <label>기간</label>
         <input type="month" class="inp" id="s7-date-from">
@@ -1330,12 +1334,15 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         <button class="btn btn-primary btn-sm" onclick="renderReports()">조회</button>
         <button class="btn btn-ghost btn-sm" onclick="clearS7Filter()">초기화</button>
       </div>
-      <div style="margin-left:auto">
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px"><input type="file" accept=".csv,.xlsx,.xls" id="s8-mlive-upload" style="display:none" onchange="uploadMliveExcel(this)"> M라이브 엑셀 업로드</label>
         <button class="btn btn-ghost btn-sm" onclick="exportExcel('report')" style="display:inline-flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg> 리포트 내보내기</button>
       </div>
     </div>
-    <!-- 성과 그리드 -->
-    <div class="card" style="margin-bottom:18px">
+    <!-- 주차별 성과 테이블 -->
+    <div id="s8-weekly-view"></div>
+    <!-- 기존 성과 그리드 (인플루언서 캠페인 상세) -->
+    <div class="card" style="margin-bottom:18px" id="s8-inf-detail-card">
       <div class="card-hd"><span class="card-ttl">캠페인 성과 현황</span></div>
       <div style="overflow-x:auto">
         <table><thead><tr>
@@ -7723,6 +7730,216 @@ function copyCampData(campId){
 // S7: 성과분석
 // ═══════════════════════════════════════
 var s7Filter = 'done';
+var s8Type = 'all'; // all | mlive | inf
+var _mliveData = []; // 모바일라이브 업로드 데이터
+
+function setS8Type(val){
+  s8Type = val;
+  document.querySelectorAll('[name="s8-type"]').forEach(function(r){ r.closest('.filter-radio').classList.toggle('active', r.value===val); });
+  renderReports();
+}
+
+// 모바일라이브 엑셀(CSV) 업로드
+function uploadMliveExcel(input){
+  var file = input.files[0]; if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var lines = e.target.result.split('\n');
+    var headers = lines[0] ? lines[0].split('\t') : [];
+    _mliveData = [];
+    for(var i=1; i<lines.length; i++){
+      var cols = lines[i].split('\t');
+      if(cols.length < 10) continue;
+      _mliveData.push({
+        code: (cols[0]||'').trim(),
+        no: cols[1]||'',
+        broadcastType: (cols[2]||'').trim(),
+        date: (cols[3]||'').trim(),
+        day: (cols[4]||'').trim(),
+        partnerType: (cols[5]||'').trim(),
+        mdName: (cols[7]||'').trim(),
+        pdName: (cols[8]||'').trim(),
+        programName: (cols[9]||'').trim(),
+        startTime: (cols[10]||'').trim(),
+        endTime: (cols[11]||'').trim(),
+        orderQty: parseInt(cols[12])||0,
+        orderAmt: parseInt(cols[13])||0,
+        targetAmt: parseInt(cols[14])||0,
+        profitAmt: parseInt(cols[18])||0,
+        profitRate: cols[20]||'',
+        viewers: parseInt(cols[21])||0,
+        mdCat: (cols[headers.length-2]||'').trim(),
+        cat: (cols[headers.length-1]||'').trim(),
+      });
+    }
+    showToast('M라이브 데이터 '+_mliveData.length+'건 로드됨');
+    renderReports();
+  };
+  reader.readAsText(file, 'UTF-8');
+  input.value = '';
+}
+
+// 주차 계산 (ISO week)
+function getWeekInfo(dateStr){
+  if(!dateStr) return {year:0,month:0,week:0};
+  var d = new Date(dateStr);
+  if(isNaN(d.getTime())) return {year:0,month:0,week:0};
+  var year = d.getFullYear();
+  var month = d.getMonth()+1;
+  var jan1 = new Date(year,0,1);
+  var week = Math.ceil(((d - jan1)/86400000 + jan1.getDay()+1)/7);
+  return {year:year, month:month, week:week};
+}
+
+// 주차별 성과 렌더링
+function renderWeeklyView(){
+  var container = document.getElementById('s8-weekly-view');
+  var detailCard = document.getElementById('s8-inf-detail-card');
+  if(!container) return;
+
+  var today = new Date(); today.setHours(0,0,0,0);
+  var fromVal = document.getElementById('s7-date-from')?.value;
+  var toVal   = document.getElementById('s7-date-to')?.value;
+
+  // 종료 캠페인 필터
+  var camps = DB.campaigns.filter(function(c){
+    var startStr = (c.start||c.startDate||'').slice(0,10);
+    var endStr   = (c.end||c.endDate||'').slice(0,10);
+    var endD = endStr ? new Date(endStr) : null;
+    if(s7Filter==='active'){ if(endD && endD<today) return false; }
+    else { if(!endD || endD>=today) return false; }
+    // 월 필터
+    if(fromVal){ var fd=new Date(fromVal+'-01'); if(new Date(startStr)<fd) return false; }
+    if(toVal){ var tp=toVal.split('-'); var td=new Date(parseInt(tp[0]),parseInt(tp[1]),0); if(new Date(startStr)>td) return false; }
+    return true;
+  });
+
+  // 주차별 그룹핑
+  var weekMap = {};
+  camps.forEach(function(c){
+    var startStr = (c.start||c.startDate||'').slice(0,10);
+    var wi = getWeekInfo(startStr);
+    var key = wi.year+'-W'+String(wi.week).padStart(2,'0');
+    var label = wi.month+'월 '+Math.ceil(new Date(startStr).getDate()/7)+'주';
+    if(!weekMap[key]) weekMap[key] = {key:key, label:label, year:wi.year, month:wi.month, infCamps:[], mliveItems:[]};
+    weekMap[key].infCamps.push(c);
+  });
+
+  // M라이브 데이터도 주차별 그룹핑
+  _mliveData.forEach(function(m){
+    var wi = getWeekInfo(m.date);
+    var key = wi.year+'-W'+String(wi.week).padStart(2,'0');
+    var label = wi.month+'월 '+Math.ceil(new Date(m.date).getDate()/7)+'주';
+    if(!weekMap[key]) weekMap[key] = {key:key, label:label, year:wi.year, month:wi.month, infCamps:[], mliveItems:[]};
+    weekMap[key].mliveItems.push(m);
+  });
+
+  var weeks = Object.values(weekMap).sort(function(a,b){ return a.key>b.key?1:-1; });
+
+  if(!weeks.length){
+    container.innerHTML = '';
+    if(detailCard) detailCard.style.display = '';
+    return;
+  }
+
+  // 타입 필터
+  if(s8Type==='mlive' && detailCard) detailCard.style.display='none';
+  else if(detailCard) detailCard.style.display='';
+
+  var fmt = function(v){ return v?v.toLocaleString('ko-KR'):'-'; };
+  var fmtM = function(v){ return v?(v/1000000).toFixed(0):'0'; };
+
+  var html = '';
+  weeks.forEach(function(wk){
+    var infTotal = {rev:0,ord:0,cost:0,views:0,comments:0,inflow:0,newMem:0};
+    var mlTotal = {rev:0,ord:0,profit:0,viewers:0};
+
+    wk.infCamps.forEach(function(c){
+      infTotal.rev += c.settleRevenue||0;
+      infTotal.ord += c.settleOrders||0;
+      var sd = (c.settleData||[]);
+      sd.forEach(function(s){
+        infTotal.views += s.views||0;
+        infTotal.comments += s.comments||0;
+        infTotal.inflow += s.inflow||0;
+        infTotal.newMem += s.newMembers||0;
+      });
+      var fr=parseFloat(c.feeRate)||0,fa=parseInt(c.feeAmount)||0,ar=parseFloat(c.agencyRate)||0,da=parseInt(c.settleDa)||0;
+      infTotal.cost += Math.round((c.settleRevenue||0)*fr/100)+fa+Math.round((c.settleRevenue||0)*ar/100)+da;
+    });
+    wk.mliveItems.forEach(function(m){
+      mlTotal.rev += m.orderAmt||0;
+      mlTotal.ord += m.orderQty||0;
+      mlTotal.profit += m.profitAmt||0;
+      mlTotal.viewers += m.viewers||0;
+    });
+
+    var wkId = 'wk-'+wk.key.replace(/[^a-zA-Z0-9]/g,'');
+    html += '<div class="card" style="margin-bottom:12px">';
+    html += '<div class="card-hd" style="cursor:pointer" onclick="var d=document.getElementById(\''+wkId+'\');d.style.display=d.style.display===\'none\'?\'\':\' none\'">';
+    html += '<span class="card-ttl">'+wk.year+'년 '+wk.label+'</span>';
+    html += '<div style="display:flex;gap:16px;font-size:12px;color:var(--text2)">';
+    if(s8Type!=='mlive') html += '<span>인플루언서: <b style="color:var(--green)">'+fmtM(infTotal.rev)+'백만</b> ('+wk.infCamps.length+'건)</span>';
+    if(s8Type!=='inf') html += '<span>M라이브: <b style="color:var(--blue)">'+fmtM(mlTotal.rev)+'백만</b> ('+wk.mliveItems.length+'건)</span>';
+    html += '</div></div>';
+
+    html += '<div id="'+wkId+'" style="display:none;overflow-x:auto">';
+
+    // 인플루언서 캠페인 테이블
+    if(s8Type!=='mlive' && wk.infCamps.length){
+      html += '<div style="padding:10px 16px 6px;font-size:11.5px;font-weight:700;color:var(--accent2)">인플루언서 캠페인</div>';
+      html += '<table style="width:100%;font-size:12px"><thead><tr style="background:var(--bg3)">'
+        +'<th style="padding:5px 8px">캠페인명</th><th>MDCAT</th><th>카테고리</th><th>담당MD</th><th>인플루언서</th>'
+        +'<th style="text-align:right">정액</th><th style="text-align:right">정률</th>'
+        +'<th style="text-align:right">매출</th><th style="text-align:right">건수</th>'
+        +'<th style="text-align:right">조회수(만)</th><th style="text-align:right">당사유입</th><th style="text-align:right">CTR</th>'
+        +'<th style="text-align:right">신규가입</th><th>기간</th>'
+        +'</tr></thead><tbody>';
+      wk.infCamps.forEach(function(c){
+        var sd0 = (c.settleData||[])[0]||{};
+        var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
+        html += '<tr><td style="padding:5px 8px;font-weight:600">'+escHtml(c.name||'-')+'</td>'
+          +'<td>'+(c.mdcat||'-')+'</td><td>'+(c.cat||'-')+'</td><td>'+(c.owner||'-')+'</td>'
+          +'<td>'+(c.infName||'-')+'</td>'
+          +'<td style="text-align:right">'+(c.feeAmount?fmt(c.feeAmount):'-')+'</td>'
+          +'<td style="text-align:right">'+(c.feeRate?c.feeRate+'%':'-')+'</td>'
+          +'<td style="text-align:right;color:var(--green);font-weight:700">'+(c.settleRevenue?fmt(c.settleRevenue):'-')+'</td>'
+          +'<td style="text-align:right">'+(c.settleOrders||'-')+'</td>'
+          +'<td style="text-align:right">'+(sd0.views||'-')+'</td>'
+          +'<td style="text-align:right">'+(sd0.inflow||'-')+'</td>'
+          +'<td style="text-align:right">'+(sd0.ctr?sd0.ctr+'%':'-')+'</td>'
+          +'<td style="text-align:right">'+(sd0.newMembers||'-')+'</td>'
+          +'<td style="font-size:11px;color:var(--text3)">'+startD+'~'+endD+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+
+    // M라이브 테이블
+    if(s8Type!=='inf' && wk.mliveItems.length){
+      html += '<div style="padding:10px 16px 6px;font-size:11.5px;font-weight:700;color:var(--blue)">모바일라이브</div>';
+      html += '<table style="width:100%;font-size:12px"><thead><tr style="background:var(--bg3)">'
+        +'<th style="padding:5px 8px">프로그램명</th><th>방송구분</th><th>담당MD</th><th>방송일자</th>'
+        +'<th style="text-align:right">주문수량</th><th style="text-align:right">주문금액</th>'
+        +'<th style="text-align:right">한계이익</th><th style="text-align:right">시청자수</th><th>편성코드</th>'
+        +'</tr></thead><tbody>';
+      wk.mliveItems.forEach(function(m){
+        html += '<tr><td style="padding:5px 8px;font-weight:600">'+escHtml(m.programName||'-')+'</td>'
+          +'<td>'+escHtml(m.broadcastType||'-')+'</td><td>'+escHtml(m.mdName||'-')+'</td>'
+          +'<td>'+escHtml(m.date||'-')+'</td>'
+          +'<td style="text-align:right">'+fmt(m.orderQty)+'</td>'
+          +'<td style="text-align:right;color:var(--blue);font-weight:600">'+fmt(m.orderAmt)+'</td>'
+          +'<td style="text-align:right">'+fmt(m.profitAmt)+'</td>'
+          +'<td style="text-align:right">'+fmt(m.viewers)+'</td>'
+          +'<td style="font-size:11px;color:var(--text3)">'+escHtml(m.code||'-')+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+
+    html += '</div></div>';
+  });
+
+  container.innerHTML = html;
+}
 
 function setS7Filter(val){
   s7Filter = val;
@@ -7828,6 +8045,8 @@ function renderReports(){
     '<tr><td colspan="13" class="empty" style="padding:32px;text-align:center;color:var(--text3)">해당 조건의 캠페인이 없습니다</td></tr>';
   // 전체선택 체크박스 동기화
   var allCb = document.getElementById('s7-check-all'); if(allCb) allCb.checked = true;
+  // 주차별 뷰 렌더링
+  renderWeeklyView();
 }
 
 var _s7FilteredCamps = [];
