@@ -6970,7 +6970,8 @@ function renderInfs(){
   });
 
   // ── 테이블 헤더 ──
-  var tableHtml = '<div class="card"><table style="width:100%"><thead><tr>'    +'<th>인플루언서</th><th>최근 규모</th><th>최근 카테고리</th>'    +'<th style="text-align:right">평균매출</th><th style="text-align:right">평균주문건수</th><th style="text-align:right">평균비용</th>'    +'</tr></thead><tbody>';
+  var canSeePrivate = isAdmin() || ME_ROLE==='manager';
+  var tableHtml = '<div class="card"><table style="width:100%"><thead><tr>'    +'<th>인플루언서</th><th>최근 규모</th><th>최근 카테고리</th>'    +(canSeePrivate?'<th>연락처</th><th>주소</th><th style="text-align:right">수수료율</th>':'')    +'<th style="text-align:right">평균매출</th><th style="text-align:right">평균주문건수</th><th style="text-align:right">평균비용</th>'    +'</tr></thead><tbody>';
 
   var twoYearsAgo = new Date(); twoYearsAgo.setFullYear(twoYearsAgo.getFullYear()-2);
 
@@ -7010,7 +7011,13 @@ function renderInfs(){
     if(igCh) platHtml += '<a href="https://www.instagram.com/'+igCh.replace('@','')+'" target="_blank" style="color:#e1306c;font-size:11px;text-decoration:none">📸'+igCh+'</a>';
     if(twCh) platHtml += '<a href="https://x.com/'+twCh.replace('@','')+'" target="_blank" style="color:#000;font-size:11px;font-weight:700;text-decoration:none;margin-right:4px">𝕏 '+twCh+'</a>';
 
-    tableHtml += '<tr class="copy-camp-item" data-infname="'+inf.name.replace(/"/g,'&quot;')+'" onclick="openInfDetail(this.dataset.infname)" style="cursor:pointer">'      +'<td><div style="display:flex;align-items:center;gap:8px">'      +'<div class="av" style="background:'+avColor(inf.name)+'22;color:'+avColor(inf.name)+'">'+( inf.name?.[0]||'?')+'</div>'      +'<div><div style="font-weight:700;font-size:13px">'+inf.name+'</div>'      +(platHtml?'<div style="margin-top:2px">'+platHtml+'</div>':'')+'</div></div></td>'      +'<td>'+(size!=='-'?'<span style="background:'+sizeBg+';color:'+sizeColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+size+'</span>':'-')+'</td>'      +'<td style="color:var(--text2);font-size:12.5px">'+(lc.cat||'-')+'</td>'      +'<td style="text-align:right;font-weight:700;color:var(--green)">'+fmtRev+'</td>'      +'<td style="text-align:right;color:var(--text2)">'+fmtOrd+'</td>'      +'<td style="text-align:right;color:var(--orange)">'+fmtCost+'</td>'      +'</tr>';
+    // 비공개 정보 (관리자/매니저 전용)
+    var dbInf = inf.dbInf || {};
+    var infContact = dbInf.contact || lc.contact || '';
+    var infAddress = dbInf.address || lc.sampleAddress || '';
+    var infFeeRate = lc.feeRate ? lc.feeRate+'%' : '-';
+
+    tableHtml += '<tr class="copy-camp-item" data-infname="'+inf.name.replace(/"/g,'&quot;')+'" onclick="openInfDetail(this.dataset.infname)" style="cursor:pointer">'      +'<td><div style="display:flex;align-items:center;gap:8px">'      +'<div class="av" style="background:'+avColor(inf.name)+'22;color:'+avColor(inf.name)+'">'+( inf.name?.[0]||'?')+'</div>'      +'<div><div style="font-weight:700;font-size:13px">'+inf.name+'</div>'      +(platHtml?'<div style="margin-top:2px">'+platHtml+'</div>':'')+'</div></div></td>'      +'<td>'+(size!=='-'?'<span style="background:'+sizeBg+';color:'+sizeColor+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+size+'</span>':'-')+'</td>'      +'<td style="color:var(--text2);font-size:12.5px">'+(lc.cat||'-')+'</td>'      +(canSeePrivate?'<td style="font-size:12px;color:var(--text2)">'+escHtml(infContact||'-')+'</td>'        +'<td style="font-size:12px;color:var(--text2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escHtml(infAddress)+'">'+escHtml(infAddress||'-')+'</td>'        +'<td style="text-align:right;font-size:12px;color:var(--accent2);font-weight:600">'+infFeeRate+'</td>':'')      +'<td style="text-align:right;font-weight:700;color:var(--green)">'+fmtRev+'</td>'      +'<td style="text-align:right;color:var(--text2)">'+fmtOrd+'</td>'      +'<td style="text-align:right;color:var(--orange)">'+fmtCost+'</td>'      +'</tr>';
   });
 
   tableHtml += '</tbody></table></div>';
