@@ -7752,14 +7752,34 @@ function uploadMliveExcel(input){
 
     _mliveData = [];
     var skipped = 0;
-    // VLOOKUP 컬럼 매핑 (1-based → 0-based)
-    // A(0)=편성코드, C(2)=방송구분, D(3)=방송일자, E(4)=요일
-    // H(7)=대표담당MD, J(9)=프로그램명, K(10)=시작, L(11)=종료
-    // M(12)=순주문수량(13th), N(13)=순주문금액(14th), O(14)=목표
-    // R(17)=한계이익실적(18th), U(20)=주문이익율(21st), V(21)=총시청자수(22nd)
-    // 70=모바일순주문수량(71st), 71=모바일순주문금액(72nd)
-    // 84=담당MD(85th), 85=MDCAT(86th), 86=카테고리(87th)
-    // 87=마케팅비(88th), 88=광고수익(89th)
+
+    // 헤더 행에서 컬럼 인덱스 자동 매핑
+    var colMap = {};
+    var headerKeywords = {
+      '순주문수량':null, '순주문금액':null, '주문이익율':null, '주문이익액':null,
+      '총시청자수':null, '프로그램명':null, '방송구분':null, '방송일자':null,
+      '대표담당MD':null, '시작':null, '종료':null
+    };
+    for(var hi=0; hi<Math.min(5,rows.length); hi++){
+      var hrow = rows[hi];
+      for(var hj=0; hj<hrow.length; hj++){
+        var hv = String(hrow[hj]||'').trim();
+        if(hv in headerKeywords && headerKeywords[hv]===null) headerKeywords[hv]=hj;
+      }
+    }
+    console.log('[M라이브] 헤더 매핑:', JSON.stringify(headerKeywords));
+
+    // 헤더 기반 인덱스 (폴백: 고정 인덱스)
+    var CI = {
+      code:0, broadcastType:headerKeywords['방송구분']||2, date:headerKeywords['방송일자']||3,
+      md:headerKeywords['대표담당MD']||7, program:headerKeywords['프로그램명']||9,
+      start:headerKeywords['시작']||10, end:headerKeywords['종료']||11,
+      orderQty:headerKeywords['순주문수량']||12, orderAmt:headerKeywords['순주문금액']||13,
+      profitAmt:headerKeywords['주문이익액']!=null?headerKeywords['주문이익액']:19,
+      profitRate:headerKeywords['주문이익율']!=null?headerKeywords['주문이익율']:20,
+      viewers:headerKeywords['총시청자수']!=null?headerKeywords['총시청자수']:21,
+    };
+    console.log('[M라이브] 컬럼 인덱스:', JSON.stringify(CI));
     var pInt = function(v){ return parseInt(String(v||'').replace(/[^0-9\-]/g,''))||0; };
     var pFlt = function(v){ return parseFloat(String(v||'').replace(/[^0-9.\-]/g,''))||0; };
 
@@ -7768,13 +7788,12 @@ function uploadMliveExcel(input){
       var code = String(r[0]||'').trim();
       if(!code.match(/^\d{6,}/)) { skipped++; continue; }
 
-      // D열(r[3]) 방송일자 파싱
-      var dateVal = r[3]||'';
+      // 방송일자 파싱 (CI.date)
+      var dateVal = r[CI.date]||'';
       var dateStr = '';
       if(dateVal instanceof Date){
         dateStr = dateVal.getFullYear()+'-'+String(dateVal.getMonth()+1).padStart(2,'0')+'-'+String(dateVal.getDate()).padStart(2,'0');
       } else if(typeof dateVal==='number'){
-        // 엑셀 시리얼넘버 → 날짜 변환
         var d = new Date((dateVal - 25569) * 86400000);
         dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
       } else {
@@ -7784,26 +7803,26 @@ function uploadMliveExcel(input){
       _mliveData.push({
         code: code,
         date: dateStr,
-        day: String(r[4]||'').trim(),
-        broadcastType: String(r[2]||'').trim(),
-        programName: String(r[9]||'').trim(),
-        startTime: String(r[10]||'').trim(),
-        endTime: String(r[11]||'').trim(),
-        orderQty: pInt(r[12]),          // 순주문수량 (13th)
-        orderAmt: pInt(r[13]),          // 순주문금액 (14th)
-        targetAmt: pInt(r[14]),         // 목표 (15th)
-        // VLOOKUP 22nd = 주문이익율(V열)
-        _profitRateRaw: pFlt(r[21]),    // 주문이익율 원시값 (22nd, 0-based idx 21)
-        profitRate: 0,                   // M라이브율 (계산)
-        profitAmt: 0,                    // M라이브이익 (계산)
-        viewers: pInt(r[22]),           // 총시청자수 (23rd)
+        day: String(r[CI.date+1]||'').trim(),
+        broadcastType: String(r[CI.broadcastType]||'').trim(),
+        programName: String(r[CI.program]||'').trim(),
+        startTime: String(r[CI.start]||'').trim(),
+        endTime: String(r[CI.end]||'').trim(),
+        orderQty: pInt(r[CI.orderQty]),
+        orderAmt: pInt(r[CI.orderAmt]),
+        targetAmt: pInt(r[CI.orderAmt+1]),
+        // 주문이익율 (V열 = 헤더 자동매핑)
+        _profitRateRaw: pFlt(r[CI.profitRate]),
+        profitRate: 0,
+        profitAmt: 0,
+        viewers: pInt(r[CI.viewers]),
         mobOrderQty: pInt(r[70]),       // 모바일 순주문수량 (71st)
         mobOrderAmt: pInt(r[71]),       // 모바일 순주문금액 (72nd)
-        mdName: String(r[84]||r[7]||'').trim(),  // 담당MD (85th, 폴백 H열)
-        mdCat: String(r[85]||'').trim(),          // MDCAT (86th)
-        cat: String(r[86]||'').trim(),            // 카테고리 (87th)
-        marketingFee: pInt(r[87]),      // 마케팅비 (88th)
-        adRevenue: pInt(r[88]),         // 광고수익 (89th)
+        mdName: String(r[84]||r[CI.md]||'').trim(),
+        mdCat: String(r[85]||'').trim(),
+        cat: String(r[86]||'').trim(),
+        marketingFee: pInt(r[87]),
+        adRevenue: pInt(r[88]),
       });
     }
     // 수식 기반 한계이익 계산
