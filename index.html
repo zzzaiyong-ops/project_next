@@ -7733,9 +7733,9 @@ function copyCampData(campId){
 var s7Filter = 'done';
 var s8Type = 'all'; // all | mlive | inf
 var _mliveData = []; // 모바일라이브 업로드 데이터
-var _monthlyTargets = {}; // 월별 목표금액 {2026-03: 500000000, ...}
+var _monthlyTargets = {}; // 월별 목표 {2026-03: {mlive:금액, inf:금액}, ...}
 
-// 월별 목표 엑셀 업로드
+// 월별 목표 엑셀 업로드 (A:연월, B:M라이브목표, C:인플루언서목표)
 function uploadMonthlyTarget(input){
   var file = input.files[0]; if(!file) return;
   var reader = new FileReader();
@@ -7748,11 +7748,10 @@ function uploadMonthlyTarget(input){
     _monthlyTargets = {};
     rows.forEach(function(r){
       var ym = String(r[0]||'').trim();
-      // 2026-03, 2026/03, 202603 등 다양한 포맷 지원
       if(ym.match(/^\d{4}[-\/]?\d{2}$/)){
         var key = ym.replace(/\//g,'-');
         if(key.length===6) key = key.slice(0,4)+'-'+key.slice(4);
-        _monthlyTargets[key] = pInt(r[1]);
+        _monthlyTargets[key] = { mlive: pInt(r[1]), inf: pInt(r[2]) };
       }
     });
     console.log('[목표] 월별 목표:', JSON.stringify(_monthlyTargets));
@@ -8028,23 +8027,44 @@ function renderWeeklyView(){
 
   // 월별 목표 및 진도율 계산
   var targetMonth = fromVal || (new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0'));
-  var monthTarget = _monthlyTargets[targetMonth]||0;
+  var tgt = _monthlyTargets[targetMonth]||{};
+  var tgtMlive = tgt.mlive||0, tgtInf = tgt.inf||0, tgtTotal = tgtMlive + tgtInf;
   var todayDate = new Date();
   var daysInMonth = new Date(todayDate.getFullYear(), todayDate.getMonth()+1, 0).getDate();
   var daysPassed = todayDate.getDate();
-  var dailyTarget = monthTarget > 0 ? Math.round(monthTarget / daysInMonth * daysPassed) : 0;
-  var progressRate = dailyTarget > 0 ? (gt.rev / dailyTarget * 100).toFixed(1) : 0;
-  var progressColor = progressRate >= 100 ? 'var(--green)' : progressRate >= 80 ? 'var(--orange)' : 'var(--pink)';
+  var dayRatio = daysPassed / daysInMonth;
+
+  function calcProgress(actual, target){
+    if(!target) return {daily:0, rate:0, color:'var(--text3)'};
+    var daily = Math.round(target * dayRatio);
+    var rate = (actual / daily * 100).toFixed(1);
+    var color = rate>=100?'var(--green)':rate>=80?'var(--orange)':'var(--pink)';
+    return {daily:daily, rate:rate, color:color};
+  }
+  var pAll = calcProgress(gt.rev, tgtTotal);
+  var pMl = calcProgress(gt.mlRev, tgtMlive);
+  var pInf = calcProgress(gt.infRev, tgtInf);
 
   // 목표/진도율 행 (목표 설정 시만 표시)
-  if(monthTarget > 0){
+  if(tgtTotal > 0){
     html += '<tr style="background:var(--bg3);font-size:12px;border-bottom:1px solid var(--border)">'
       +'<td></td>'
-      +'<td colspan="4" style="padding:8px"><span style="font-weight:700">월 목표</span> <span style="color:var(--text3)">'+fmt(monthTarget)+'</span>'
-      +' | <span style="font-weight:700">일할 목표</span> <span style="color:var(--text3)">'+fmt(dailyTarget)+' ('+daysPassed+'/'+daysInMonth+'일)</span>'
-      +' | <span style="font-weight:700">진도율</span> <span style="font-size:14px;font-weight:800;color:'+progressColor+'">'+progressRate+'%</span></td>'
-      +'<td colspan="'+(colExpanded?13:7)+'"></td>'
-      +'</tr>';
+      +'<td colspan="'+(colExpanded?18:12)+'" style="padding:10px 8px;line-height:2">'
+      +'<div style="display:flex;gap:24px;flex-wrap:wrap">'
+      // 전체
+      +'<div><span style="font-weight:700">전체</span> '
+      +'목표 '+fmt(tgtTotal)+' · 일할 '+fmt(pAll.daily)+' ('+daysPassed+'/'+daysInMonth+'일) · '
+      +'진도율 <span style="font-size:15px;font-weight:800;color:'+pAll.color+'">'+pAll.rate+'%</span></div>'
+      // M라이브
+      +'<div><span style="font-weight:700;color:var(--blue)">M라이브</span> '
+      +'목표 '+fmt(tgtMlive)+' · 일할 '+fmt(pMl.daily)+' · '
+      +'진도율 <span style="font-size:14px;font-weight:800;color:'+pMl.color+'">'+pMl.rate+'%</span></div>'
+      // 인플루언서
+      +'<div><span style="font-weight:700;color:var(--green)">인플루언서</span> '
+      +'목표 '+fmt(tgtInf)+' · 일할 '+fmt(pInf.daily)+' · '
+      +'진도율 <span style="font-size:14px;font-weight:800;color:'+pInf.color+'">'+pInf.rate+'%</span></div>'
+      +'</div>'
+      +'</td></tr>';
   }
 
   // 월 합계 행
