@@ -2390,7 +2390,8 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <div class="fr2" style="margin-bottom:6px"><div><label style="font-size:11px;color:var(--text3)">📸 인스타그램</label><input class="inp" id="i-insta" placeholder="@계정명"></div><div><label style="font-size:11px;color:var(--text3)">▶ 유튜브</label><input class="inp" id="i-youtube" placeholder="@채널명"></div></div>
       <div class="fr2"><div><label style="font-size:11px;color:var(--text3)">𝕏 트위터/X</label><input class="inp" id="i-twitter" placeholder="@계정명"></div><div><label style="font-size:11px;color:var(--text3)">팔로워 (대표)</label><input class="inp" id="i-flw" type="number" placeholder="50000"></div></div>
     </div>
-    <div class="fr2"><div><label>연락처</label><input class="inp" id="i-contact" placeholder="이메일 또는 DM"></div><div><label>광고 단가 (원)</label><input class="inp inp-money" id="i-fee" placeholder="300,000"></div></div>
+    <div class="fr2"><div><label>연락처</label><input class="inp" id="i-contact" placeholder="전화번호 또는 이메일"></div><div><label>광고 단가 (원)</label><input class="inp inp-money" id="i-fee" placeholder="300,000"></div></div>
+    <div class="fr"><label>주소</label><input class="inp" id="i-address" placeholder="샘플 수신 주소"></div>
     <div class="fr"><label>메모</label><textarea class="ta" id="i-memo" placeholder="협업 이력, 특이사항..."></textarea></div>
   </div>
   <div class="mo-ft"><button class="btn btn-ghost" onclick="closeMo('influencer')">취소</button><button class="btn btn-primary" onclick="saveInf()">등록</button></div>
@@ -8446,6 +8447,7 @@ function saveProd(){
         });
       }
     })();
+    syncInfDataToDb(_infData);
     console.log('[saveProd] 수정 저장 실행, id:', newData.id);
     if(_noMdcat) showToast('⚠️ MDCAT을 선택해주세요 (기본정보 관리에서 추가 가능)');
     showCompleteModal('수정');  // Firebase 응답과 무관하게 즉시 표시
@@ -8467,6 +8469,7 @@ function saveProd(){
     addNotif('📋', name+' 캠페인 요청 등록됨', '방금 전');
     var dsProdEl=document.getElementById('ds-prod'); if(dsProdEl) dsProdEl.textContent=DB.campaigns.length;
     // 모달 먼저 닫고
+    syncInfDataToDb(_infData);
     console.log('[saveProd] 신규 저장 실행, id:', newData.id);
     closeMo('product');
     // 저장 완료 팝업 즉시 표시
@@ -8484,6 +8487,41 @@ function saveProd(){
     return;
   }
 }
+
+// 캠페인 인플루언서 정보 → DB.influencers 동기화
+function syncInfDataToDb(infDataArr){
+  if(!infDataArr || !infDataArr.length) return;
+  infDataArr.forEach(function(inf){
+    if(!inf.infName) return;
+    var name = inf.infName.trim();
+    var existing = (DB.influencers||[]).find(function(i){ return i.name && i.name.trim()===name; });
+    if(existing){
+      // 기존 인플루언서 업데이트 (빈 값은 덮어쓰지 않음)
+      if(inf.insta) existing.insta = inf.insta;
+      if(inf.youtube) existing.youtube = inf.youtube;
+      if(inf.twitter) existing.twitter = inf.twitter;
+      if(inf.contact) existing.contact = inf.contact;
+      if(inf.sampleAddress) existing.address = inf.sampleAddress;
+      if(inf.mcn) existing.mcn = inf.mcn;
+    } else {
+      // 신규 인플루언서 자동 등록
+      DB.influencers = DB.influencers || [];
+      DB.influencers.push({
+        id: nid.influencers++,
+        name: name,
+        insta: inf.insta||'',
+        youtube: inf.youtube||'',
+        twitter: inf.twitter||'',
+        contact: inf.contact||'',
+        address: inf.sampleAddress||'',
+        cat: '',
+        fee: inf.feeAmount||0,
+        memo: '캠페인 등록 시 자동 추가'
+      });
+    }
+  });
+}
+
 // 캠페인 수정 시 연관 데이터 동기화
 function syncRelatedData(oldData, newData){
   // 캠페인명/기간이 바뀐 경우 연결된 campaigns 테이블도 업데이트
@@ -8686,6 +8724,11 @@ function onInfNameInput(el, blockN){
     if(igEl && !igEl.value && (dbInf.insta||'')) igEl.value = dbInf.insta;
     if(ytEl && !ytEl.value && (dbInf.youtube||'')) ytEl.value = dbInf.youtube;
     if(twEl && !twEl.value && (dbInf.twitter||'')) twEl.value = dbInf.twitter;
+    // 연락처·주소 자동 채움
+    var contactEl = block.querySelector('.inf-contact-'+blockN);
+    var addrEl = block.querySelector('.inf-saddr-'+blockN);
+    if(contactEl && !contactEl.value && (dbInf.contact||'')) contactEl.value = dbInf.contact;
+    if(addrEl && !addrEl.value && (dbInf.address||'')) addrEl.value = dbInf.address;
     // 구버전 호환: handle+platform
     if(dbInf.handle && !dbInf.insta && !dbInf.youtube && !dbInf.twitter){
       var p = (dbInf.platform||'').toLowerCase();
@@ -8773,8 +8816,12 @@ function addInfBlock(data){
     +'<input type="checkbox" class="inf-sexempt-'+n+'" style="width:15px;height:15px;accent-color:var(--orange);cursor:pointer"'+(d.sampleExempt?' checked':'')+'>'
     +'<span style="font-size:12.5px;font-weight:600;color:var(--orange)">🚫 샘플발송 미대상</span></label>'
     +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">'
+    +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">연락처</label>'
+    +'<input class="inp inf-contact-'+n+'" placeholder="전화번호 또는 이메일" value="'+(d.contact||'')+'"></div>'
     +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">수신 주소</label>'
-    +'<input class="inp inf-saddr-'+n+'" placeholder="수신자명 / 연락처 / 주소" value="'+(d.sampleAddress||'')+'"></div>'
+    +'<input class="inp inf-saddr-'+n+'" placeholder="샘플 수신 주소" value="'+(d.sampleAddress||'')+'"></div>'
+    +'</div>'
     +'</div>';
 
   container.appendChild(block);
@@ -8808,6 +8855,7 @@ function getInfBlocksData(){
       proposeFeeRate:  parseFloat(block.querySelector('.inf-propose-frate-'+n)?.value)||0,
       proposeFeeAmount:parseInt((block.querySelector('.inf-propose-famt-'+n)?.value||'').replace(/,/g,''))||0,
       agencyRate:parseFloat(block.querySelector('.inf-arate-'+n)?.value)||0,
+      contact:  block.querySelector('.inf-contact-'+n)?.value.trim()||'',
       sampleSent:!!(block.querySelector('.inf-ssent-'+n)?.checked),
       sampleExempt:!!(block.querySelector('.inf-sexempt-'+n)?.checked),
       sampleAddress:block.querySelector('.inf-saddr-'+n)?.value.trim()||'',
@@ -9193,7 +9241,7 @@ function editCamp(id){
 function saveInf(){
   if(!canEdit() || isExtMcn()){ showToast('권한이 없습니다.'); return; }
   var name=document.getElementById('i-name').value.trim(); if(!name){alert('이름 필수');return;}
-  DB.influencers.push({id:nid.influencers++,name,insta:v('i-insta'),youtube:v('i-youtube'),twitter:v('i-twitter'),followers:iv('i-flw'),cat:v('i-cat'),contact:v('i-contact'),fee:iv('i-fee'),memo:v('i-memo')});
+  DB.influencers.push({id:nid.influencers++,name,insta:v('i-insta'),youtube:v('i-youtube'),twitter:v('i-twitter'),followers:iv('i-flw'),cat:v('i-cat'),contact:v('i-contact'),address:v('i-address'),fee:iv('i-fee'),memo:v('i-memo')});
   addAct('👤',`${name} 인플루언서 등록`,nowStr(),'');
   addNotif('👤',`${name} DB 추가됨`,'방금 전');
   broadcastData(); closeMo('influencer'); renderInfs();
