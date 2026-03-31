@@ -7792,8 +7792,10 @@ function uploadMliveExcel(input){
         orderQty: pInt(r[12]),          // 순주문수량 (13th)
         orderAmt: pInt(r[13]),          // 순주문금액 (14th)
         targetAmt: pInt(r[14]),         // 목표 (15th)
-        profitAmt: pInt(r[17]) || Math.round(pInt(r[13]) * pFlt(r[20]) / 100),  // 한계이익: R열 또는 순주문금액×이익율
-        profitRate: pFlt(r[20]),        // 주문이익율 (21st)
+        // VLOOKUP 21st = 주문이익율(U열)
+        _profitRateRaw: pFlt(r[20]),    // 주문이익율 원시값 (%)
+        profitRate: 0,                   // M라이브율 (계산)
+        profitAmt: 0,                    // M라이브이익 (계산)
         viewers: pInt(r[21]),           // 총시청자수 (22nd)
         mobOrderQty: pInt(r[70]),       // 모바일 순주문수량 (71st)
         mobOrderAmt: pInt(r[71]),       // 모바일 순주문금액 (72nd)
@@ -7804,11 +7806,29 @@ function uploadMliveExcel(input){
         adRevenue: pInt(r[88]),         // 광고수익 (89th)
       });
     }
+    // 수식 기반 한계이익 계산
+    // M라이브율(AS) = (VLOOKUP 21st / (방송외+방송중)) - 2%  ※ 21st=주문이익율
+    // M라이브이익(AR) = 전체매출(AA) × M라이브율(AS)
+    _mliveData.forEach(function(m){
+      var totalAmt = m.orderAmt||0;                        // AA: 전체매출
+      var brdAmt = m.mobOrderAmt||0;                       // AJ: 방송중매출
+      var outAmt = totalAmt - brdAmt;                      // AL: 방송외매출
+      var vlookup21 = m._profitRateRaw||0;                 // VLOOKUP 21st: 주문이익율(%)
+      // AS: M라이브율 = (주문이익율% / (방송외+방송중)) - 2%  → 단위 주의: 이익율이 %이면 /100
+      // 수식 원본: (VLOOKUP(21st) / (AL+AJ)) - 2%
+      // VLOOKUP(21st) = 주문이익율 (예: 10% → 0.1 또는 10)
+      var rateBase = vlookup21;
+      if(Math.abs(rateBase)>1) rateBase = rateBase/100;    // 10 → 0.1 변환
+      var divisor = outAmt + brdAmt;                       // = totalAmt
+      var mlRate = divisor>0 ? (rateBase/divisor*totalAmt - 0.02) : 0;  // 수식 해석: (이익율) - 2%
+      // 더 단순한 해석: AS = 주문이익율 - 2%
+      mlRate = rateBase - 0.02;
+      m.profitRate = Math.round(mlRate*10000)/100;          // % 표시용
+      m.profitAmt = Math.round(totalAmt * mlRate);          // AR: M라이브이익 = 전체매출 × M라이브율
+    });
     var sample = _mliveData[0];
-    showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?sample.programName+' / '+sample.date:'0건 - 파싱 확인 필요'));
-    console.log('[M라이브]', _mliveData.length, '건 로드, 스킵:', skipped);
-    if(sample) console.log('[M라이브] 첫건:', JSON.stringify(sample));
-    if(sample) console.log('[M라이브] R열(17)원시값:', rows[1]?rows[1][17]:'없음', 'U열(20)원시값:', rows[1]?rows[1][20]:'없음');
+    showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?sample.programName+' / 이익:'+sample.profitAmt:'0건'));
+    console.log('[M라이브]', _mliveData.length, '건, 첫건 이익율:', sample?sample.profitRate+'%':'', '이익:', sample?sample.profitAmt:'');
     renderReports();
   };
   reader.readAsArrayBuffer(file);
