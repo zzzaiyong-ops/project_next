@@ -2246,9 +2246,13 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           </div>
         </div>
         <div id="appmkt-live-fields" style="display:none;margin-bottom:4px">
-          <div class="fr">
+          <div class="fr" style="margin-bottom:8px">
             <label>모바일라이브 방송일시 <span style="color:var(--red)">*</span></label>
             <input class="inp" id="appmkt-live-dt" type="datetime-local">
+          </div>
+          <div class="fr">
+            <label>모바일라이브 편성코드</label>
+            <input class="inp" id="appmkt-live-code" placeholder="예: 202602022467">
           </div>
         </div>
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
@@ -5066,6 +5070,7 @@ function editProd(id){
   var ss=document.getElementById('appmkt-super-start'); if(ss) ss.value=appMkt.superStart||'';
   var se=document.getElementById('appmkt-super-end');   if(se) se.value=appMkt.superEnd||'';
   var ld=document.getElementById('appmkt-live-dt');     if(ld) ld.value=appMkt.liveDt||'';
+  var alc=document.getElementById('appmkt-live-code');  if(alc) alc.value=appMkt.liveCode||'';
   var lu=document.getElementById('appmkt-landing-url'); if(lu) lu.value=appMkt.landingUrl||'';
   var du=document.getElementById('appmkt-deal-url');    if(du) du.value=appMkt.dealUrl||'';
   initSections(false); // 수정 시에도 기본 닫힘
@@ -8579,7 +8584,7 @@ function openNewProd(){
   var cil=document.getElementById('p-insta-link');     if(cil){ cil.style.display='none'; cil.href='#'; }
   var suf2=document.getElementById('appmkt-super-fields'); if(suf2) suf2.style.display='none';
   var luf2=document.getElementById('appmkt-live-fields');  if(luf2) luf2.style.display='none';
-  ['appmkt-super-start','appmkt-super-end','appmkt-live-dt','appmkt-landing-url','appmkt-deal-url'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  ['appmkt-super-start','appmkt-super-end','appmkt-live-dt','appmkt-live-code','appmkt-landing-url','appmkt-deal-url'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   var ssEl2=document.getElementById('p-sample-sent'); if(ssEl2) ssEl2.checked=false;
   var sfCk=document.getElementById('p-ship-free'); if(sfCk) sfCk.checked=false;
   var ifCk=document.getElementById('p-island-free'); if(ifCk) ifCk.checked=false;
@@ -8872,6 +8877,7 @@ function saveProd(){
         superStart:document.getElementById('appmkt-super-start')?.value||'',
         superEnd:  document.getElementById('appmkt-super-end')?.value||'',
         liveDt:    document.getElementById('appmkt-live-dt')?.value||'',
+        liveCode:  document.getElementById('appmkt-live-code')?.value.trim()||document.getElementById('p-live-code')?.value.trim()||'',
         landingUrl:document.getElementById('appmkt-landing-url')?.value||'',
         dealUrl:   document.getElementById('appmkt-deal-url')?.value||''
       };
