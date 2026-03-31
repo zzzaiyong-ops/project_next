@@ -7780,6 +7780,15 @@ function uploadMliveExcel(input){
       viewers:headerKeywords['총시청자수']!=null?headerKeywords['총시청자수']:21,
     };
     console.log('[M라이브] 컬럼 인덱스:', JSON.stringify(CI));
+    // 첫 데이터행 원시값 디버그 (V열 위치 확인용)
+    for(var di=0; di<rows.length; di++){
+      var dr=rows[di]; var dc=String(dr[0]||'').trim();
+      if(dc.match(/^\d{6,}/)){
+        console.log('[M라이브] 첫 데이터행 idx '+di+' 컬럼 18~25:', JSON.stringify([dr[18],dr[19],dr[20],dr[21],dr[22],dr[23],dr[24],dr[25]]));
+        console.log('[M라이브] 헤더 profitRate idx='+CI.profitRate+' 값='+dr[CI.profitRate]);
+        break;
+      }
+    }
     var pInt = function(v){ return parseInt(String(v||'').replace(/[^0-9\-]/g,''))||0; };
     var pFlt = function(v){ return parseFloat(String(v||'').replace(/[^0-9.\-]/g,''))||0; };
 
