@@ -7931,8 +7931,8 @@ function renderWeeklyView(){
     +'<th style="text-align:right;'+cx+'">CTR</th>'
     +'<th style="text-align:right;color:var(--blue);'+cx+'">M라이브 매출</th>'
     +'<th style="text-align:right;'+cx+'">M라이브 건수</th>'
-    +'<th style="text-align:right;'+cx+'">한계이익</th>'
-    +'<th style="text-align:right;'+cx+'">이익율</th>'
+    +'<th style="text-align:right">한계이익</th>'
+    +'<th style="text-align:right">이익율</th>'
     +'<th style="text-align:right">신규가입</th>'
     +'</tr></thead><tbody>';
 
@@ -7972,8 +7972,8 @@ function renderWeeklyView(){
       +'<td style="text-align:right;'+cx+'">'+(t.ctr||'-')+'</td>'
       +'<td style="text-align:right;color:var(--blue);'+cx+'">'+fmt(t.mlRev)+'</td>'
       +'<td style="text-align:right;'+cx+'">'+fmt(t.mlOrd)+'</td>'
-      +'<td style="text-align:right;'+cx+'">'+(function(){ var totalProfit=t.mlProfit-t.infCost-t.da; return totalProfit?fmt(totalProfit):'-'; })()+'</td>'
-      +'<td style="text-align:right;'+cx+'">'+(function(){ var totalProfit=t.mlProfit-t.infCost-t.da; return t.rev>0?(totalProfit/t.rev*100).toFixed(0)+'%':'-'; })()+'</td>'
+      +'<td style="text-align:right">'+(function(){ var totalProfit=t.mlProfit-t.infCost-t.da; return totalProfit?fmt(totalProfit):'-'; })()+'</td>'
+      +'<td style="text-align:right">'+(function(){ var totalProfit=t.mlProfit-t.infCost-t.da; return t.rev>0?(totalProfit/t.rev*100).toFixed(0)+'%':'-'; })()+'</td>'
       +'<td style="text-align:right">'+(t.newMem||'-')+'</td>'
       +'</tr>';
 
@@ -8007,8 +8007,8 @@ function renderWeeklyView(){
           +'<td style="text-align:right;'+cx+'">'+(sd0.ctr?sd0.ctr+'%':'-')+'</td>'
           +'<td style="text-align:right;color:var(--blue);'+cx+'">'+mlRevStr+'</td>'
           +'<td style="text-align:right;'+cx+'">'+mlOrdStr+'</td>'
-          +'<td style="text-align:right;'+cx+'">-</td>'
-          +'<td style="text-align:right;'+cx+'">-</td>'
+          +'<td style="text-align:right">-</td>'
+          +'<td style="text-align:right">-</td>'
           +'<td style="text-align:right">'+(sd0.newMembers||'-')+'</td>'
           +'</tr>';
       });
@@ -8036,8 +8036,8 @@ function renderWeeklyView(){
         +'<td colspan="2" style="'+cx+'"></td>'
         +'<td style="text-align:right;color:var(--blue);'+cx+'">'+fmt(t.mlRev)+'</td>'
         +'<td style="text-align:right;'+cx+'">'+fmt(t.mlOrd)+'</td>'
-        +'<td style="text-align:right;'+cx+'">'+fmt(mlSumProfit)+'</td>'
-        +'<td style="text-align:right;'+cx+'">'+(t.mlRev>0?(mlSumProfit/t.mlRev*100).toFixed(0)+'%':'-')+'</td>'
+        +'<td style="text-align:right">'+fmt(mlSumProfit)+'</td>'
+        +'<td style="text-align:right">'+(t.mlRev>0?(mlSumProfit/t.mlRev*100).toFixed(0)+'%':'-')+'</td>'
         +'<td></td></tr>';
       wk.mliveItems.forEach(function(m){
         var outAmt=(m.orderAmt||0)-(m.mobOrderAmt||0);
@@ -8057,8 +8057,8 @@ function renderWeeklyView(){
           +'<td style="text-align:right;'+cx+'">'+fmt(outQty)+'</td>'
           +'<td style="text-align:right;'+cx+'">'+fmt(m.profitAmt)+'</td>'
           +'<td style="text-align:right;font-size:10px;'+cx+'">'+(m.profitRate?m.profitRate+'%':'-')+'</td>'
-          +'<td style="text-align:right;'+cx+'">'+fmt(m.profitAmt)+'</td>'
-          +'<td style="text-align:right;'+cx+'">'+(m.orderAmt>0?(m.profitAmt/m.orderAmt*100).toFixed(0)+'%':'-')+'</td>'
+          +'<td style="text-align:right">'+fmt(m.profitAmt)+'</td>'
+          +'<td style="text-align:right">'+(m.orderAmt>0?(m.profitAmt/m.orderAmt*100).toFixed(0)+'%':'-')+'</td>'
           +'<td style="font-size:10px;color:var(--text3)">'+escHtml(m.code||'-')+'</td></tr>';
       });
     }
