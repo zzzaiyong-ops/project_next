@@ -7816,14 +7816,18 @@ function uploadMliveExcel(input){
 
 // 주차 계산 (ISO week)
 function getWeekInfo(dateStr){
-  if(!dateStr) return {year:0,month:0,week:0,label:''};
+  if(!dateStr) return {year:0,month:0,week:0,label:'',key:''};
   var d = new Date(dateStr);
-  if(isNaN(d.getTime())) return {year:0,month:0,week:0,label:''};
+  if(isNaN(d.getTime())) return {year:0,month:0,week:0,label:'',key:''};
+  // 월요일~일요일 기준 주차 계산
   var year = d.getFullYear();
   var month = d.getMonth()+1;
-  // 해당 월의 몇째 주인지 계산 (1일 기준)
-  var weekOfMonth = Math.ceil(d.getDate()/7);
-  // 고유 키: 연-월-주
+  // 해당 월 1일의 요일 (0=일, 1=월 ... 6=토)
+  var firstOfMonth = new Date(year, d.getMonth(), 1);
+  var firstDayOfWeek = firstOfMonth.getDay(); // 0=일
+  // 월요일 기준 보정: 일요일(0)→6, 월(1)→0, 화(2)→1 ...
+  var offset = (firstDayOfWeek === 0) ? 6 : firstDayOfWeek - 1;
+  var weekOfMonth = Math.ceil((d.getDate() + offset) / 7);
   var key = year+'-'+String(month).padStart(2,'0')+'-W'+weekOfMonth;
   var label = month+'월'+weekOfMonth+'주';
   return {year:year, month:month, week:weekOfMonth, key:key, label:label};
@@ -7927,13 +7931,15 @@ function renderWeeklyView(){
     +'<th style="text-align:right;'+cx+'">CTR</th>'
     +'<th style="text-align:right;color:var(--blue);'+cx+'">M라이브 매출</th>'
     +'<th style="text-align:right;'+cx+'">M라이브 건수</th>'
+    +'<th style="text-align:right;'+cx+'">한계이익</th>'
+    +'<th style="text-align:right;'+cx+'">이익율</th>'
     +'<th style="text-align:right">신규가입</th>'
     +'</tr></thead><tbody>';
 
   weeks.forEach(function(wk){
     var wkId = 'wkr-'+wk.key.replace(/[^a-zA-Z0-9]/g,'');
     // 합계 계산
-    var t = {rev:0,ord:0,infRev:0,infOrd:0,infCost:0,mlRev:0,mlOrd:0,da:0,views:0,inflow:0,ctr:0,newMem:0};
+    var t = {rev:0,ord:0,infRev:0,infOrd:0,infCost:0,mlRev:0,mlOrd:0,da:0,views:0,inflow:0,ctr:0,newMem:0,mlProfit:0};
     wk.infCamps.forEach(function(c){
       var sr=c.settleRevenue||0, so=c.settleOrders||0;
       t.infRev+=sr; t.infOrd+=so; t.rev+=sr; t.ord+=so;
@@ -7947,7 +7953,7 @@ function renderWeeklyView(){
     // 매칭되지 않은 M라이브만 별도 합산 (중복 방지)
     var matchedCodes = {};
     wk.infCamps.forEach(function(c){ if(c._matchedMlive) matchedCodes[c._matchedMlive.code]=true; });
-    wk.mliveItems.forEach(function(m){ if(!matchedCodes[m.code]){ t.mlRev+=m.orderAmt||0; t.mlOrd+=m.orderQty||0; t.rev+=m.orderAmt||0; t.ord+=m.orderQty||0; } });
+    wk.mliveItems.forEach(function(m){ t.mlProfit+=m.profitAmt||0; if(!matchedCodes[m.code]){ t.mlRev+=m.orderAmt||0; t.mlOrd+=m.orderQty||0; t.rev+=m.orderAmt||0; t.ord+=m.orderQty||0; } });
     if(t.views>0) t.ctr = ((t.inflow/t.views)*100).toFixed(1);
 
     // 합계 행 (항상 표시, 볼드)
@@ -7966,6 +7972,8 @@ function renderWeeklyView(){
       +'<td style="text-align:right;'+cx+'">'+(t.ctr||'-')+'</td>'
       +'<td style="text-align:right;color:var(--blue);'+cx+'">'+fmt(t.mlRev)+'</td>'
       +'<td style="text-align:right;'+cx+'">'+fmt(t.mlOrd)+'</td>'
+      +'<td style="text-align:right;'+cx+'">'+(function(){ var totalProfit=t.mlProfit-t.infCost-t.da; return totalProfit?fmt(totalProfit):'-'; })()+'</td>'
+      +'<td style="text-align:right;'+cx+'">'+(function(){ var totalProfit=t.mlProfit-t.infCost-t.da; return t.rev>0?(totalProfit/t.rev*100).toFixed(0)+'%':'-'; })()+'</td>'
       +'<td style="text-align:right">'+(t.newMem||'-')+'</td>'
       +'</tr>';
 
@@ -7999,6 +8007,8 @@ function renderWeeklyView(){
           +'<td style="text-align:right;'+cx+'">'+(sd0.ctr?sd0.ctr+'%':'-')+'</td>'
           +'<td style="text-align:right;color:var(--blue);'+cx+'">'+mlRevStr+'</td>'
           +'<td style="text-align:right;'+cx+'">'+mlOrdStr+'</td>'
+          +'<td style="text-align:right;'+cx+'">-</td>'
+          +'<td style="text-align:right;'+cx+'">-</td>'
           +'<td style="text-align:right">'+(sd0.newMembers||'-')+'</td>'
           +'</tr>';
       });
@@ -8026,6 +8036,8 @@ function renderWeeklyView(){
         +'<td colspan="2" style="'+cx+'"></td>'
         +'<td style="text-align:right;color:var(--blue);'+cx+'">'+fmt(t.mlRev)+'</td>'
         +'<td style="text-align:right;'+cx+'">'+fmt(t.mlOrd)+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+fmt(mlSumProfit)+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+(t.mlRev>0?(mlSumProfit/t.mlRev*100).toFixed(0)+'%':'-')+'</td>'
         +'<td></td></tr>';
       wk.mliveItems.forEach(function(m){
         var outAmt=(m.orderAmt||0)-(m.mobOrderAmt||0);
@@ -8045,6 +8057,8 @@ function renderWeeklyView(){
           +'<td style="text-align:right;'+cx+'">'+fmt(outQty)+'</td>'
           +'<td style="text-align:right;'+cx+'">'+fmt(m.profitAmt)+'</td>'
           +'<td style="text-align:right;font-size:10px;'+cx+'">'+(m.profitRate?m.profitRate+'%':'-')+'</td>'
+          +'<td style="text-align:right;'+cx+'">'+fmt(m.profitAmt)+'</td>'
+          +'<td style="text-align:right;'+cx+'">'+(m.orderAmt>0?(m.profitAmt/m.orderAmt*100).toFixed(0)+'%':'-')+'</td>'
           +'<td style="font-size:10px;color:var(--text3)">'+escHtml(m.code||'-')+'</td></tr>';
       });
     }
