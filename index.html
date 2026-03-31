@@ -7797,7 +7797,9 @@ function uploadMliveExcel(input){
         profitAmt: pInt(cols[17]),                      // 한계이익실적 (R열, 18th)
       });
     }
-    showToast('M라이브 데이터 '+_mliveData.length+'건 로드됨');
+    var sample = _mliveData[0];
+    showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?'첫건: '+sample.programName+' / '+sample.date+' / 매출:'+sample.orderAmt:'데이터 없음'));
+    console.log('[M라이브] 파싱 결과:', _mliveData.length, '건', _mliveData.slice(0,3));
     renderReports();
   };
   reader.readAsText(file, 'UTF-8');
@@ -7849,9 +7851,23 @@ function renderWeeklyView(){
     weekMap[key].infCamps.push(c);
   });
   _mliveData.forEach(function(m){
-    var wi = getWeekInfo(m.date);
+    // M라이브는 캠페인 진행중/종료 필터 무관, 날짜 필터만 적용
+    var mDate = (m.date||'').trim();
+    if(!mDate) return;
+    // 날짜 포맷 정규화 (YYYY-MM-DD 또는 YYYY/MM/DD 등)
+    mDate = mDate.replace(/\//g,'-');
+    if(fromVal){
+      var fd=new Date(fromVal+'-01');
+      if(new Date(mDate)<fd) return;
+    }
+    if(toVal){
+      var tp=toVal.split('-'); var td=new Date(parseInt(tp[0]),parseInt(tp[1]),0);
+      if(new Date(mDate)>td) return;
+    }
+    var wi = getWeekInfo(mDate);
+    if(!wi.year) return;
     var key = wi.year+'-W'+String(wi.week).padStart(2,'0');
-    var wkNum = Math.ceil(new Date(m.date).getDate()/7);
+    var wkNum = Math.ceil(new Date(mDate).getDate()/7);
     var label = wi.month+'월'+wkNum+'주';
     if(!weekMap[key]) weekMap[key] = {key:key, label:label, year:wi.year, month:wi.month, infCamps:[], mliveItems:[]};
     weekMap[key].mliveItems.push(m);
