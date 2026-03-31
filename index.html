@@ -7745,10 +7745,9 @@ function uploadMliveExcel(input){
   var reader = new FileReader();
   reader.onload = function(e){
     var data = new Uint8Array(e.target.result);
-    var wb = XLSX.read(data, {type:'array', cellDates:true});
+    var wb = XLSX.read(data, {type:'array', cellDates:false});
     var ws = wb.Sheets[wb.SheetNames[0]];
-    // 모든 행을 배열로 변환 (헤더 포함)
-    var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
+    var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true});
     console.log('[M라이브] 시트:', wb.SheetNames[0], '총행:', rows.length);
 
     _mliveData = [];
@@ -7769,11 +7768,18 @@ function uploadMliveExcel(input){
       var code = String(r[0]||'').trim();
       if(!code.match(/^\d{6,}/)) { skipped++; continue; }
 
-      // 날짜 처리: 엑셀 Date 객체 또는 문자열
+      // D열(r[3]) 방송일자 파싱
       var dateVal = r[3]||'';
       var dateStr = '';
-      if(dateVal instanceof Date){ dateStr = dateVal.toISOString().slice(0,10); }
-      else { dateStr = String(dateVal).trim().replace(/\//g,'-'); }
+      if(dateVal instanceof Date){
+        dateStr = dateVal.getFullYear()+'-'+String(dateVal.getMonth()+1).padStart(2,'0')+'-'+String(dateVal.getDate()).padStart(2,'0');
+      } else if(typeof dateVal==='number'){
+        // 엑셀 시리얼넘버 → 날짜 변환
+        var d = new Date((dateVal - 25569) * 86400000);
+        dateStr = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      } else {
+        dateStr = String(dateVal).trim().replace(/\//g,'-');
+      }
 
       _mliveData.push({
         code: code,
