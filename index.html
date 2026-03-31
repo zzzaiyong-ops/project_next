@@ -6237,7 +6237,9 @@ function openAppMktEdit(campId){
   liveDiv.id = 'modal-live-fields';
   liveDiv.style.cssText = 'display:'+(checked.includes('모바일라이브')?'block':'none')+';margin-bottom:12px';
   liveDiv.innerHTML = '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">모바일라이브 방송일시 <span style="color:var(--red)">*</span></label>'
-    + '<input class="inp" id="modal-live-dt" type="datetime-local" value="'+(appMkt.liveDt||'')+'">';
+    + '<input class="inp" id="modal-live-dt" type="datetime-local" value="'+(appMkt.liveDt||'')+'" style="margin-bottom:8px">'
+    + '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">모바일라이브 편성코드</label>'
+    + '<input class="inp" id="modal-live-code" placeholder="예: 202602022467" value="'+(appMkt.liveCode||'')+'">';
   box.appendChild(liveDiv);
 
   // 버튼
@@ -6270,6 +6272,7 @@ function saveAppMktEdit(campId){
   var superStart = document.getElementById('modal-super-start')?.value||'';
   var superEnd   = document.getElementById('modal-super-end')?.value||'';
   var liveDt     = document.getElementById('modal-live-dt')?.value||'';
+  var liveCode   = document.getElementById('modal-live-code')?.value.trim()||'';
 
   var missing = [];
   if(channels.includes('슈퍼브랜드')&&!superStart) missing.push('슈퍼브랜드 시작일');
@@ -6280,7 +6283,7 @@ function saveAppMktEdit(campId){
   var idx = DB.campaigns.findIndex(function(c){return c.id===campId;});
   if(idx===-1) return;
   DB.campaigns[idx] = Object.assign({}, DB.campaigns[idx], {
-    appMkt: {channels:channels, superStart:superStart, superEnd:superEnd, liveDt:liveDt},
+    appMkt: {channels:channels, superStart:superStart, superEnd:superEnd, liveDt:liveDt, liveCode:liveCode},
     stage: channels.length>0 ? '6.APP마케팅확정' : DB.campaigns[idx].stage
   });
   document.getElementById('appmkt-modal').remove();
@@ -8805,13 +8808,15 @@ function addInfBlock(data){
     +'</div></div>'
     +'<div style="background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:10px">'
     +'<div style="font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:8px">✅ 확정 (정산 반영)</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">'
     +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">확정수수료율 (%)</label>'
     +'<input class="inp inf-frate-'+n+'" type="number" placeholder="15" step="0.1" value="'+(d.feeRate||'')+'"></div>'
     +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">확정원고료 (원)</label>'
     +'<input class="inp inp-money inf-famt-'+n+'" placeholder="500,000" value="'+(d.feeAmount?d.feeAmount.toLocaleString('ko-KR'):'')+'"></div>'
     +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">에이전시수수료 cafe24 (%)</label>'
     +'<input class="inp inf-arate-'+n+'" type="number" placeholder="5" step="0.1" value="'+(d.agencyRate||'')+'"></div>'
+    +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">DA 광고료 (원)</label>'
+    +'<input class="inp inp-money inf-da-'+n+'" placeholder="0" value="'+(d.daFee?d.daFee.toLocaleString('ko-KR'):'')+'"></div>'
     +'</div></div>'
     // 샘플발송
     +'<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 14px">'
@@ -8862,6 +8867,7 @@ function getInfBlocksData(){
       proposeFeeRate:  parseFloat(block.querySelector('.inf-propose-frate-'+n)?.value)||0,
       proposeFeeAmount:parseInt((block.querySelector('.inf-propose-famt-'+n)?.value||'').replace(/,/g,''))||0,
       agencyRate:parseFloat(block.querySelector('.inf-arate-'+n)?.value)||0,
+      daFee:parseInt((block.querySelector('.inf-da-'+n)?.value||'').replace(/,/g,''))||0,
       contact:  block.querySelector('.inf-contact-'+n)?.value.trim()||'',
       sampleSent:!!(block.querySelector('.inf-ssent-'+n)?.checked),
       sampleExempt:!!(block.querySelector('.inf-sexempt-'+n)?.checked),
@@ -8952,6 +8958,21 @@ function addSettleBlock(n, data){
     +'<div style="font-weight:800;color:var(--text);padding-top:6px;border-top:1px solid var(--border2);margin-top:4px">비용 소계</div>'
     +'<div style="text-align:right;font-weight:800;font-size:14px;color:var(--accent2);padding-top:6px;border-top:1px solid var(--border2);margin-top:4px" class="settle-cost-'+n+'">-</div>'
     +'</div>'
+    +'</div>'
+    // ── 콘텐츠 반응도
+    +'<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px;margin-top:10px">'
+    +'<div style="font-weight:700;color:var(--text2);margin-bottom:8px;font-size:12px">📣 콘텐츠 반응도</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">'
+    +'<div><label style="font-size:11px;color:var(--text3)">조회수 (만)</label><input class="inp settle-views-'+n+'" type="number" placeholder="0" value="'+(d.views||'')+'" style="margin-top:4px"></div>'
+    +'<div><label style="font-size:11px;color:var(--text3)">댓글수</label><input class="inp settle-comments-'+n+'" type="number" placeholder="0" value="'+(d.comments||'')+'" style="margin-top:4px"></div>'
+    +'<div><label style="font-size:11px;color:var(--text3)">당사유입</label><input class="inp settle-inflow-'+n+'" type="number" placeholder="0" value="'+(d.inflow||'')+'" style="margin-top:4px"></div>'
+    +'<div><label style="font-size:11px;color:var(--text3)">CTR (%)</label><input class="inp settle-ctr-'+n+'" type="number" step="0.01" placeholder="0" value="'+(d.ctr||'')+'" style="margin-top:4px"></div>'
+    +'</div></div>'
+    // ── 신규회원가입
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'
+    +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">신규회원 가입자수</label>'
+    +'<input class="inp settle-newmember-'+n+'" type="number" placeholder="0" value="'+(d.newMembers||'')+'"></div>'
+    +'<div style="display:flex;align-items:flex-end;padding-bottom:4px"><span style="font-size:11px;color:var(--text3)">가입율 = 신규회원가입자 / 전체구매건수</span></div>'
     +'</div>';
 
   // money 포맷 + 자동 계산
@@ -9004,6 +9025,11 @@ function getSettleBlocksData(){
     result.push({
       revenue: parseInt((block.querySelector('.settle-rev-'+n)?.value||'').replace(/,/g,''))||0,
       orders:  parseInt(block.querySelector('.settle-ord-'+n)?.value)||0,
+      views:   parseFloat(block.querySelector('.settle-views-'+n)?.value)||0,
+      comments:parseInt(block.querySelector('.settle-comments-'+n)?.value)||0,
+      inflow:  parseInt(block.querySelector('.settle-inflow-'+n)?.value)||0,
+      ctr:     parseFloat(block.querySelector('.settle-ctr-'+n)?.value)||0,
+      newMembers:parseInt(block.querySelector('.settle-newmember-'+n)?.value)||0,
     });
   });
   return result;
