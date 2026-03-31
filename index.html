@@ -7792,7 +7792,7 @@ function uploadMliveExcel(input){
         orderQty: pInt(r[12]),          // 순주문수량 (13th)
         orderAmt: pInt(r[13]),          // 순주문금액 (14th)
         targetAmt: pInt(r[14]),         // 목표 (15th)
-        profitAmt: pInt(r[17]),         // 한계이익실적 (18th)
+        profitAmt: pInt(r[17]) || Math.round(pInt(r[13]) * pFlt(r[20]) / 100),  // 한계이익: R열 또는 순주문금액×이익율
         profitRate: pFlt(r[20]),        // 주문이익율 (21st)
         viewers: pInt(r[21]),           // 총시청자수 (22nd)
         mobOrderQty: pInt(r[70]),       // 모바일 순주문수량 (71st)
@@ -7808,6 +7808,7 @@ function uploadMliveExcel(input){
     showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?sample.programName+' / '+sample.date:'0건 - 파싱 확인 필요'));
     console.log('[M라이브]', _mliveData.length, '건 로드, 스킵:', skipped);
     if(sample) console.log('[M라이브] 첫건:', JSON.stringify(sample));
+    if(sample) console.log('[M라이브] R열(17)원시값:', rows[1]?rows[1][17]:'없음', 'U열(20)원시값:', rows[1]?rows[1][20]:'없음');
     renderReports();
   };
   reader.readAsArrayBuffer(file);
