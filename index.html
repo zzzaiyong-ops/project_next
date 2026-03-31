@@ -7744,78 +7744,67 @@ function uploadMliveExcel(input){
   var file = input.files[0]; if(!file) return;
   var reader = new FileReader();
   reader.onload = function(e){
-    var raw = e.target.result;
-    var lines = raw.split('\n');
+    var data = new Uint8Array(e.target.result);
+    var wb = XLSX.read(data, {type:'array', cellDates:true});
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    // 모든 행을 배열로 변환 (헤더 포함)
+    var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
+    console.log('[M라이브] 시트:', wb.SheetNames[0], '총행:', rows.length);
+
     _mliveData = [];
-
-    // 구분자 자동 감지 (탭 vs 쉼표)
-    var firstLine = lines[0]||'';
-    var sep = firstLine.split('\t').length > firstLine.split(',').length ? '\t' : ',';
-    console.log('[M라이브] 구분자:', sep==='\t'?'TAB':'COMMA', '총 라인:', lines.length);
-
-    // 헤더 행 찾기
-    var startRow = 0;
-    for(var h=0; h<Math.min(10,lines.length); h++){
-      var hCols = lines[h].split(sep);
-      var h0 = (hCols[0]||'').trim();
-      // 헤더 키워드 발견 시 다음 행부터 데이터
-      if(h0.match(/편성|No|방송정보/i) || (hCols[1]||'').match(/방송구분|No/i)){ startRow=h+1; break; }
-      // 12자리+ 숫자로 시작하면 데이터 행
-      if(h0.match(/^\d{8,}/)){ startRow=h; break; }
-    }
-    if(startRow===0) startRow=1;
-    console.log('[M라이브] 시작행:', startRow, '첫행 컬럼수:', firstLine.split(sep).length);
-
     var skipped = 0;
-    for(var i=startRow; i<lines.length; i++){
-      var cols = lines[i].split(sep);
-      if(cols.length < 10){ skipped++; continue; }
-      var code = (cols[0]||'').trim();
-      if(!code || !code.match(/\d{4,}/)){ skipped++; continue; }
+    // VLOOKUP 컬럼 매핑 (1-based → 0-based)
+    // A(0)=편성코드, C(2)=방송구분, D(3)=방송일자, E(4)=요일
+    // H(7)=대표담당MD, J(9)=프로그램명, K(10)=시작, L(11)=종료
+    // M(12)=순주문수량(13th), N(13)=순주문금액(14th), O(14)=목표
+    // R(17)=한계이익실적(18th), U(20)=주문이익율(21st), V(21)=총시청자수(22nd)
+    // 70=모바일순주문수량(71st), 71=모바일순주문금액(72nd)
+    // 84=담당MD(85th), 85=MDCAT(86th), 86=카테고리(87th)
+    // 87=마케팅비(88th), 88=광고수익(89th)
+    var pInt = function(v){ return parseInt(String(v||'').replace(/[^0-9\-]/g,''))||0; };
+    var pFlt = function(v){ return parseFloat(String(v||'').replace(/[^0-9.\-]/g,''))||0; };
 
-      // VLOOKUP 수식 기반 컬럼 매핑 (1-based → 0-based)
-      // col[0]=편성코드(A), col[9]=프로그램명(10th), col[12]=순주문수량(13th), col[13]=순주문금액(14th)
-      // col[20]=주문이익율(21st), col[21]=총시청자수(22nd)
-      // col[70]=모바일순주문수량(71st), col[71]=모바일순주문금액(72nd)
-      // col[84]=담당MD(85th), col[85]=MDCAT(86th), col[86]=카테고리(87th)
-      // col[87]=마케팅비(88th), col[88]=광고수익(89th)
-      var pInt = function(v){ return parseInt(String(v||'').replace(/,/g,''))||0; };
-      var pFlt = function(v){ var s=String(v||'').replace(/,/g,'').replace('%',''); return parseFloat(s)||0; };
+    for(var i=0; i<rows.length; i++){
+      var r = rows[i];
+      var code = String(r[0]||'').trim();
+      if(!code.match(/^\d{6,}/)) { skipped++; continue; }
+
+      // 날짜 처리: 엑셀 Date 객체 또는 문자열
+      var dateVal = r[3]||'';
+      var dateStr = '';
+      if(dateVal instanceof Date){ dateStr = dateVal.toISOString().slice(0,10); }
+      else { dateStr = String(dateVal).trim().replace(/\//g,'-'); }
 
       _mliveData.push({
         code: code,
-        date: (cols[3]||'').trim(),                    // 방송일자 (D열, 4th)
-        day: (cols[4]||'').trim(),                      // 요일
-        broadcastType: (cols[2]||'').trim(),            // 방송구분 (C열, 3rd)
-        programName: (cols[9]||'').trim(),              // 프로그램명 (J열, 10th)
-        startTime: (cols[10]||'').trim(),               // 시작시간
-        endTime: (cols[11]||'').trim(),                 // 종료시간
-        orderQty: pInt(cols[12]),                       // 순주문수량 (M열, 13th)
-        orderAmt: pInt(cols[13]),                       // 순주문금액 (N열, 14th)
-        targetAmt: pInt(cols[14]),                      // 목표순주문액 (O열, 15th)
-        profitRate: pFlt(cols[20]),                     // 주문이익율 (U열, 21st)
-        viewers: pInt(cols[21]),                        // 총시청자수 (V열, 22nd)
-        // 모바일(방송중) 실적
-        mobOrderQty: pInt(cols[70]),                    // 모바일 순주문수량 (71st)
-        mobOrderAmt: pInt(cols[71]),                    // 모바일 순주문금액 (72nd)
-        // MD/카테고리 정보
-        mdName: (cols[84]||cols[7]||'').trim(),         // 담당MD (85th, 없으면 H열 폴백)
-        mdCat: (cols[85]||'').trim(),                   // MDCAT (86th)
-        cat: (cols[86]||'').trim(),                     // 카테고리 (87th)
-        marketingFee: pInt(cols[87]),                   // 마케팅비 (88th)
-        adRevenue: pInt(cols[88]),                      // 광고수익 (89th)
-        // 한계이익 (col[17]=한계이익실적 18th, col[19]=주문이익율 20th)
-        profitAmt: pInt(cols[17]),                      // 한계이익실적 (R열, 18th)
+        date: dateStr,
+        day: String(r[4]||'').trim(),
+        broadcastType: String(r[2]||'').trim(),
+        programName: String(r[9]||'').trim(),
+        startTime: String(r[10]||'').trim(),
+        endTime: String(r[11]||'').trim(),
+        orderQty: pInt(r[12]),          // 순주문수량 (13th)
+        orderAmt: pInt(r[13]),          // 순주문금액 (14th)
+        targetAmt: pInt(r[14]),         // 목표 (15th)
+        profitAmt: pInt(r[17]),         // 한계이익실적 (18th)
+        profitRate: pFlt(r[20]),        // 주문이익율 (21st)
+        viewers: pInt(r[21]),           // 총시청자수 (22nd)
+        mobOrderQty: pInt(r[70]),       // 모바일 순주문수량 (71st)
+        mobOrderAmt: pInt(r[71]),       // 모바일 순주문금액 (72nd)
+        mdName: String(r[84]||r[7]||'').trim(),  // 담당MD (85th, 폴백 H열)
+        mdCat: String(r[85]||'').trim(),          // MDCAT (86th)
+        cat: String(r[86]||'').trim(),            // 카테고리 (87th)
+        marketingFee: pInt(r[87]),      // 마케팅비 (88th)
+        adRevenue: pInt(r[88]),         // 광고수익 (89th)
       });
     }
     var sample = _mliveData[0];
-    showToast('M라이브 '+_mliveData.length+'건 로드 (스킵:'+skipped+') | '+(sample?sample.programName+' / '+sample.date:'파싱 확인 필요'));
-    console.log('[M라이브] 파싱 결과:', _mliveData.length, '건, 스킵:', skipped);
-    if(sample) console.log('[M라이브] 첫 레코드:', JSON.stringify(sample));
-    if(_mliveData.length===0) console.log('[M라이브] 디버그 - 첫 데이터행:', lines[startRow]?.substring(0,200));
+    showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?sample.programName+' / '+sample.date:'0건 - 파싱 확인 필요'));
+    console.log('[M라이브]', _mliveData.length, '건 로드, 스킵:', skipped);
+    if(sample) console.log('[M라이브] 첫건:', JSON.stringify(sample));
     renderReports();
   };
-  reader.readAsText(file, 'UTF-8');
+  reader.readAsArrayBuffer(file);
   input.value = '';
 }
 
@@ -7894,12 +7883,16 @@ function renderWeeklyView(){
   // ── VLOOKUP: 캠페인 편성코드로 M라이브 데이터 매칭 ──
   var mliveByCode = {};
   _mliveData.forEach(function(m){ if(m.code) mliveByCode[m.code.trim()] = m; });
-  // 각 인플루언서 캠페인에 매칭된 M라이브 연결
+  // 각 인플루언서 캠페인에 매칭된 M라이브 연결 + 날짜 보강
   weeks.forEach(function(wk){
     wk.infCamps.forEach(function(c){
       var liveCode = (c.appMkt && c.appMkt.liveCode) ? c.appMkt.liveCode.trim() : '';
       if(liveCode && mliveByCode[liveCode]){
         c._matchedMlive = mliveByCode[liveCode];
+        // M라이브 날짜가 없으면 캠페인의 모바일라이브 방송일시 참조
+        if(!c._matchedMlive.date && c.appMkt && c.appMkt.liveDt){
+          c._matchedMlive.date = c.appMkt.liveDt.slice(0,10);
+        }
       }
     });
   });
