@@ -7854,68 +7854,59 @@ function renderWeeklyView(){
     return true;
   });
 
-  // 주차별 그룹핑
-  var weekMap = {};
-  camps.forEach(function(c){
-    var startStr = (c.start||c.startDate||'').slice(0,10);
-    var wi = getWeekInfo(startStr);
-    if(!wi.key) return;
-    if(!weekMap[wi.key]) weekMap[wi.key] = {key:wi.key, label:wi.label, year:wi.year, month:wi.month, infCamps:[], mliveItems:[]};
-    weekMap[wi.key].infCamps.push(c);
-  });
+  // M라이브 주차별 그룹핑
+  var mlWeekMap = {};
   _mliveData.forEach(function(m){
-    // M라이브는 캠페인 진행중/종료 필터 무관, 날짜 필터만 적용
-    var mDate = (m.date||'').trim();
+    var mDate = (m.date||'').trim().replace(/\//g,'-');
     if(!mDate) return;
-    // 날짜 포맷 정규화 (YYYY-MM-DD 또는 YYYY/MM/DD 등)
-    mDate = mDate.replace(/\//g,'-');
-    if(fromVal){
-      var fd=new Date(fromVal+'-01');
-      if(new Date(mDate)<fd) return;
-    }
-    if(toVal){
-      var tp=toVal.split('-'); var td=new Date(parseInt(tp[0]),parseInt(tp[1]),0);
-      if(new Date(mDate)>td) return;
-    }
+    if(fromVal && new Date(mDate)<new Date(fromVal+'-01')) return;
+    if(toVal){ var tp=toVal.split('-'); if(new Date(mDate)>new Date(parseInt(tp[0]),parseInt(tp[1]),0)) return; }
     var wi = getWeekInfo(mDate);
     if(!wi.key) return;
-    if(!weekMap[wi.key]) weekMap[wi.key] = {key:wi.key, label:wi.label, year:wi.year, month:wi.month, infCamps:[], mliveItems:[]};
-    weekMap[wi.key].mliveItems.push(m);
+    if(!mlWeekMap[wi.key]) mlWeekMap[wi.key] = {label:wi.label, date:mDate, items:[], totAmt:0, totQty:0, totProfit:0, totBrdAmt:0, totOutAmt:0, totMktFee:0};
+    mlWeekMap[wi.key].items.push(m);
+    mlWeekMap[wi.key].totAmt += m.orderAmt||0;
+    mlWeekMap[wi.key].totQty += m.orderQty||0;
+    mlWeekMap[wi.key].totProfit += m.profitAmt||0;
+    mlWeekMap[wi.key].totBrdAmt += m.mobOrderAmt||0;
+    mlWeekMap[wi.key].totOutAmt += (m.orderAmt||0)-(m.mobOrderAmt||0);
+    mlWeekMap[wi.key].totMktFee += m.marketingFee||0;
   });
 
-  var weeks = Object.values(weekMap).sort(function(a,b){ return a.key>b.key?1:-1; });
-  if(!weeks.length){ container.innerHTML=''; if(detailCard) detailCard.style.display=''; return; }
+  // VLOOKUP 매칭
+  var mliveByCode = {};
+  _mliveData.forEach(function(m){ if(m.code) mliveByCode[m.code.trim()]=m; });
+  camps.forEach(function(c){
+    var liveCode = (c.appMkt&&c.appMkt.liveCode)?c.appMkt.liveCode.trim():'';
+    if(liveCode && mliveByCode[liveCode]) c._matchedMlive = mliveByCode[liveCode];
+  });
+
+  // 통합 행 목록 (시간순: 인플루언서=개별행, M라이브=주차 합계행)
+  var rows = [];
+  if(s8Type!=='mlive'){
+    camps.forEach(function(c){
+      rows.push({type:'inf', date:(c.start||c.startDate||'').slice(0,10), camp:c});
+    });
+  }
+  if(s8Type!=='inf'){
+    Object.keys(mlWeekMap).forEach(function(k){
+      rows.push({type:'mlive', date:mlWeekMap[k].date, weekKey:k, week:mlWeekMap[k]});
+    });
+  }
+  rows.sort(function(a,b){ return (a.date||'')>(b.date||'')?1:(a.date||'')<(b.date||'')?-1:0; });
+
+  if(!rows.length){ container.innerHTML=''; if(detailCard) detailCard.style.display=''; return; }
   if(s8Type==='mlive' && detailCard) detailCard.style.display='none';
   else if(detailCard) detailCard.style.display='';
 
-  // ── VLOOKUP: 캠페인 편성코드로 M라이브 데이터 매칭 ──
-  var mliveByCode = {};
-  _mliveData.forEach(function(m){ if(m.code) mliveByCode[m.code.trim()] = m; });
-  // 각 인플루언서 캠페인에 매칭된 M라이브 연결 + 날짜 보강
-  weeks.forEach(function(wk){
-    wk.infCamps.forEach(function(c){
-      var liveCode = (c.appMkt && c.appMkt.liveCode) ? c.appMkt.liveCode.trim() : '';
-      if(liveCode && mliveByCode[liveCode]){
-        c._matchedMlive = mliveByCode[liveCode];
-        // M라이브 날짜가 없으면 캠페인의 모바일라이브 방송일시 참조
-        if(!c._matchedMlive.date && c.appMkt && c.appMkt.liveDt){
-          c._matchedMlive.date = c.appMkt.liveDt.slice(0,10);
-        }
-      }
-    });
-  });
   var fmt = function(v){ return v?v.toLocaleString('ko-KR'):'-'; };
   var fmtM = function(v){ return v?(v/1000000).toFixed(1):'0'; };
-
-  // 단일 테이블 구조 (엑셀 그룹핑 스타일)
-  // 가로 접힘 상태
   var colExpanded = window._s8ColExpanded||false;
-  var cx = colExpanded?'':'display:none'; // 접힌 컬럼 스타일
+  var cx = colExpanded?'':'display:none';
 
   var html = '<div class="card" style="margin-bottom:18px"><div class="card-hd"><span class="card-ttl">캠페인 성과지표</span>'
     +'<button class="btn btn-ghost btn-xs" onclick="window._s8ColExpanded=!window._s8ColExpanded;renderWeeklyView()" style="font-size:11px">'+(colExpanded?'◀ 열 접기':'▶ 열 펼치기')+'</button></div>';
   html += '<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">';
-  // 헤더
   html += '<thead><tr style="background:var(--bg)">'
     +'<th style="padding:6px 8px;width:28px"></th>'
     +'<th style="padding:6px 8px;text-align:left">주차</th>'
@@ -7936,130 +7927,82 @@ function renderWeeklyView(){
     +'<th style="text-align:right">신규가입</th>'
     +'</tr></thead><tbody>';
 
-  weeks.forEach(function(wk){
-    var wkId = 'wkr-'+wk.key.replace(/[^a-zA-Z0-9]/g,'');
-    // 합계 계산
-    var t = {rev:0,ord:0,infRev:0,infOrd:0,infCost:0,mlRev:0,mlOrd:0,da:0,views:0,inflow:0,ctr:0,newMem:0,mlProfit:0};
-    wk.infCamps.forEach(function(c){
-      var sr=c.settleRevenue||0, so=c.settleOrders||0;
-      t.infRev+=sr; t.infOrd+=so; t.rev+=sr; t.ord+=so;
-      var fr=parseFloat(c.feeRate)||0,fa=parseInt(c.feeAmount)||0,ar=parseFloat(c.agencyRate)||0;
-      t.infCost += Math.round(sr*fr/100)+fa+Math.round(sr*ar/100);
-      t.da += parseInt(c.settleDa)||0;
-      (c.settleData||[]).forEach(function(s){ t.views+=s.views||0; t.inflow+=s.inflow||0; t.newMem+=s.newMembers||0; });
-      // VLOOKUP: 매칭된 M라이브 매출 합산
-      if(c._matchedMlive){ t.mlRev+=c._matchedMlive.orderAmt||0; t.mlOrd+=c._matchedMlive.orderQty||0; t.rev+=c._matchedMlive.orderAmt||0; t.ord+=c._matchedMlive.orderQty||0; }
-    });
-    // 매칭되지 않은 M라이브만 별도 합산 (중복 방지)
-    var matchedCodes = {};
-    wk.infCamps.forEach(function(c){ if(c._matchedMlive) matchedCodes[c._matchedMlive.code]=true; });
-    wk.mliveItems.forEach(function(m){ t.mlProfit+=m.profitAmt||0; if(!matchedCodes[m.code]){ t.mlRev+=m.orderAmt||0; t.mlOrd+=m.orderQty||0; t.rev+=m.orderAmt||0; t.ord+=m.orderQty||0; } });
-    if(t.views>0) t.ctr = ((t.inflow/t.views)*100).toFixed(1);
+  rows.forEach(function(row){
+    if(row.type==='inf'){
+      var c = row.camp;
+      var sd0 = (c.settleData||[])[0]||{};
+      var sr = c.settleRevenue||0;
+      var fr=parseFloat(c.feeRate)||0, fa=parseInt(c.feeAmount)||0, ar=parseFloat(c.agencyRate)||0, da=parseInt(c.settleDa)||0;
+      var cost = Math.round(sr*fr/100)+fa+Math.round(sr*ar/100);
+      var ml = c._matchedMlive||{};
+      var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
 
-    // 합계 행 (항상 표시, 볼드)
-    html += '<tr style="background:var(--accent-bg);font-weight:700;cursor:pointer" onclick="document.querySelectorAll(\'.'+wkId+'\').forEach(function(r){r.style.display=r.style.display===\'none\'?\'table-row\':\'none\'})">'
-      +'<td style="padding:6px 8px;text-align:center;font-size:14px;color:var(--accent)">+</td>'
-      +'<td style="padding:6px 8px;white-space:nowrap">'+wk.label+'</td>'
-      +'<td></td><td style="font-weight:800">실적</td><td></td>'
-      +'<td style="text-align:right">'+fmtM(t.infCost)+'</td>'
-      +'<td style="text-align:right">'+fmtM(t.da)+'</td>'
-      +'<td style="text-align:right;color:var(--green)">'+fmt(t.rev)+'</td>'
-      +'<td style="text-align:right">'+fmt(t.ord)+'</td>'
-      +'<td style="text-align:right;color:var(--green);'+cx+'">'+fmt(t.infRev)+'</td>'
-      +'<td style="text-align:right;'+cx+'">'+fmt(t.infOrd)+'</td>'
-      +'<td style="text-align:right;'+cx+'">'+(t.views||'-')+'</td>'
-      +'<td style="text-align:right;'+cx+'">'+(t.inflow||'-')+'</td>'
-      +'<td style="text-align:right;'+cx+'">'+(t.ctr||'-')+'</td>'
-      +'<td style="text-align:right;color:var(--blue);'+cx+'">'+fmt(t.mlRev)+'</td>'
-      +'<td style="text-align:right;'+cx+'">'+fmt(t.mlOrd)+'</td>'
-      +'<td style="text-align:right">'+(function(){ var totalProfit=t.mlProfit-t.infCost-t.da; return totalProfit?fmt(totalProfit):'-'; })()+'</td>'
-      +'<td style="text-align:right">'+(function(){ var totalProfit=t.mlProfit-t.infCost-t.da; return t.rev>0?(totalProfit/t.rev*100).toFixed(0)+'%':'-'; })()+'</td>'
-      +'<td style="text-align:right">'+(t.newMem||'-')+'</td>'
-      +'</tr>';
+      html += '<tr>'
+        +'<td style="padding:5px 8px">'+(ml.code?'<span title="편성코드:'+escHtml(ml.code)+'" style="color:var(--blue);font-size:10px">🔗</span>':'')+'</td>'
+        +'<td style="padding:5px 8px;font-size:11px;color:var(--text3)">'+startD+'~'+endD+'</td>'
+        +'<td>'+(c.mdcat||'-')+'</td>'
+        +'<td>'+(c.infSize||'-')+'</td>'
+        +'<td style="font-weight:600;cursor:pointer" onclick="editProd('+c.id+')">'+escHtml(c.name||'-')+'</td>'
+        +'<td style="text-align:right">'+(cost?fmtM(cost):'-')+'</td>'
+        +'<td style="text-align:right">'+(da?fmtM(da):'-')+'</td>'
+        +'<td style="text-align:right;color:var(--green)">'+(sr?fmt(sr):'-')+'</td>'
+        +'<td style="text-align:right">'+(c.settleOrders||'-')+'</td>'
+        +'<td style="text-align:right;color:var(--green);'+cx+'">'+(sr?fmt(sr):'-')+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+(c.settleOrders||'-')+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+(sd0.views||'-')+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+(sd0.inflow||'-')+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+(sd0.ctr?sd0.ctr+'%':'-')+'</td>'
+        +'<td style="text-align:right;color:var(--blue);'+cx+'">'+(ml.orderAmt?fmt(ml.orderAmt):'-')+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+(ml.orderQty?fmt(ml.orderQty):'-')+'</td>'
+        +'<td style="text-align:right">-</td>'
+        +'<td style="text-align:right">-</td>'
+        +'<td style="text-align:right">'+(sd0.newMembers||'-')+'</td>'
+        +'</tr>';
 
-    // 인플루언서 캠페인 상세 행 (기본 접힘)
-    if(s8Type!=='mlive'){
-      wk.infCamps.forEach(function(c){
-        var sd0 = (c.settleData||[])[0]||{};
-        var sr=c.settleRevenue||0;
-        var fr=parseFloat(c.feeRate)||0,fa=parseInt(c.feeAmount)||0;
-        var cost = Math.round(sr*fr/100)+fa;
-        var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
-        // VLOOKUP: 매칭된 M라이브 실적
-        var ml = c._matchedMlive||{};
-        var mlRevStr = ml.orderAmt ? fmt(ml.orderAmt) : '-';
-        var mlOrdStr = ml.orderQty ? fmt(ml.orderQty) : '-';
-        var liveCode = (c.appMkt&&c.appMkt.liveCode)||'';
-        html += '<tr class="'+wkId+'" style="display:none">'
-          +'<td style="padding:5px 8px">'+(liveCode?'<span title="편성코드: '+escHtml(liveCode)+'" style="color:var(--blue);font-size:10px">🔗</span>':'')+'</td>'
-          +'<td style="padding:5px 8px;font-size:11px;color:var(--text3)">'+startD+'~'+endD+'</td>'
-          +'<td>'+(c.mdcat||'-')+'</td>'
-          +'<td>'+(c.infSize||'-')+'</td>'
-          +'<td style="font-weight:600;cursor:pointer" onclick="event.stopPropagation();editProd('+c.id+')">'+escHtml(c.name||'-')+'</td>'
-          +'<td style="text-align:right">'+(cost?fmt(cost):'-')+'</td>'
-          +'<td style="text-align:right">'+(c.settleDa?fmt(c.settleDa):'-')+'</td>'
-          +'<td style="text-align:right;color:var(--green)">'+(sr?fmt(sr):'-')+'</td>'
-          +'<td style="text-align:right">'+(c.settleOrders||'-')+'</td>'
-          +'<td style="text-align:right;color:var(--green);'+cx+'">'+(sr?fmt(sr):'-')+'</td>'
-          +'<td style="text-align:right;'+cx+'">'+(c.settleOrders||'-')+'</td>'
-          +'<td style="text-align:right;'+cx+'">'+(sd0.views||'-')+'</td>'
-          +'<td style="text-align:right;'+cx+'">'+(sd0.inflow||'-')+'</td>'
-          +'<td style="text-align:right;'+cx+'">'+(sd0.ctr?sd0.ctr+'%':'-')+'</td>'
-          +'<td style="text-align:right;color:var(--blue);'+cx+'">'+mlRevStr+'</td>'
-          +'<td style="text-align:right;'+cx+'">'+mlOrdStr+'</td>'
-          +'<td style="text-align:right">-</td>'
-          +'<td style="text-align:right">-</td>'
-          +'<td style="text-align:right">'+(sd0.newMembers||'-')+'</td>'
-          +'</tr>';
-      });
-    }
+    } else if(row.type==='mlive'){
+      var wk = row.week;
+      var mlId = 'ml-'+row.weekKey.replace(/[^a-zA-Z0-9]/g,'');
+      var pr = wk.totAmt>0?(wk.totProfit/wk.totAmt*100).toFixed(0)+'%':'-';
 
-    // M라이브 합계 행 + 상세 (주차 내 별도 그룹)
-    if(s8Type!=='inf' && wk.mliveItems.length){
-      var mlId = 'ml-'+wk.key.replace(/[^a-zA-Z0-9]/g,'');
-      // M라이브 합계 (방송중/방송외 분리)
-      var mlSumBrdAmt=0,mlSumBrdQty=0,mlSumOutAmt=0,mlSumOutQty=0,mlSumProfit=0;
-      wk.mliveItems.forEach(function(m){
-        mlSumBrdAmt+=m.mobOrderAmt||0; mlSumBrdQty+=m.mobOrderQty||0;
-        mlSumOutAmt+=(m.orderAmt||0)-(m.mobOrderAmt||0); mlSumOutQty+=(m.orderQty||0)-(m.mobOrderQty||0);
-        mlSumProfit+=m.profitAmt||0;
-      });
-      html += '<tr style="background:var(--bg3);font-weight:600;cursor:pointer" onclick="event.stopPropagation();document.querySelectorAll(\'.'+mlId+'\').forEach(function(r){r.style.display=r.style.display===\'none\'?\'table-row\':\'none\'})">'
-        +'<td style="padding:5px 8px;text-align:center;color:var(--blue)">+</td>'
-        +'<td style="padding:5px 8px;color:var(--blue)">'+wk.label+' M라이브</td>'
-        +'<td colspan="3"></td>'
-        +'<td style="text-align:right"></td><td style="text-align:right"></td>'
-        +'<td style="text-align:right;color:var(--blue)">'+fmt(t.mlRev)+'</td>'
-        +'<td style="text-align:right">'+fmt(t.mlOrd)+'</td>'
-        +'<td style="'+cx+'">방송중: '+fmt(mlSumBrdAmt)+'</td>'
-        +'<td style="'+cx+'">방송외: '+fmt(mlSumOutAmt)+'</td>'
-        +'<td colspan="2" style="'+cx+'"></td>'
-        +'<td style="text-align:right;color:var(--blue);'+cx+'">'+fmt(t.mlRev)+'</td>'
-        +'<td style="text-align:right;'+cx+'">'+fmt(t.mlOrd)+'</td>'
-        +'<td style="text-align:right">'+fmt(mlSumProfit)+'</td>'
-        +'<td style="text-align:right">'+(t.mlRev>0?(mlSumProfit/t.mlRev*100).toFixed(0)+'%':'-')+'</td>'
-        +'<td></td></tr>';
-      wk.mliveItems.forEach(function(m){
+      html += '<tr style="background:var(--bg3);font-weight:600;cursor:pointer" onclick="document.querySelectorAll(\'.'+mlId+'\').forEach(function(r){r.style.display=r.style.display===\'none\'?\'table-row\':\'none\'})">'
+        +'<td style="padding:5px 8px;text-align:center;color:var(--blue);font-size:13px">+</td>'
+        +'<td style="padding:5px 8px;color:var(--blue);white-space:nowrap"><b>'+wk.label+' M라이브</b></td>'
+        +'<td></td><td></td><td></td>'
+        +'<td></td>'
+        +'<td style="text-align:right">'+(wk.totMktFee?fmtM(wk.totMktFee):'-')+'</td>'
+        +'<td style="text-align:right;color:var(--blue)">'+fmt(wk.totAmt)+'</td>'
+        +'<td style="text-align:right">'+fmt(wk.totQty)+'</td>'
+        +'<td style="'+cx+'"></td><td style="'+cx+'"></td>'
+        +'<td style="'+cx+'"></td><td style="'+cx+'"></td><td style="'+cx+'"></td>'
+        +'<td style="text-align:right;color:var(--blue);'+cx+'">'+fmt(wk.totAmt)+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+fmt(wk.totQty)+'</td>'
+        +'<td style="text-align:right">'+fmt(wk.totProfit)+'</td>'
+        +'<td style="text-align:right">'+pr+'</td>'
+        +'<td></td>'
+        +'</tr>';
+
+      wk.items.forEach(function(m){
         var outAmt=(m.orderAmt||0)-(m.mobOrderAmt||0);
         var outQty=(m.orderQty||0)-(m.mobOrderQty||0);
         html += '<tr class="'+mlId+'" style="display:none;font-size:11px">'
-          +'<td></td><td style="padding:4px 8px;color:var(--text3)">'+escHtml(m.date||'')+'</td>'
+          +'<td></td>'
+          +'<td style="padding:4px 8px;color:var(--text3)">'+escHtml(m.date||'')+'</td>'
           +'<td style="font-size:10px">'+(m.mdCat||'-')+'</td>'
           +'<td style="font-size:10px">'+(m.cat||'-')+'</td>'
           +'<td>'+escHtml(m.programName||'-')+'</td>'
-          +'<td style="text-align:right;font-size:10px">'+(m.marketingFee?fmt(m.marketingFee):'-')+'</td>'
           +'<td></td>'
+          +'<td style="text-align:right;font-size:10px">'+(m.marketingFee?fmt(m.marketingFee):'-')+'</td>'
           +'<td style="text-align:right">'+fmt(m.orderAmt)+'</td>'
           +'<td style="text-align:right">'+fmt(m.orderQty)+'</td>'
           +'<td style="text-align:right;color:var(--blue);'+cx+'">'+fmt(m.mobOrderAmt)+'</td>'
           +'<td style="text-align:right;'+cx+'">'+fmt(m.mobOrderQty)+'</td>'
-          +'<td style="text-align:right;color:var(--text2);'+cx+'">'+fmt(outAmt)+'</td>'
+          +'<td style="'+cx+'"></td><td style="'+cx+'"></td><td style="'+cx+'"></td>'
+          +'<td style="text-align:right;'+cx+'">'+fmt(outAmt)+'</td>'
           +'<td style="text-align:right;'+cx+'">'+fmt(outQty)+'</td>'
-          +'<td style="text-align:right;'+cx+'">'+fmt(m.profitAmt)+'</td>'
-          +'<td style="text-align:right;font-size:10px;'+cx+'">'+(m.profitRate?m.profitRate+'%':'-')+'</td>'
           +'<td style="text-align:right">'+fmt(m.profitAmt)+'</td>'
           +'<td style="text-align:right">'+(m.orderAmt>0?(m.profitAmt/m.orderAmt*100).toFixed(0)+'%':'-')+'</td>'
-          +'<td style="font-size:10px;color:var(--text3)">'+escHtml(m.code||'-')+'</td></tr>';
+          +'<td style="font-size:10px;color:var(--text3)">'+escHtml(m.code||'-')+'</td>'
+          +'</tr>';
       });
     }
   });
