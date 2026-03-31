@@ -7792,11 +7792,11 @@ function uploadMliveExcel(input){
         orderQty: pInt(r[12]),          // 순주문수량 (13th)
         orderAmt: pInt(r[13]),          // 순주문금액 (14th)
         targetAmt: pInt(r[14]),         // 목표 (15th)
-        // VLOOKUP 21st = 주문이익율(U열)
-        _profitRateRaw: pFlt(r[20]),    // 주문이익율 원시값 (%)
+        // VLOOKUP 22nd = 주문이익율(V열)
+        _profitRateRaw: pFlt(r[21]),    // 주문이익율 원시값 (22nd, 0-based idx 21)
         profitRate: 0,                   // M라이브율 (계산)
         profitAmt: 0,                    // M라이브이익 (계산)
-        viewers: pInt(r[21]),           // 총시청자수 (22nd)
+        viewers: pInt(r[22]),           // 총시청자수 (23rd)
         mobOrderQty: pInt(r[70]),       // 모바일 순주문수량 (71st)
         mobOrderAmt: pInt(r[71]),       // 모바일 순주문금액 (72nd)
         mdName: String(r[84]||r[7]||'').trim(),  // 담당MD (85th, 폴백 H열)
@@ -7813,18 +7813,23 @@ function uploadMliveExcel(input){
       var totalAmt = m.orderAmt||0;                        // AA: 전체매출
       var brdAmt = m.mobOrderAmt||0;                       // AJ: 방송중매출
       var outAmt = totalAmt - brdAmt;                      // AL: 방송외매출
-      var vlookup21 = m._profitRateRaw||0;                 // VLOOKUP 21st: 주문이익율(%)
-      // AS: M라이브율 = (주문이익율% / (방송외+방송중)) - 2%  → 단위 주의: 이익율이 %이면 /100
-      // 수식 원본: (VLOOKUP(21st) / (AL+AJ)) - 2%
-      // VLOOKUP(21st) = 주문이익율 (예: 10% → 0.1 또는 10)
-      var rateBase = vlookup21;
-      if(Math.abs(rateBase)>1) rateBase = rateBase/100;    // 10 → 0.1 변환
-      var divisor = outAmt + brdAmt;                       // = totalAmt
-      var mlRate = divisor>0 ? (rateBase/divisor*totalAmt - 0.02) : 0;  // 수식 해석: (이익율) - 2%
-      // 더 단순한 해석: AS = 주문이익율 - 2%
-      mlRate = rateBase - 0.02;
-      m.profitRate = Math.round(mlRate*10000)/100;          // % 표시용
-      m.profitAmt = Math.round(totalAmt * mlRate);          // AR: M라이브이익 = 전체매출 × M라이브율
+      // AS: M라이브율 = (VLOOKUP(22nd) / (AL+AJ)) - 2%
+      // 22nd 값이 금액이면 금액/금액=비율, 비율이면 비율 그대로
+      var vlookupVal = m._profitRateRaw||0;              // 22nd 원시값
+      var alPlusAj = totalAmt;                           // AL+AJ = 방송외+방송중 = 전체매출
+      var mlRate = 0;
+      if(alPlusAj > 0){
+        if(Math.abs(vlookupVal) > 1){
+          // 금액인 경우: 금액/금액 = 비율
+          mlRate = vlookupVal / alPlusAj - 0.02;
+        } else {
+          // 이미 비율(소수)인 경우
+          mlRate = vlookupVal - 0.02;
+        }
+      }
+      // AR: M라이브이익 = 전체매출(AA) × M라이브율(AS)
+      m.profitRate = Math.round(mlRate*10000)/100;       // % 표시용
+      m.profitAmt = Math.round(totalAmt * mlRate);       // AR
     });
     var sample = _mliveData[0];
     showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?sample.programName+' / 이익:'+sample.profitAmt:'0건'));
