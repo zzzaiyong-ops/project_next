@@ -7997,8 +7997,36 @@ function renderWeeklyView(){
   var colExpanded = window._s8ColExpanded||false;
   var cx = colExpanded?'':'display:none';
 
-  var html = '<div class="card" style="margin-bottom:18px"><div class="card-hd"><span class="card-ttl">캠페인 성과지표</span>'
-    +'<button class="btn btn-ghost btn-xs" onclick="window._s8ColExpanded=!window._s8ColExpanded;renderWeeklyView()" style="font-size:11px">'+(colExpanded?'◀ 열 접기':'▶ 열 펼치기')+'</button></div>';
+  // 진도율 미리 계산 (카드 헤더에 표시)
+  var _targetMonth = fromVal || (new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0'));
+  var _tgt = _monthlyTargets[_targetMonth]||{};
+  var _tgtMl = _tgt.mlive||0, _tgtInf = _tgt.inf||0, _tgtAll = _tgtMl+_tgtInf;
+
+  // 전체 합계 미리 계산 (rows에서)
+  var _gtRev=0, _gtMl=0, _gtInf=0;
+  rows.forEach(function(r){
+    if(r.type==='inf'){ var sr=r.camp.settleRevenue||0; _gtRev+=sr; _gtInf+=sr; }
+    else if(r.type==='mlive'){ _gtRev+=r.week.totAmt; _gtMl+=r.week.totAmt; }
+  });
+  var _today = new Date();
+  var _dim = new Date(_today.getFullYear(), _today.getMonth()+1, 0).getDate();
+  var _dp = _today.getDate();
+  var _ratio = _dp/_dim;
+  function _cp(act,tgt){ if(!tgt)return''; var d=Math.round(tgt*_ratio); var r2=d>0?(act/d*100).toFixed(1):0; var cl=r2>=100?'var(--green)':r2>=80?'var(--orange)':'var(--pink)'; return '<span style="font-size:12px;font-weight:800;color:'+cl+'">'+r2+'%</span>'; }
+
+  var progressHtml = '';
+  if(_tgtAll > 0){
+    progressHtml = '<div style="display:flex;gap:12px;align-items:center;font-size:11px;color:var(--text2);margin-left:12px">'
+      +'<span>전체 달성율 '+_cp(_gtRev,_tgtAll)+'</span>'
+      +'<span style="color:var(--blue)">M라이브 '+_cp(_gtMl,_tgtMl)+'</span>'
+      +'<span style="color:var(--green)">인플 '+_cp(_gtInf,_tgtInf)+'</span>'
+      +'<span style="font-size:10px;color:var(--text3)">('+_dp+'/'+_dim+'일 기준)</span>'
+      +'</div>';
+  }
+
+  var html = '<div class="card" style="margin-bottom:18px"><div class="card-hd" style="flex-wrap:wrap;gap:8px"><span class="card-ttl">캠페인 성과지표</span>'
+    +progressHtml
+    +'<button class="btn btn-ghost btn-xs" style="font-size:11px;margin-left:auto" onclick="window._s8ColExpanded=!window._s8ColExpanded;renderWeeklyView()">'+(colExpanded?'◀ 열 접기':'▶ 열 펼치기')+'</button></div>';
   html += '<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">';
   html += '<thead><tr style="background:var(--bg)">'
     +'<th style="padding:6px 8px;width:28px"></th>'
@@ -8045,45 +8073,6 @@ function renderWeeklyView(){
   // 월별 목표 및 진도율 계산
   var targetMonth = fromVal || (new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0'));
   var tgt = _monthlyTargets[targetMonth]||{};
-  var tgtMlive = tgt.mlive||0, tgtInf = tgt.inf||0, tgtTotal = tgtMlive + tgtInf;
-  var todayDate = new Date();
-  var daysInMonth = new Date(todayDate.getFullYear(), todayDate.getMonth()+1, 0).getDate();
-  var daysPassed = todayDate.getDate();
-  var dayRatio = daysPassed / daysInMonth;
-
-  function calcProgress(actual, target){
-    if(!target) return {daily:0, rate:0, color:'var(--text3)'};
-    var daily = Math.round(target * dayRatio);
-    var rate = (actual / daily * 100).toFixed(1);
-    var color = rate>=100?'var(--green)':rate>=80?'var(--orange)':'var(--pink)';
-    return {daily:daily, rate:rate, color:color};
-  }
-  var pAll = calcProgress(gt.rev, tgtTotal);
-  var pMl = calcProgress(gt.mlRev, tgtMlive);
-  var pInf = calcProgress(gt.infRev, tgtInf);
-
-  // 목표/진도율 행 (목표 설정 시만 표시)
-  if(tgtTotal > 0){
-    html += '<tr style="background:var(--bg3);font-size:12px;border-bottom:1px solid var(--border)">'
-      +'<td></td>'
-      +'<td colspan="'+(colExpanded?18:12)+'" style="padding:10px 8px;line-height:2">'
-      +'<div style="display:flex;gap:24px;flex-wrap:wrap">'
-      // 전체
-      +'<div><span style="font-weight:700">전체</span> '
-      +'목표 '+fmtEok(tgtTotal)+'억 · 일할 '+fmtEok(pAll.daily)+'억 ('+daysPassed+'/'+daysInMonth+'일) · '
-      +'진도율 <span style="font-size:15px;font-weight:800;color:'+pAll.color+'">'+pAll.rate+'%</span></div>'
-      // M라이브
-      +'<div><span style="font-weight:700;color:var(--blue)">M라이브</span> '
-      +'목표 '+fmtEok(tgtMlive)+'억 · 일할 '+fmtEok(pMl.daily)+'억 · '
-      +'진도율 <span style="font-size:14px;font-weight:800;color:'+pMl.color+'">'+pMl.rate+'%</span></div>'
-      // 인플루언서
-      +'<div><span style="font-weight:700;color:var(--green)">인플루언서</span> '
-      +'목표 '+fmtEok(tgtInf)+'억 · 일할 '+fmtEok(pInf.daily)+'억 · '
-      +'진도율 <span style="font-size:14px;font-weight:800;color:'+pInf.color+'">'+pInf.rate+'%</span></div>'
-      +'</div>'
-      +'</td></tr>';
-  }
-
   // 월 합계 행
   html += '<tr style="background:var(--accent-bg);font-weight:800;border-bottom:2px solid var(--accent)">'
     +'<td style="padding:8px"></td>'
