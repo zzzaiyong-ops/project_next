@@ -7974,6 +7974,49 @@ function renderWeeklyView(){
     +'<th style="text-align:right">신규가입</th>'
     +'</tr></thead><tbody>';
 
+  // ── 월 전체 합계 계산 ──
+  var gt = {infCost:0, da:0, mktFee:0, rev:0, ord:0, infRev:0, infOrd:0, mlRev:0, mlOrd:0, views:0, inflow:0, newMem:0, mlProfit:0};
+  rows.forEach(function(row){
+    if(row.type==='inf'){
+      var c=row.camp, sr=c.settleRevenue||0;
+      var fr2=parseFloat(c.feeRate)||0,fa2=parseInt(c.feeAmount)||0,ar2=parseFloat(c.agencyRate)||0;
+      gt.infCost+=Math.round(sr*fr2/100)+fa2+Math.round(sr*ar2/100);
+      gt.da+=parseInt(c.settleDa)||0;
+      gt.rev+=sr; gt.ord+=c.settleOrders||0;
+      gt.infRev+=sr; gt.infOrd+=c.settleOrders||0;
+      (c.settleData||[]).forEach(function(s){ gt.views+=s.views||0; gt.inflow+=s.inflow||0; gt.newMem+=s.newMembers||0; });
+      var ml2=c._matchedMlive||{}; gt.mlRev+=ml2.orderAmt||0; gt.mlOrd+=ml2.orderQty||0;
+    } else if(row.type==='mlive'){
+      var wk2=row.week;
+      gt.mktFee+=wk2.totMktFee||0; gt.rev+=wk2.totAmt; gt.ord+=wk2.totQty;
+      gt.mlRev+=wk2.totAmt; gt.mlOrd+=wk2.totQty; gt.mlProfit+=wk2.totProfit||0;
+    }
+  });
+  var gtProfit = gt.mlProfit - gt.infCost - gt.da;
+  var gtProfitRate = gt.rev>0?(gtProfit/gt.rev*100).toFixed(0)+'%':'-';
+  var gtCtr = gt.views>0?((gt.inflow/gt.views)*100).toFixed(1)+'%':'-';
+
+  // 월 합계 행
+  html += '<tr style="background:var(--accent-bg);font-weight:800;border-bottom:2px solid var(--accent)">'
+    +'<td style="padding:8px"></td>'
+    +'<td style="padding:8px;font-size:13px;color:var(--accent2)">월 합계</td>'
+    +'<td></td><td style="font-weight:800">실적</td><td></td>'
+    +'<td style="text-align:right">'+fmtM(gt.infCost)+'</td>'
+    +'<td style="text-align:right">'+fmtM(gt.mktFee)+'</td>'
+    +'<td style="text-align:right;color:var(--green);font-size:13px">'+fmt(gt.rev)+'</td>'
+    +'<td style="text-align:right;font-size:13px">'+fmt(gt.ord)+'</td>'
+    +'<td style="text-align:right;color:var(--green);'+cx+'">'+fmt(gt.infRev)+'</td>'
+    +'<td style="text-align:right;'+cx+'">'+fmt(gt.infOrd)+'</td>'
+    +'<td style="text-align:right;'+cx+'">'+(gt.views||'-')+'</td>'
+    +'<td style="text-align:right;'+cx+'">'+(gt.inflow||'-')+'</td>'
+    +'<td style="text-align:right;'+cx+'">'+gtCtr+'</td>'
+    +'<td style="text-align:right;color:var(--blue);'+cx+'">'+fmt(gt.mlRev)+'</td>'
+    +'<td style="text-align:right;'+cx+'">'+fmt(gt.mlOrd)+'</td>'
+    +'<td style="text-align:right;font-size:13px">'+fmt(gtProfit)+'</td>'
+    +'<td style="text-align:right">'+gtProfitRate+'</td>'
+    +'<td style="text-align:right">'+(gt.newMem||'-')+'</td>'
+    +'</tr>';
+
   rows.forEach(function(row){
     if(row.type==='inf'){
       var c = row.camp;
