@@ -7837,6 +7837,18 @@ function renderWeeklyView(){
   if(s8Type==='mlive' && detailCard) detailCard.style.display='none';
   else if(detailCard) detailCard.style.display='';
 
+  // ── VLOOKUP: 캠페인 편성코드로 M라이브 데이터 매칭 ──
+  var mliveByCode = {};
+  _mliveData.forEach(function(m){ if(m.code) mliveByCode[m.code.trim()] = m; });
+  // 각 인플루언서 캠페인에 매칭된 M라이브 연결
+  weeks.forEach(function(wk){
+    wk.infCamps.forEach(function(c){
+      var liveCode = (c.appMkt && c.appMkt.liveCode) ? c.appMkt.liveCode.trim() : '';
+      if(liveCode && mliveByCode[liveCode]){
+        c._matchedMlive = mliveByCode[liveCode];
+      }
+    });
+  });
   var fmt = function(v){ return v?v.toLocaleString('ko-KR'):'-'; };
   var fmtM = function(v){ return v?(v/1000000).toFixed(1):'0'; };
 
@@ -7873,8 +7885,13 @@ function renderWeeklyView(){
       t.infCost += Math.round(sr*fr/100)+fa+Math.round(sr*ar/100);
       t.da += parseInt(c.settleDa)||0;
       (c.settleData||[]).forEach(function(s){ t.views+=s.views||0; t.inflow+=s.inflow||0; t.newMem+=s.newMembers||0; });
+      // VLOOKUP: 매칭된 M라이브 매출 합산
+      if(c._matchedMlive){ t.mlRev+=c._matchedMlive.orderAmt||0; t.mlOrd+=c._matchedMlive.orderQty||0; t.rev+=c._matchedMlive.orderAmt||0; t.ord+=c._matchedMlive.orderQty||0; }
     });
-    wk.mliveItems.forEach(function(m){ t.mlRev+=m.orderAmt||0; t.mlOrd+=m.orderQty||0; t.rev+=m.orderAmt||0; t.ord+=m.orderQty||0; });
+    // 매칭되지 않은 M라이브만 별도 합산 (중복 방지)
+    var matchedCodes = {};
+    wk.infCamps.forEach(function(c){ if(c._matchedMlive) matchedCodes[c._matchedMlive.code]=true; });
+    wk.mliveItems.forEach(function(m){ if(!matchedCodes[m.code]){ t.mlRev+=m.orderAmt||0; t.mlOrd+=m.orderQty||0; t.rev+=m.orderAmt||0; t.ord+=m.orderQty||0; } });
     if(t.views>0) t.ctr = ((t.inflow/t.views)*100).toFixed(1);
 
     // 합계 행 (항상 표시, 볼드)
@@ -7904,8 +7921,13 @@ function renderWeeklyView(){
         var fr=parseFloat(c.feeRate)||0,fa=parseInt(c.feeAmount)||0;
         var cost = Math.round(sr*fr/100)+fa;
         var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
+        // VLOOKUP: 매칭된 M라이브 실적
+        var ml = c._matchedMlive||{};
+        var mlRevStr = ml.orderAmt ? fmt(ml.orderAmt) : '-';
+        var mlOrdStr = ml.orderQty ? fmt(ml.orderQty) : '-';
+        var liveCode = (c.appMkt&&c.appMkt.liveCode)||'';
         html += '<tr class="'+wkId+'" style="display:none">'
-          +'<td style="padding:5px 8px"></td>'
+          +'<td style="padding:5px 8px">'+(liveCode?'<span title="편성코드: '+escHtml(liveCode)+'" style="color:var(--blue);font-size:10px">🔗</span>':'')+'</td>'
           +'<td style="padding:5px 8px;font-size:11px;color:var(--text3)">'+startD+'~'+endD+'</td>'
           +'<td>'+(c.mdcat||'-')+'</td>'
           +'<td>'+(c.infSize||'-')+'</td>'
@@ -7919,8 +7941,8 @@ function renderWeeklyView(){
           +'<td style="text-align:right">'+(sd0.views||'-')+'</td>'
           +'<td style="text-align:right">'+(sd0.inflow||'-')+'</td>'
           +'<td style="text-align:right">'+(sd0.ctr?sd0.ctr+'%':'-')+'</td>'
-          +'<td style="text-align:right;color:var(--text3)">-</td>'
-          +'<td style="text-align:right">-</td>'
+          +'<td style="text-align:right;color:var(--blue)">'+mlRevStr+'</td>'
+          +'<td style="text-align:right">'+mlOrdStr+'</td>'
           +'<td style="text-align:right">'+(sd0.newMembers||'-')+'</td>'
           +'</tr>';
       });
