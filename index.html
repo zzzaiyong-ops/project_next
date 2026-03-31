@@ -7841,20 +7841,13 @@ function uploadMliveExcel(input){
       var totalAmt = m.orderAmt||0;                        // AA: 전체매출
       var brdAmt = m.mobOrderAmt||0;                       // AJ: 방송중매출
       var outAmt = totalAmt - brdAmt;                      // AL: 방송외매출
-      // AS: M라이브율 = (VLOOKUP(22nd) / (AL+AJ)) - 2%
-      // 22nd 값이 금액이면 금액/금액=비율, 비율이면 비율 그대로
-      var vlookupVal = m._profitRateRaw||0;              // 22nd 원시값
-      var alPlusAj = totalAmt;                           // AL+AJ = 방송외+방송중 = 전체매출
-      var mlRate = 0;
-      if(alPlusAj > 0){
-        if(Math.abs(vlookupVal) > 1){
-          // 금액인 경우: 금액/금액 = 비율
-          mlRate = vlookupVal / alPlusAj - 0.02;
-        } else {
-          // 이미 비율(소수)인 경우
-          mlRate = vlookupVal - 0.02;
-        }
-      }
+      // AS: M라이브율 = (VLOOKUP(V열) / (AL+AJ)) - 2%
+      // V열 값: "10%" → 10 (pFlt) → /100 = 0.1 (소수 비율로 변환)
+      var vlookupVal = m._profitRateRaw||0;
+      // "10%" 같은 퍼센트 정수이면 /100으로 소수 변환
+      if(Math.abs(vlookupVal) >= 1) vlookupVal = vlookupVal / 100;
+      // AS = 주문이익율(소수) - 2%
+      var mlRate = vlookupVal - 0.02;
       // AR: M라이브이익 = 전체매출(AA) × M라이브율(AS)
       m.profitRate = Math.round(mlRate*10000)/100;       // % 표시용
       m.profitAmt = Math.round(totalAmt * mlRate);       // AR
