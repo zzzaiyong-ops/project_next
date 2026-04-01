@@ -9062,6 +9062,11 @@ function syncInfDataToDb(infDataArr){
       });
     }
   });
+  // Firebase에 influencers 개별 저장
+  if(fbReady){
+    fbRef.child('influencers').set(arrToObj(DB.influencers))
+      .catch(function(e){ console.warn('[syncInfDataToDb] Firebase 저장 실패:', e); });
+  }
 }
 
 // 캠페인 수정 시 연관 데이터 동기화
@@ -9809,6 +9814,12 @@ function saveInf(){
   DB.influencers.push({id:nid.influencers++,name,insta:v('i-insta'),youtube:v('i-youtube'),twitter:v('i-twitter'),followers:iv('i-flw'),cat:v('i-cat'),contact:v('i-contact'),address:v('i-address'),fee:iv('i-fee'),memo:v('i-memo')});
   addAct('👤',`${name} 인플루언서 등록`,nowStr(),'');
   addNotif('👤',`${name} DB 추가됨`,'방금 전');
+  // Firebase에 influencers만 개별 저장 (전체 덮어쓰기 방지)
+  if(fbReady){
+    fbRef.child('influencers').set(arrToObj(DB.influencers))
+      .then(function(){ console.log('[saveInf] Firebase 저장 성공'); })
+      .catch(function(e){ console.warn('[saveInf] Firebase 저장 실패:', e); });
+  }
   broadcastData(); closeMo('influencer'); renderInfs();
   showToast(`${name} 등록됨`);
 }
