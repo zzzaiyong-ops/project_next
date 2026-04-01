@@ -8005,7 +8005,10 @@ function renderWeeklyView(){
   }
   if(s8Type!=='inf'){
     Object.keys(mlWeekMap).forEach(function(k){
-      rows.push({type:'mlive', date:mlWeekMap[k].date, weekKey:k, week:mlWeekMap[k]});
+      // 매칭된 편성코드 제외 후 항목이 없으면 스킵
+      if(mlWeekMap[k].items.length > 0){
+        rows.push({type:'mlive', date:mlWeekMap[k].date, weekKey:k, week:mlWeekMap[k]});
+      }
     });
   }
   rows.sort(function(a,b){ return (a.date||'')>(b.date||'')?1:(a.date||'')<(b.date||'')?-1:0; });
@@ -8077,10 +8080,9 @@ function renderWeeklyView(){
   rows.forEach(function(row){
     if(row.type==='inf'){
       var c=row.camp, sr=c.settleRevenue||0;
-      var fr2=parseFloat(c.feeRate)||0,fa2=parseInt(c.feeAmount)||0,ar2=parseFloat(c.agencyRate)||0;
-      var cost2=Math.round(sr*fr2/100)+fa2+Math.round(sr*ar2/100);
+      var fr2=parseFloat(c.feeRate)||0,fa2=parseInt(c.feeAmount)||0,ar2=parseFloat(c.agencyRate)||0,da2=parseInt(c.settleDa)||0;
+      var cost2=Math.round(sr*fr2/100)+fa2+Math.round(sr*ar2/100)+da2; // 비용소계 (DA 포함)
       gt.infCost+=cost2;
-      gt.da+=parseInt(c.settleDa)||0;
       gt.infRev+=sr; gt.infOrd+=c.settleOrders||0;
       (c.settleData||[]).forEach(function(s){ gt.views+=s.views||0; gt.inflow+=s.inflow||0; gt.newMem+=s.newMembers||0; });
       // AR: 인플이익
@@ -8099,8 +8101,8 @@ function renderWeeklyView(){
       gt.mlRev+=wk2.totAmt; gt.mlOrd+=wk2.totQty; gt.mlProfit+=wk2.totProfit||0;
     }
   });
-  // AP: 전체한계이익 = AR(인플이익) + AT(M라이브이익) + AV(광고수익) - V(마케팅비)
-  var gtProfit = gt.infProfit + gt.mlProfit + gt.adRev - gt.da;
+  // AP: 전체한계이익 = AR(인플이익) + AT(M라이브이익) + AV(광고수익) (DA는 비용소계에 포함)
+  var gtProfit = gt.infProfit + gt.mlProfit + gt.adRev;
   var gtProfitRate = gt.rev>0?(gtProfit/gt.rev*100).toFixed(0)+'%':'-';
   var gtCtr = gt.views>0?((gt.inflow/gt.views)*100).toFixed(1)+'%':'-';
 
@@ -8134,12 +8136,13 @@ function renderWeeklyView(){
       var sd0 = (c.settleData||[])[0]||{};
       var sr = c.settleRevenue||0;
       var fr=parseFloat(c.feeRate)||0, fa=parseInt(c.feeAmount)||0, ar=parseFloat(c.agencyRate)||0, da=parseInt(c.settleDa)||0;
-      var cost = Math.round(sr*fr/100)+fa+Math.round(sr*ar/100); // Q: 인플비용
+      // 비용소계 = 수수료 + 원고료 + 에이전시 + DA (정산 비용소계와 동일)
+      var cost = Math.round(sr*fr/100)+fa+Math.round(sr*ar/100)+da;
       var ml = c._matchedMlive||{};
       var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
 
       // 인플루언서 한계이익 계산
-      // AR: 인플이익 = 인플매출(AC=sr) × 0.24 - 인플비용(Q=cost)
+      // AR: 인플이익 = 인플매출(AC=sr) × 0.24 - 비용소계(cost)
       var infProfit = Math.round(sr * 0.24) - cost;
       var infProfitRate = sr>0?((infProfit/sr)*100).toFixed(0)+'%':'-';
       // AT: M라이브이익 (매칭된 경우)
@@ -8147,8 +8150,8 @@ function renderWeeklyView(){
       var mlProfitRate = ml.orderAmt>0?((mlProfit/ml.orderAmt)*100).toFixed(0)+'%':'-';
       // AV: 광고수익 (매칭된 M라이브에서 참조)
       var adRev = ml.adRevenue||0;
-      // AP: 전체한계이익 = AR + AT + AV - V(마케팅비=da)
-      var totalProfit = infProfit + mlProfit + adRev - da;
+      // AP: 전체한계이익 = AR + AT + AV (DA는 이미 cost에 포함)
+      var totalProfit = infProfit + mlProfit + adRev;
       // 전체매출 = 인플매출 + M라이브매출
       var totalRev = sr + (ml.orderAmt||0);
       var totalProfitRate = totalRev>0?((totalProfit/totalRev)*100).toFixed(0)+'%':'-';
@@ -8160,7 +8163,7 @@ function renderWeeklyView(){
         +'<td>'+(c.infSize||'-')+'</td>'
         +'<td style="font-weight:600;cursor:pointer" onclick="editProd('+c.id+')">'+escHtml(c.name||'-')+'</td>'
         +'<td style="text-align:right">'+(cost?fmtCost(cost):'-')+'</td>'
-        +'<td style="text-align:right">'+(da?fmtCost(da):'-')+'</td>'
+        +'<td style="text-align:right">-</td>'
         +'<td style="text-align:right;color:var(--green)">'+(totalRev?fmtEok(totalRev):'-')+'</td>'
         +'<td style="text-align:right">'+(c.settleOrders||'-')+'</td>'
         +'<td style="text-align:right;color:var(--green);'+cx+'">'+(sr?fmtEok(sr):'-')+'</td>'
