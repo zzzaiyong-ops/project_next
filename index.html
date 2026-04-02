@@ -4114,7 +4114,7 @@ function enterDemoMode(role){
     updateBadges();
     renderS1(); renderS2(); renderS3(); renderS4();
     renderS5(); renderS6(); renderS7();
-    renderCamps(); renderInfs(); loadInfAiFromDb();
+    renderCamps(); renderInfs(); loadInfAiFromDb(); loadMliveFromDb(); loadTargetsFromDb();
     // 기본정보 관리
     if(typeof renderMdcatTable==='function') renderMdcatTable();
     if(typeof renderMcnTable==='function')   renderMcnTable();
@@ -7763,6 +7763,12 @@ function uploadMonthlyTarget(input){
       }
     });
     console.log('[목표] 월별 목표:', JSON.stringify(_monthlyTargets));
+    // Firebase에 저장
+    if(fbReady && fbRef){
+      fbRef.child('monthlyTargets').set(_monthlyTargets)
+        .then(function(){ console.log('[목표] Firebase 저장 성공'); })
+        .catch(function(e){ console.warn('[목표] Firebase 저장 실패:', e); });
+    }
     showToast('월별 목표 '+Object.keys(_monthlyTargets).length+'개월 로드됨');
     renderReports();
   };
@@ -7771,6 +7777,15 @@ function uploadMonthlyTarget(input){
 }
 
 // 월별 목표 양식 다운로드
+// 월 목표 Firebase 로드
+function loadTargetsFromDb(){
+  if(!fbReady || !fbRef) return;
+  fbRef.child('monthlyTargets').once('value', function(snap){
+    var d = snap.val();
+    if(d){ _monthlyTargets = d; console.log('[목표] Firebase 로드:', JSON.stringify(d)); }
+  });
+}
+
 function downloadTargetTemplate(){
   var ws_data = [
     ['연월','M라이브 목표(원)','인플루언서 목표(원)'],
@@ -7905,11 +7920,42 @@ function uploadMliveExcel(input){
     });
     var sample = _mliveData[0];
     showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?sample.programName+' / 이익:'+sample.profitAmt:'0건'));
-    console.log('[M라이브]', _mliveData.length, '건, 첫건 이익율:', sample?sample.profitRate+'%':'', '이익:', sample?sample.profitAmt:'');
+    // Firebase에 편성코드 키로 저장 (기존 데이터와 머지)
+    saveMliveToDb();
     renderReports();
   };
   reader.readAsArrayBuffer(file);
   input.value = '';
+}
+
+// M라이브 데이터 Firebase 저장 (편성코드 키)
+function saveMliveToDb(){
+  if(!fbReady || !fbRef) return;
+  var obj = {};
+  _mliveData.forEach(function(m){
+    if(m.code) obj[m.code] = m;
+  });
+  fbRef.child('mliveData').set(obj)
+    .then(function(){ console.log('[M라이브] Firebase 저장 성공:', Object.keys(obj).length, '건'); })
+    .catch(function(e){ console.warn('[M라이브] Firebase 저장 실패:', e); });
+}
+
+// M라이브 데이터 Firebase에서 로드
+function loadMliveFromDb(){
+  if(!fbReady || !fbRef) return;
+  fbRef.child('mliveData').once('value', function(snap){
+    var d = snap.val();
+    if(!d) return;
+    var loaded = Object.values(d);
+    if(!loaded.length) return;
+    // 기존 메모리 데이터와 머지 (편성코드 키 기준)
+    var codeMap = {};
+    _mliveData.forEach(function(m){ if(m.code) codeMap[m.code] = m; });
+    loaded.forEach(function(m){ if(m.code) codeMap[m.code] = m; });
+    _mliveData = Object.values(codeMap);
+    console.log('[M라이브] Firebase 로드:', _mliveData.length, '건');
+    renderReports();
+  });
 }
 
 // 주차 계산 (ISO week)
