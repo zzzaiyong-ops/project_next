@@ -8075,11 +8075,12 @@ function renderWeeklyView(){
     +'<th style="text-align:right">방송외건수</th>'
     +'<th style="text-align:right">한계이익<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
     +'<th style="text-align:right">이익율</th>'
+    +'<th style="text-align:right">광고수익<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
     +'<th style="text-align:right">신규가입</th>'
     +'</tr></thead><tbody>';
 
   // ── 월 전체 합계 계산 ──
-  var gt = {infCost:0, da:0, mktFee:0, rev:0, ord:0, infRev:0, infOrd:0, mlRev:0, mlOrd:0, views:0, inflow:0, newMem:0, mlProfit:0, infProfit:0, adRev:0};
+  var gt = {infCost:0, da:0, mktFee:0, rev:0, ord:0, infRev:0, infOrd:0, mlRev:0, mlOrd:0, views:0, inflow:0, newMem:0, mlProfit:0, infProfit:0, adRev:0, brdAmt:0, brdQty:0, outAmt:0, outQty:0};
   rows.forEach(function(row){
     if(row.type==='inf'){
       var c=row.camp, sr=c.settleRevenue||0;
@@ -8093,6 +8094,8 @@ function renderWeeklyView(){
       // 매칭된 M라이브
       var ml2=c._matchedMlive||{};
       gt.mlRev+=ml2.orderAmt||0; gt.mlOrd+=ml2.orderQty||0;
+      gt.brdAmt+=ml2.mobOrderAmt||0; gt.brdQty+=ml2.mobOrderQty||0;
+      gt.outAmt+=(ml2.orderAmt||0)-(ml2.mobOrderAmt||0); gt.outQty+=(ml2.orderQty||0)-(ml2.mobOrderQty||0);
       gt.mlProfit+=ml2.profitAmt||0;
       gt.adRev+=ml2.adRevenue||0;
       // 전체매출 = 인플 + 매칭M라이브
@@ -8102,6 +8105,7 @@ function renderWeeklyView(){
       gt.mktFee+=wk2.totMktFee||0;
       gt.rev+=wk2.totAmt; gt.ord+=wk2.totQty;
       gt.mlRev+=wk2.totAmt; gt.mlOrd+=wk2.totQty; gt.mlProfit+=wk2.totProfit||0;
+      gt.brdAmt+=wk2.totBrdAmt||0; gt.outAmt+=wk2.totOutAmt||0;
     }
   });
   // AP: 전체한계이익 = AR(인플이익) + AT(M라이브이익) + AV(광고수익) (DA는 비용소계에 포함)
@@ -8126,13 +8130,14 @@ function renderWeeklyView(){
     +'<td style="text-align:right;'+cx+'">'+fmtNum(gt.views)+'</td>'
     +'<td style="text-align:right;'+cx+'">'+fmtNum(gt.inflow)+'</td>'
     +'<td style="text-align:right;'+cx+'">'+gtCtr+'</td>'
-    +'<td style="text-align:right;color:var(--blue)">-</td>'
-    +'<td style="text-align:right">-</td>'
-    +'<td style="text-align:right">-</td>'
-    +'<td style="text-align:right">-</td>'
+    +'<td style="text-align:right;color:var(--blue)">'+fmtEok(gt.brdAmt)+'</td>'
+    +'<td style="text-align:right">'+fmtNum(gt.brdQty)+'</td>'
+    +'<td style="text-align:right">'+fmtEok(gt.outAmt)+'</td>'
+    +'<td style="text-align:right">'+fmtNum(gt.outQty)+'</td>'
     +'<td style="text-align:right;font-size:13px">'+fmtCost(gtProfit)+'</td>'
     +'<td style="text-align:right">'+gtProfitRate+'</td>'
-    +'<td style="text-align:right">'+(gt.newMem||'-')+'</td>'
+    +'<td style="text-align:right">'+fmtCost(gt.adRev)+'</td>'
+    +'<td style="text-align:right">'+fmtNum(gt.newMem)+'</td>'
     +'</tr>';
 
   rows.forEach(function(row){
@@ -8182,6 +8187,7 @@ function renderWeeklyView(){
         +'<td style="text-align:right">'+fmtNum(totalRev?((c.settleOrders||0)+((ml.orderQty||0)-(ml.mobOrderQty||0))):0)+'</td>'
         +'<td style="text-align:right">'+fmtCost(totalProfit)+'</td>'
         +'<td style="text-align:right">'+totalProfitRate+'</td>'
+        +'<td style="text-align:right">'+(adRev?fmtCost(adRev):'-')+'</td>'
         +'<td style="text-align:right">'+(sd0.newMembers||'-')+'</td>'
         +'</tr>';
 
@@ -8206,6 +8212,7 @@ function renderWeeklyView(){
         +'<td style="text-align:right">'+fmtNum(wk.totQty?Math.round(wk.totOutAmt/wk.totAmt*wk.totQty):0)+'</td>'
         +'<td style="text-align:right">'+fmtCost(wk.totProfit)+'</td>'
         +'<td style="text-align:right">'+pr+'</td>'
+        +'<td style="text-align:right">-</td>'
         +'<td></td>'
         +'</tr>';
 
@@ -8230,6 +8237,7 @@ function renderWeeklyView(){
           +'<td style="text-align:right">'+fmtNum(outQty)+'</td>'
           +'<td style="text-align:right">'+fmtCost(m.profitAmt)+'</td>'
           +'<td style="text-align:right">'+(m.orderAmt>0?(m.profitAmt/m.orderAmt*100).toFixed(0)+'%':'-')+'</td>'
+          +'<td style="text-align:right">'+(m.adRevenue?fmtCost(m.adRevenue):'-')+'</td>'
           +'<td style="font-size:10px;color:var(--text3)">'+escHtml(m.code||'-')+'</td>'
           +'</tr>';
       });
