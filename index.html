@@ -7961,13 +7961,15 @@ function renderWeeklyView(){
     if(toVal){ var tp=toVal.split('-'); if(new Date(mDate)>new Date(parseInt(tp[0]),parseInt(tp[1]),0)) return; }
     var wi = getWeekInfo(mDate);
     if(!wi.key) return;
-    if(!mlWeekMap[wi.key]) mlWeekMap[wi.key] = {label:wi.label, date:mDate, items:[], totAmt:0, totQty:0, totProfit:0, totBrdAmt:0, totOutAmt:0, totMktFee:0};
+    if(!mlWeekMap[wi.key]) mlWeekMap[wi.key] = {label:wi.label, date:mDate, items:[], totAmt:0, totQty:0, totProfit:0, totBrdAmt:0, totBrdQty:0, totOutAmt:0, totOutQty:0, totMktFee:0};
     mlWeekMap[wi.key].items.push(m);
     mlWeekMap[wi.key].totAmt += m.orderAmt||0;
     mlWeekMap[wi.key].totQty += m.orderQty||0;
     mlWeekMap[wi.key].totProfit += m.profitAmt||0;
     mlWeekMap[wi.key].totBrdAmt += m.mobOrderAmt||0;
+    mlWeekMap[wi.key].totBrdQty += m.mobOrderQty||0;
     mlWeekMap[wi.key].totOutAmt += (m.orderAmt||0)-(m.mobOrderAmt||0);
+    mlWeekMap[wi.key].totOutQty += (m.orderQty||0)-(m.mobOrderQty||0);
     mlWeekMap[wi.key].totMktFee += m.marketingFee||0;
   });
 
@@ -7988,10 +7990,11 @@ function renderWeeklyView(){
     var wk = mlWeekMap[k];
     var filtered = wk.items.filter(function(m){ return !matchedMliveCodes[m.code]; });
     wk.items = filtered;
-    wk.totAmt=0; wk.totQty=0; wk.totProfit=0; wk.totBrdAmt=0; wk.totOutAmt=0; wk.totMktFee=0;
+    wk.totAmt=0; wk.totQty=0; wk.totProfit=0; wk.totBrdAmt=0; wk.totBrdQty=0; wk.totOutAmt=0; wk.totOutQty=0; wk.totMktFee=0;
     filtered.forEach(function(m){
       wk.totAmt+=m.orderAmt||0; wk.totQty+=m.orderQty||0; wk.totProfit+=m.profitAmt||0;
-      wk.totBrdAmt+=m.mobOrderAmt||0; wk.totOutAmt+=(m.orderAmt||0)-(m.mobOrderAmt||0);
+      wk.totBrdAmt+=m.mobOrderAmt||0; wk.totBrdQty+=m.mobOrderQty||0;
+      wk.totOutAmt+=(m.orderAmt||0)-(m.mobOrderAmt||0); wk.totOutQty+=(m.orderQty||0)-(m.mobOrderQty||0);
       wk.totMktFee+=m.marketingFee||0;
     });
   });
@@ -8105,7 +8108,8 @@ function renderWeeklyView(){
       gt.mktFee+=wk2.totMktFee||0;
       gt.rev+=wk2.totAmt; gt.ord+=wk2.totQty;
       gt.mlRev+=wk2.totAmt; gt.mlOrd+=wk2.totQty; gt.mlProfit+=wk2.totProfit||0;
-      gt.brdAmt+=wk2.totBrdAmt||0; gt.outAmt+=wk2.totOutAmt||0;
+      gt.brdAmt+=wk2.totBrdAmt||0; gt.brdQty+=wk2.totBrdQty||0;
+      gt.outAmt+=wk2.totOutAmt||0; gt.outQty+=wk2.totOutQty||0;
     }
   });
   // AP: 전체한계이익 = AR(인플이익) + AT(M라이브이익) + AV(광고수익) (DA는 비용소계에 포함)
@@ -8207,9 +8211,9 @@ function renderWeeklyView(){
         +'<td style="text-align:right">-</td><td style="text-align:right">-</td>'
         +'<td style="'+cx+'"></td><td style="'+cx+'"></td><td style="'+cx+'"></td>'
         +'<td style="text-align:right;color:var(--blue)">'+fmtEok(wk.totBrdAmt)+'</td>'
-        +'<td style="text-align:right">'+fmtNum(wk.totQty?Math.round(wk.totBrdAmt/wk.totAmt*wk.totQty):0)+'</td>'
+        +'<td style="text-align:right">'+fmtNum(wk.totBrdQty)+'</td>'
         +'<td style="text-align:right">'+fmtEok(wk.totOutAmt)+'</td>'
-        +'<td style="text-align:right">'+fmtNum(wk.totQty?Math.round(wk.totOutAmt/wk.totAmt*wk.totQty):0)+'</td>'
+        +'<td style="text-align:right">'+fmtNum(wk.totOutQty)+'</td>'
         +'<td style="text-align:right">'+fmtCost(wk.totProfit)+'</td>'
         +'<td style="text-align:right">'+pr+'</td>'
         +'<td style="text-align:right">-</td>'
