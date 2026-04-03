@@ -8108,9 +8108,24 @@ function renderWeeklyView(){
   var cx = colExpanded?'':'display:none';
 
   // 진도율 미리 계산 (카드 헤더에 표시)
-  var _targetMonth = fromVal || (new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0'));
-  var _tgt = _monthlyTargets[_targetMonth]||{};
-  var _tgtMl = _tgt.mlive||0, _tgtInf = _tgt.inf||0, _tgtAll = _tgtMl+_tgtInf;
+  // 조회 기간 내 모든 월의 목표를 합산
+  var _tgtMl=0, _tgtInf=0;
+  if(fromVal && toVal){
+    var fParts=fromVal.split('-'), tParts=toVal.split('-');
+    var fy=parseInt(fParts[0]), fm=parseInt(fParts[1]);
+    var ty=parseInt(tParts[0]), tm=parseInt(tParts[1]);
+    for(var _y=fy,_m=fm; _y<ty||(_y===ty&&_m<=tm); _m++){
+      if(_m>12){_m=1;_y++;}
+      var mk=_y+'-'+String(_m).padStart(2,'0');
+      var mt=_monthlyTargets[mk]||{};
+      _tgtMl+=mt.mlive||0; _tgtInf+=mt.inf||0;
+    }
+  } else {
+    var _targetMonth = fromVal || (new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0'));
+    var _tgt = _monthlyTargets[_targetMonth]||{};
+    _tgtMl = _tgt.mlive||0; _tgtInf = _tgt.inf||0;
+  }
+  var _tgtAll = _tgtMl+_tgtInf;
 
   // 전체 합계 미리 계산 (rows에서)
   var _gtRev=0, _gtMl=0, _gtInf=0;
@@ -8122,7 +8137,7 @@ function renderWeeklyView(){
   var _dim = new Date(_today.getFullYear(), _today.getMonth()+1, 0).getDate();
   var _dp = _today.getDate();
   var _ratio = _dp/_dim;
-  function _cp(act,tgt){ if(!tgt)return''; var d=Math.round(tgt*_ratio); var r2=d>0?(act/d*100).toFixed(1):0; var cl=r2>=100?'var(--green)':r2>=80?'var(--orange)':'var(--pink)'; return '<span style="font-size:12px;font-weight:800;color:'+cl+'">'+r2+'%</span>'; }
+  function _cp(act,tgt){ if(!tgt)return''; var r2=(act/tgt*100).toFixed(1); var cl=r2>=100?'var(--green)':r2>=80?'var(--orange)':'var(--pink)'; return '<span style="font-size:12px;font-weight:800;color:'+cl+'">'+r2+'%</span>'; }
 
   var progressHtml = '';
   if(_tgtAll > 0){
@@ -8130,7 +8145,7 @@ function renderWeeklyView(){
       +'<span>전체 달성율 '+_cp(_gtRev,_tgtAll)+'</span>'
       +'<span style="color:var(--blue)">M라이브 '+_cp(_gtMl,_tgtMl)+'</span>'
       +'<span style="color:var(--green)">인플 '+_cp(_gtInf,_tgtInf)+'</span>'
-      +'<span style="font-size:10px;color:var(--text3)">('+_dp+'/'+_dim+'일 기준)</span>'
+      +'<span style="font-size:10px;color:var(--text3)">(목표대비)</span>'
       +'</div>';
   }
 
