@@ -8094,10 +8094,11 @@ function renderWeeklyView(){
   else if(detailCard) detailCard.style.display='';
 
   var fmtMil = function(v){ return v?Math.round(v/1000000).toLocaleString('ko-KR'):'-'; };  // 백만 단위 (정수)
+  var fmtMil1 = function(v){ return v?(v/1000000).toFixed(1):'-'; };  // 백만 단위 (소수점1자리)
   var fmtNum = function(v){ return v?v.toLocaleString('ko-KR'):'-'; };  // 정수 천단위 쉼표
-  var fmt = fmtMil; // 모든 금액 백만 단위
+  var fmt = fmtMil; // 매출 등 백만 정수
   var fmtEok = fmtMil; // 호환용
-  var fmtCost = fmtMil;
+  var fmtCost = fmtMil1; // 비용/광고수익 백만 소수1자리
   var colExpanded = window._s8ColExpanded||false;
   var cx = colExpanded?'':'display:none';
 
