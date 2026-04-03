@@ -8047,11 +8047,16 @@ function renderWeeklyView(){
   var mliveByCode = {};
   _mliveData.forEach(function(m){ if(m.code) mliveByCode[String(m.code).trim()]=m; });
   var matchedMliveCodes = {};
+  console.log('[VLOOKUP] M라이브 코드맵:', Object.keys(mliveByCode).length, '건');
   camps.forEach(function(c){
-    var liveCode = (c.appMkt&&c.appMkt.liveCode)?String(c.appMkt.liveCode).trim():'';
+    // appMkt.liveCode 또는 정산의 p-live-code 모두 확인
+    var liveCode = '';
+    if(c.appMkt && c.appMkt.liveCode) liveCode = String(c.appMkt.liveCode).trim();
+    if(!liveCode && c._liveCodeInput) liveCode = String(c._liveCodeInput).trim();
     if(!liveCode) return;
-    // 편성코드 매칭 시도 (정확 매칭 + 숫자만 매칭)
+    // 편성코드 매칭 시도
     var matched = mliveByCode[liveCode] || mliveByCode[liveCode.replace(/\D/g,'')];
+    console.log('[VLOOKUP] 캠페인:'+c.name+' 편성코드:'+liveCode+' 매칭:'+(matched?'성공':'실패'));
     if(matched){
       c._matchedMlive = matched;
       matchedMliveCodes[matched.code] = true;
@@ -8132,28 +8137,29 @@ function renderWeeklyView(){
   var html = '<div class="card" style="margin-bottom:18px"><div class="card-hd" style="flex-wrap:wrap;gap:8px"><span class="card-ttl">캠페인 성과지표</span>'
     +progressHtml
     +'<button class="btn btn-ghost btn-xs" style="font-size:11px;margin-left:auto" onclick="window._s8ColExpanded=!window._s8ColExpanded;renderWeeklyView()">'+(colExpanded?'◀ 열 접기':'▶ 열 펼치기')+'</button></div>';
-  html += '<div style="overflow:auto;max-height:80vh"><table style="width:100%;font-size:12px;border-collapse:collapse">';
-  html += '<thead style="position:sticky;top:0;z-index:10"><tr style="background:var(--bg)">'
-    +'<th style="padding:6px 8px;width:28px"></th>'
-    +'<th style="padding:6px 8px;text-align:left">주차</th>'
-    +'<th>MDCAT</th><th>패키지</th><th>캠페인명</th>'
-    +'<th style="text-align:right">인플 비용<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="text-align:right">M라이브 마케팅비<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="text-align:right;color:var(--green)">전체매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="text-align:right">건수</th>'
-    +'<th style="text-align:right;color:var(--green)">인플매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="text-align:right">인플건수</th>'
-    +'<th style="text-align:right;'+cx+'">조회수<div style="font-size:9px;color:var(--text3);font-weight:400">※만</div></th>'
-    +'<th style="text-align:right;'+cx+'">당사유입</th>'
-    +'<th style="text-align:right;'+cx+'">CTR</th>'
-    +'<th style="text-align:right;color:var(--blue)">방송중매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="text-align:right">방송중건수</th>'
-    +'<th style="text-align:right">방송외매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="text-align:right">방송외건수</th>'
-    +'<th style="text-align:right">한계이익<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="text-align:right">이익율</th>'
-    +'<th style="text-align:right">광고수익<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="text-align:right">신규가입</th>'
+  html += '<div style="overflow:auto;max-height:calc(100vh - 200px)"><table style="width:100%;font-size:12px;border-collapse:separate;border-spacing:0">';
+  var ths='background:var(--bg);border-bottom:1px solid var(--border);';
+  html += '<thead style="position:sticky;top:0;z-index:10"><tr>'
+    +'<th style="'+ths+'padding:6px 8px;width:28px"></th>'
+    +'<th style="'+ths+'padding:6px 8px;text-align:left">주차</th>'
+    +'<th style="'+ths+'">MDCAT</th><th style="'+ths+'">패키지</th><th style="'+ths+'">캠페인명</th>'
+    +'<th style="'+ths+'text-align:right">인플 비용<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
+    +'<th style="'+ths+'text-align:right">M라이브 마케팅비<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
+    +'<th style="'+ths+'text-align:right;color:var(--green)">전체매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
+    +'<th style="'+ths+'text-align:right">건수</th>'
+    +'<th style="'+ths+'text-align:right;color:var(--green)">인플매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
+    +'<th style="'+ths+'text-align:right">인플건수</th>'
+    +'<th style="'+ths+'text-align:right;'+cx+'">조회수<div style="font-size:9px;color:var(--text3);font-weight:400">※만</div></th>'
+    +'<th style="'+ths+'text-align:right;'+cx+'">당사유입</th>'
+    +'<th style="'+ths+'text-align:right;'+cx+'">CTR</th>'
+    +'<th style="'+ths+'text-align:right;color:var(--blue)">방송중매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
+    +'<th style="'+ths+'text-align:right">방송중건수</th>'
+    +'<th style="'+ths+'text-align:right">방송외매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
+    +'<th style="'+ths+'text-align:right">방송외건수</th>'
+    +'<th style="'+ths+'text-align:right">한계이익<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
+    +'<th style="'+ths+'text-align:right">이익율</th>'
+    +'<th style="'+ths+'text-align:right">광고수익<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
+    +'<th style="'+ths+'text-align:right">신규가입</th>'
     +'</tr></thead><tbody>';
 
   // ── 월 전체 합계 계산 ──
@@ -8208,9 +8214,9 @@ function renderWeeklyView(){
     +'<td style="text-align:right;'+cx+'">'+fmtNum(gt.views)+'</td>'
     +'<td style="text-align:right;'+cx+'">'+fmtNum(gt.inflow)+'</td>'
     +'<td style="text-align:right;'+cx+'">'+gtCtr+'</td>'
-    +'<td style="text-align:right;color:var(--blue)">'+fmtEok(gt.brdAmt)+'</td>'
+    +'<td style="text-align:right;color:var(--blue)">'+fmtCost(gt.brdAmt)+'</td>'
     +'<td style="text-align:right">'+fmtNum(gt.brdQty)+'</td>'
-    +'<td style="text-align:right">'+fmtEok(gt.outAmt)+'</td>'
+    +'<td style="text-align:right">'+fmtCost(gt.outAmt)+'</td>'
     +'<td style="text-align:right">'+fmtNum(gt.outQty)+'</td>'
     +'<td style="text-align:right;font-size:13px">'+fmtCost(gtProfit)+'</td>'
     +'<td style="text-align:right">'+gtProfitRate+'</td>'
@@ -8259,9 +8265,9 @@ function renderWeeklyView(){
         +'<td style="text-align:right;'+cx+'">'+(sd0.views||'-')+'</td>'
         +'<td style="text-align:right;'+cx+'">'+(sd0.inflow||'-')+'</td>'
         +'<td style="text-align:right;'+cx+'">'+(sd0.ctr?sd0.ctr+'%':'-')+'</td>'
-        +'<td style="text-align:right;color:var(--blue)">'+(ml.mobOrderAmt?fmtEok(ml.mobOrderAmt):'-')+'</td>'
+        +'<td style="text-align:right;color:var(--blue)">'+(ml.mobOrderAmt?fmtCost(ml.mobOrderAmt):'-')+'</td>'
         +'<td style="text-align:right">'+fmtNum(ml.mobOrderQty)+'</td>'
-        +'<td style="text-align:right">'+(totalRev?fmtEok(totalRev-(ml.mobOrderAmt||0)):'-')+'</td>'
+        +'<td style="text-align:right">'+(totalRev?fmtCost(totalRev-(ml.mobOrderAmt||0)):'-')+'</td>'
         +'<td style="text-align:right">'+fmtNum(totalRev?((c.settleOrders||0)+((ml.orderQty||0)-(ml.mobOrderQty||0))):0)+'</td>'
         +'<td style="text-align:right">'+fmtCost(totalProfit)+'</td>'
         +'<td style="text-align:right">'+totalProfitRate+'</td>'
@@ -8284,9 +8290,9 @@ function renderWeeklyView(){
         +'<td style="text-align:right">'+fmtNum(wk.totQty)+'</td>'
         +'<td style="text-align:right">-</td><td style="text-align:right">-</td>'
         +'<td style="'+cx+'"></td><td style="'+cx+'"></td><td style="'+cx+'"></td>'
-        +'<td style="text-align:right;color:var(--blue)">'+fmtEok(wk.totBrdAmt)+'</td>'
+        +'<td style="text-align:right;color:var(--blue)">'+fmtCost(wk.totBrdAmt)+'</td>'
         +'<td style="text-align:right">'+fmtNum(wk.totBrdQty)+'</td>'
-        +'<td style="text-align:right">'+fmtEok(wk.totOutAmt)+'</td>'
+        +'<td style="text-align:right">'+fmtCost(wk.totOutAmt)+'</td>'
         +'<td style="text-align:right">'+fmtNum(wk.totOutQty)+'</td>'
         +'<td style="text-align:right">'+fmtCost(wk.totProfit)+'</td>'
         +'<td style="text-align:right">'+pr+'</td>'
@@ -8309,9 +8315,9 @@ function renderWeeklyView(){
           +'<td style="text-align:right">'+fmtNum(m.orderQty)+'</td>'
           +'<td style="text-align:right">-</td><td style="text-align:right">-</td>'
           +'<td style="'+cx+'"></td><td style="'+cx+'"></td><td style="'+cx+'"></td>'
-          +'<td style="text-align:right;color:var(--blue)">'+fmtEok(m.mobOrderAmt)+'</td>'
+          +'<td style="text-align:right;color:var(--blue)">'+fmtCost(m.mobOrderAmt)+'</td>'
           +'<td style="text-align:right">'+fmtNum(m.mobOrderQty)+'</td>'
-          +'<td style="text-align:right">'+fmtEok(outAmt)+'</td>'
+          +'<td style="text-align:right">'+fmtCost(outAmt)+'</td>'
           +'<td style="text-align:right">'+fmtNum(outQty)+'</td>'
           +'<td style="text-align:right">'+fmtCost(m.profitAmt)+'</td>'
           +'<td style="text-align:right">'+(m.orderAmt>0?(m.profitAmt/m.orderAmt*100).toFixed(0)+'%':'-')+'</td>'
