@@ -2920,6 +2920,8 @@ function initAfterLogin(){
     if(cur && cur !== 'login-screen') renderPage(cur);
     else renderDash();
     updateOnline();
+    // 추가 데이터 로드 (AI분석, M라이브, 월목표)
+    loadInfAiFromDb(); loadMliveFromDb(); loadTargetsFromDb();
   });
 
   // 초기 렌더 (DOM 표시 후 렌더링 보장)
