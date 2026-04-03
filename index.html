@@ -8184,7 +8184,7 @@ function renderWeeklyView(){
     +'<th style="'+thd+'text-align:right">한계이익<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
     +'<th style="'+ths+'text-align:right">이익율</th>'
     +'<th style="'+ths+'text-align:right">광고수익<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="'+ths+'text-align:right">신규가입</th>'
+    +'<th style="'+ths+'text-align:right">신규가입<div style="font-size:9px;color:var(--text3);font-weight:400">※명</div></th>'
     +'</tr></thead><tbody>';
 
   // ── 월 전체 합계 계산 ──
@@ -8192,7 +8192,8 @@ function renderWeeklyView(){
   rows.forEach(function(row){
     if(row.type==='inf'){
       var c=row.camp, sr=c.settleRevenue||0;
-      var fr2=parseFloat(c.feeRate)||0,fa2=parseInt(c.feeAmount)||0,ar2=parseFloat(c.agencyRate)||0,da2=parseInt(c.settleDa)||0;
+      var _i0=(c.infData&&c.infData[0])||{};
+      var fr2=parseFloat(_i0.feeRate||c.feeRate)||0,fa2=parseInt(_i0.feeAmount||c.feeAmount)||0,ar2=parseFloat(_i0.agencyRate||c.agencyRate)||0,da2=parseInt(_i0.daFee||c.settleDa)||0;
       var cost2=Math.round(sr*fr2/100)+fa2+Math.round(sr*ar2/100)+da2; // 비용소계 (DA 포함)
       gt.infCost+=cost2;
       gt.infRev+=sr; gt.infOrd+=c.settleOrders||0;
@@ -8256,9 +8257,14 @@ function renderWeeklyView(){
       var c = row.camp;
       var sd0 = (c.settleData||[])[0]||{};
       var sr = c.settleRevenue||0;
-      var fr=parseFloat(c.feeRate)||0, fa=parseInt(c.feeAmount)||0, ar=parseFloat(c.agencyRate)||0, da=parseInt(c.settleDa)||0;
+      // infData에서 비용 정보 가져오기 (캠페인 레벨 폴백)
+      var inf0 = (c.infData&&c.infData[0])||{};
+      var fr=parseFloat(inf0.feeRate||c.feeRate)||0;
+      var fa=parseInt(inf0.feeAmount||c.feeAmount)||0;
+      var ar=parseFloat(inf0.agencyRate||c.agencyRate)||0;
+      var daFee=parseInt(inf0.daFee||c.settleDa)||0;
       // 비용소계 = 수수료 + 원고료 + 에이전시 + DA (정산 비용소계와 동일)
-      var cost = Math.round(sr*fr/100)+fa+Math.round(sr*ar/100)+da;
+      var cost = Math.round(sr*fr/100)+fa+Math.round(sr*ar/100)+daFee;
       var ml = c._matchedMlive||{};
       var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
 
