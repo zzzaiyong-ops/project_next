@@ -38,7 +38,13 @@ console.log('[HEAD] 페이지 로드 시작, protocol:', window.location.protoco
 body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px;line-height:1.5;}
 
 /* ── SIDEBAR ── */
-.sidebar{width:216px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+.sidebar{width:216px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:width .2s ease;}
+.sidebar.collapsed{width:52px;overflow:hidden;}
+.sidebar.collapsed .nav-item span:not(.ico),.sidebar.collapsed .nav-sec,.sidebar.collapsed .logo-ver,.sidebar.collapsed .online-bar,.sidebar.collapsed .user-name,.sidebar.collapsed .user-role,.sidebar.collapsed .nbadge,.sidebar.collapsed .sidebar-foot button span{display:none;}
+.sidebar.collapsed .logo-name{font-size:11px;letter-spacing:0;}
+.sidebar.collapsed .nav-item{padding:8px 14px;justify-content:center;}
+.sidebar.collapsed .nav-item .ico{margin:0;}
+.sidebar.collapsed + .mob-overlay + .main,.sidebar.collapsed ~ .main{margin-left:52px;}
 .logo{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
 .logo-wrap{display:flex;align-items:center;gap:10px;}
 .logo-ico{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background:transparent;}
@@ -67,7 +73,7 @@ nav{padding:10px 8px;flex:1;overflow-y:auto;}
 .user-role{font-size:11px;color:var(--text3);}
 
 /* ── MAIN ── */
-.main{margin-left:216px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+.main{margin-left:216px;flex:1;min-height:100vh;display:flex;flex-direction:column;transition:margin-left .2s ease;}
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 26px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
 .page-ttl{font-size:15px;font-weight:700;}
 .topbar-r{display:flex;align-items:center;gap:8px;}
@@ -795,6 +801,9 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div class="nav-item" data-page="campaigns" id="nav-campaigns" onclick="goPage('campaigns',this)"><span class="ico">🚀</span> 전체 캠페인 <span class="nbadge" id="b-camp">3</span></div>
     <div class="nav-item" data-page="basemgmt" id="nav-basemgmt" style="display:none" onclick="goPage('basemgmt',this)"><span class="ico">⚙️</span> 기본정보 관리</div>
   </nav>
+  <div style="padding:4px 8px;border-top:1px solid var(--border)">
+    <button onclick="toggleSidebarCollapse()" style="width:100%;background:none;border:none;cursor:pointer;font-size:14px;color:var(--text3);padding:6px 0;font-family:inherit" title="메뉴 접기/펼치기" id="sidebar-toggle-btn">◀ 접기</button>
+  </div>
   <div class="sidebar-foot">
     <div style="padding:0 12px 8px">
       <button onclick="openProfilePanel()" style="background:rgba(108,92,231,0.12);border:1px solid rgba(108,92,231,0.25);border-radius:6px;padding:5px 10px;color:var(--accent2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='rgba(108,92,231,0.22)'" onmouseout="this.style.background='rgba(108,92,231,0.12)'">👤 내 정보 수정</button>
@@ -4200,6 +4209,19 @@ function goBack(){
 }
 
 // 모바일 사이드바 토글
+// PC 사이드바 접기/펼치기
+function toggleSidebarCollapse(){
+  var sb = document.querySelector('.sidebar');
+  var btn = document.getElementById('sidebar-toggle-btn');
+  if(sb.classList.contains('collapsed')){
+    sb.classList.remove('collapsed');
+    if(btn) btn.textContent = '◀ 접기';
+  } else {
+    sb.classList.add('collapsed');
+    if(btn) btn.textContent = '▶';
+  }
+}
+
 function toggleMobSidebar(){
   var sb = document.querySelector('.sidebar');
   var ov = document.getElementById('mob-overlay');
@@ -4302,7 +4324,7 @@ function renderPage(p){
   if(p==='s5')          renderS5();
   if(p==='s6')          renderS6();
   if(p==='s7')          renderS7();
-  if(p==='s8')          { initS7DateFilter(); renderReports(); }
+  if(p==='s8')          { if(!document.getElementById('s7-date-from')?.value) initS7DateFilter(); renderReports(); }
   if(p==='influencers') renderInfs();
   if(p==='campaigns')   renderCamps();
   if(p==='usermgmt')    renderUserTable();
@@ -8021,13 +8043,16 @@ function renderWeeklyView(){
 
   // VLOOKUP 매칭
   var mliveByCode = {};
-  _mliveData.forEach(function(m){ if(m.code) mliveByCode[m.code.trim()]=m; });
-  var matchedMliveCodes = {}; // 인플루언서에 연결된 M라이브 편성코드
+  _mliveData.forEach(function(m){ if(m.code) mliveByCode[String(m.code).trim()]=m; });
+  var matchedMliveCodes = {};
   camps.forEach(function(c){
-    var liveCode = (c.appMkt&&c.appMkt.liveCode)?c.appMkt.liveCode.trim():'';
-    if(liveCode && mliveByCode[liveCode]){
-      c._matchedMlive = mliveByCode[liveCode];
-      matchedMliveCodes[liveCode] = true;
+    var liveCode = (c.appMkt&&c.appMkt.liveCode)?String(c.appMkt.liveCode).trim():'';
+    if(!liveCode) return;
+    // 편성코드 매칭 시도 (정확 매칭 + 숫자만 매칭)
+    var matched = mliveByCode[liveCode] || mliveByCode[liveCode.replace(/\D/g,'')];
+    if(matched){
+      c._matchedMlive = matched;
+      matchedMliveCodes[matched.code] = true;
     }
   });
 
