@@ -7787,6 +7787,7 @@ function uploadMonthlyTarget(input){
       }
     });
     console.log('[목표] 월별 목표:', JSON.stringify(_monthlyTargets));
+    console.log('[목표] 원시 첫행:', rows[0], '둘째행:', rows[1]);
     // Firebase에 저장
     if(fbReady && fbRef){
       fbRef.child('monthlyTargets').set(_monthlyTargets)
@@ -8133,6 +8134,8 @@ function renderWeeklyView(){
     if(r.type==='inf'){ var sr=r.camp.settleRevenue||0; _gtRev+=sr; _gtInf+=sr; }
     else if(r.type==='mlive'){ _gtRev+=r.week.totAmt; _gtMl+=r.week.totAmt; }
   });
+  console.log('[달성율] 목표 M라이브:'+_tgtMl+' 인플:'+_tgtInf+' 합계:'+_tgtAll);
+  console.log('[달성율] 실적 M라이브:'+_gtMl+' 인플:'+_gtInf+' 합계:'+_gtRev);
   var _today = new Date();
   var _dim = new Date(_today.getFullYear(), _today.getMonth()+1, 0).getDate();
   var _dp = _today.getDate();
