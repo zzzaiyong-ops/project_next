@@ -8091,11 +8091,11 @@ function renderWeeklyView(){
   if(s8Type==='mlive' && detailCard) detailCard.style.display='none';
   else if(detailCard) detailCard.style.display='';
 
-  var fmtEok = function(v){ return v?(v/100000000).toFixed(1).replace(/\B(?=(\d{3})+(?!\d))/g,','):'-'; };  // 억 단위
-  var fmtMil = function(v){ return v?(v/1000000).toFixed(1).replace(/\B(?=(\d{3})+(?!\d))/g,','):'-'; };  // 백만 단위
+  var fmtMil = function(v){ return v?Math.round(v/1000000).toLocaleString('ko-KR'):'-'; };  // 백만 단위 (정수)
   var fmtNum = function(v){ return v?v.toLocaleString('ko-KR'):'-'; };  // 정수 천단위 쉼표
-  var fmt = fmtEok; // 매출은 억 기본
-  var fmtCost = fmtMil; // 비용은 백만 기본
+  var fmt = fmtMil; // 모든 금액 백만 단위
+  var fmtEok = fmtMil; // 호환용
+  var fmtCost = fmtMil;
   var colExpanded = window._s8ColExpanded||false;
   var cx = colExpanded?'':'display:none';
 
@@ -8129,23 +8129,23 @@ function renderWeeklyView(){
   var html = '<div class="card" style="margin-bottom:18px"><div class="card-hd" style="flex-wrap:wrap;gap:8px"><span class="card-ttl">캠페인 성과지표</span>'
     +progressHtml
     +'<button class="btn btn-ghost btn-xs" style="font-size:11px;margin-left:auto" onclick="window._s8ColExpanded=!window._s8ColExpanded;renderWeeklyView()">'+(colExpanded?'◀ 열 접기':'▶ 열 펼치기')+'</button></div>';
-  html += '<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">';
-  html += '<thead><tr style="background:var(--bg)">'
+  html += '<div style="overflow:auto;max-height:80vh"><table style="width:100%;font-size:12px;border-collapse:collapse">';
+  html += '<thead style="position:sticky;top:0;z-index:10"><tr style="background:var(--bg)">'
     +'<th style="padding:6px 8px;width:28px"></th>'
     +'<th style="padding:6px 8px;text-align:left">주차</th>'
     +'<th>MDCAT</th><th>패키지</th><th>캠페인명</th>'
     +'<th style="text-align:right">인플 비용<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
     +'<th style="text-align:right">M라이브 마케팅비<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
-    +'<th style="text-align:right;color:var(--green)">전체매출<div style="font-size:9px;color:var(--text3);font-weight:400">※억</div></th>'
+    +'<th style="text-align:right;color:var(--green)">전체매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
     +'<th style="text-align:right">건수</th>'
-    +'<th style="text-align:right;color:var(--green)">인플매출<div style="font-size:9px;color:var(--text3);font-weight:400">※억</div></th>'
+    +'<th style="text-align:right;color:var(--green)">인플매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
     +'<th style="text-align:right">인플건수</th>'
     +'<th style="text-align:right;'+cx+'">조회수<div style="font-size:9px;color:var(--text3);font-weight:400">※만</div></th>'
     +'<th style="text-align:right;'+cx+'">당사유입</th>'
     +'<th style="text-align:right;'+cx+'">CTR</th>'
-    +'<th style="text-align:right;color:var(--blue)">방송중매출<div style="font-size:9px;color:var(--text3);font-weight:400">※억</div></th>'
+    +'<th style="text-align:right;color:var(--blue)">방송중매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
     +'<th style="text-align:right">방송중건수</th>'
-    +'<th style="text-align:right">방송외매출<div style="font-size:9px;color:var(--text3);font-weight:400">※억</div></th>'
+    +'<th style="text-align:right">방송외매출<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
     +'<th style="text-align:right">방송외건수</th>'
     +'<th style="text-align:right">한계이익<div style="font-size:9px;color:var(--text3);font-weight:400">※백만</div></th>'
     +'<th style="text-align:right">이익율</th>'
