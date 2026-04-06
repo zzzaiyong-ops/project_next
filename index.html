@@ -7999,14 +7999,19 @@ function getWeekInfo(dateStr){
   var dayOfWeek = d.getDay(); // 0=일,1=월...6=토
   var mondayOffset = (dayOfWeek === 0) ? -6 : 1 - dayOfWeek;
   var monday = new Date(d); monday.setDate(d.getDate() + mondayOffset);
-  // 주차는 월요일 기준 월에 귀속
-  var year = monday.getFullYear();
-  var month = monday.getMonth()+1;
-  // 해당 월에서 몇째 주인지
-  var firstOfMonth = new Date(year, monday.getMonth(), 1);
+  // 월 걸침 처리: 월요일+1일(화요일) 기준 월에 귀속
+  // 예: 3/30(월)~4/5(일) → 화요일=3/31 → 3월, 하지만 4/1이 포함 → 4월1주
+  var tuesday = new Date(monday); tuesday.setDate(monday.getDate()+1);
+  var year = tuesday.getFullYear();
+  var month = tuesday.getMonth()+1;
+  // 해당 월에서 몇째 주인지 (월요일 기준)
+  var firstOfMonth = new Date(year, tuesday.getMonth(), 1);
   var firstDay = firstOfMonth.getDay();
   var offset = (firstDay === 0) ? 6 : firstDay - 1;
-  var weekOfMonth = Math.ceil((monday.getDate() + offset) / 7);
+  var weekOfMonth = Math.ceil((monday.getDate() > tuesday.getDate() ? 1 : tuesday.getDate()) + offset) / 7;
+  weekOfMonth = Math.ceil(weekOfMonth);
+  // 월이 넘어간 경우 1주로 고정
+  if(monday.getMonth() !== tuesday.getMonth()) weekOfMonth = 1;
   var key = year+'-'+String(month).padStart(2,'0')+'-W'+weekOfMonth;
   var label = month+'월'+weekOfMonth+'주';
   return {year:year, month:month, week:weekOfMonth, key:key, label:label};
