@@ -8027,11 +8027,20 @@ function loadMliveFromDb(){
     if(!d) return;
     var loaded = Object.values(d);
     if(!loaded.length) return;
-    // 기존 메모리 데이터와 머지 (편성코드 키 기준)
+    // 편성코드 키 기준 머지 (로드 데이터 우선)
     var codeMap = {};
     _mliveData.forEach(function(m){ if(m.code) codeMap[m.code] = m; });
     loaded.forEach(function(m){ if(m.code) codeMap[m.code] = m; });
     _mliveData = Object.values(codeMap);
+    // 한계이익 재계산
+    _mliveData.forEach(function(m){
+      if(m.profitAmt!==undefined && m.profitAmt!==0) return; // 이미 계산됨
+      var vlookupVal = m._profitRateRaw||0;
+      if(Math.abs(vlookupVal)>=1) vlookupVal=vlookupVal/100;
+      var mlRate = vlookupVal-0.02;
+      m.profitRate = Math.round(mlRate*10000)/100;
+      m.profitAmt = Math.round((m.orderAmt||0)*mlRate);
+    });
     console.log('[M라이브] Firebase 로드:', _mliveData.length, '건');
     renderReports();
   });
