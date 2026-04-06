@@ -8215,14 +8215,15 @@ function renderWeeklyView(){
           var isReplay = (m.programName||'').indexOf('다시보는')===0;
           var dealCode = m.dealCode||'';
           if(isReplay && dealCode){
-            if(!replayByDeal[dealCode]) replayByDeal[dealCode] = {orderAmt:0,orderQty:0,mobOrderAmt:0,mobOrderQty:0,profitAmt:0,adRevenue:0,marketingFee:0,count:0,programName:'',date:'',code:'',mdCat:'',cat:''};
+            if(!replayByDeal[dealCode]) replayByDeal[dealCode] = {orderAmt:0,orderQty:0,mobOrderAmt:0,mobOrderQty:0,profitAmt:0,adRevenue:0,marketingFee:0,count:0,programName:'',date:'',code:'',mdCat:'',cat:'',_origName:''};
             var rb = replayByDeal[dealCode];
             rb.orderAmt+=m.orderAmt||0; rb.orderQty+=m.orderQty||0;
             rb.mobOrderAmt+=m.mobOrderAmt||0; rb.mobOrderQty+=m.mobOrderQty||0;
             rb.profitAmt+=m.profitAmt||0; rb.adRevenue+=m.adRevenue||0;
             rb.marketingFee+=m.marketingFee||0; rb.count++;
-            if(!rb.programName) rb.programName='다시보는 ('+rb.count+'건)';
-            else rb.programName='다시보는 ('+rb.count+'건)';
+            // 원본 캠페인명 저장 (첫 건 기준, "다시보는 " 제거)
+            if(!rb._origName) rb._origName = (m.programName||'').replace(/^다시보는\s*/,'');
+            rb.programName = '(재방) ('+rb.count+'건)'; // 임시, 나중에 본방 종속 여부로 결정
             if(!rb.date) rb.date=m.date; rb.code=m.code; rb.mdCat=m.mdCat||rb.mdCat; rb.cat=m.cat||rb.cat;
             rb._isReplaySum = true;
             rb.dealCode = dealCode;
@@ -8244,14 +8245,17 @@ function renderWeeklyView(){
         Object.keys(mainMap).forEach(function(dc){
           mainMap[dc].forEach(function(m){ sorted.push(m); });
           if(replayByDeal[dc]){
-            sorted.push(replayByDeal[dc]); // 재방 합산 1줄
+            // 본방 종속: "(재방) (N건)"
+            replayByDeal[dc].programName = '(재방) ('+replayByDeal[dc].count+'건)';
+            sorted.push(replayByDeal[dc]);
             delete replayByDeal[dc];
           }
         });
-        // 본방 없이 재방만 있는 케이스
+        // 본방 없이 재방만 있는 케이스: "(재방) 캠페인명"
         Object.keys(replayByDeal).forEach(function(dc){
           var rb = replayByDeal[dc];
-          rb._isOrphanReplay = true; // ㄴ 표시 안 함
+          rb._isOrphanReplay = true;
+          rb.programName = '(재방) '+(rb._origName||'')+ ' ('+rb.count+'건)';
           sorted.push(rb);
         });
         r.week.items = sorted;
