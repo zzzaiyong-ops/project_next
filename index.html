@@ -1040,6 +1040,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         <span class="card-ttl">1단계 · 캠페인 요청</span>
         <div class="card-acts">
           <input class="search-inp" placeholder="캠페인명 검색..." oninput="filterProds(this.value)">
+          <button class="btn btn-ghost btn-xs" onclick="toggleS1Sort()" id="s1-sort-btn" style="font-size:11px;padding:4px 8px">등록일 ▼</button>
           <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s1')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
           <button class="btn btn-primary" onclick="openNewProd()">+ 캠페인 등록</button>
         </div>
@@ -1050,7 +1051,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th class="mob-hide">MDCAT</th><th>역할</th>
           <th class="mob-hide">인플루언서규모</th><th class="mob-hide">예상매출</th>
-          <th class="mob-hide">시작일</th><th class="mob-hide">종료일</th><th style="background:var(--bg)"></th>
+          <th class="mob-hide">시작일</th><th class="mob-hide">종료일</th><th class="mob-hide">등록일</th><th style="background:var(--bg)"></th>
         </tr></thead>
         <tbody id="prod-tbl"></tbody>
       </table>
@@ -1445,7 +1446,9 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
       <div class="stage-filter mob-filter-hide">
         <label>MCN</label>
-        <input class="inp inp-sm" id="sf-camp-mcn" placeholder="업체 검색" style="height:30px;font-size:12px;width:90px" oninput="renderCamps()">
+        <select class="sel inp-sm" id="sf-camp-mcn" style="height:30px;font-size:12px;width:120px" onchange="renderCamps()">
+          <option value="">전체</option>
+        </select>
       </div>
       <div style="margin-left:auto;display:flex;gap:6px">
         <button class="btn btn-primary btn-sm" onclick="applyDateFilter('camp')">조회</button>
@@ -4916,6 +4919,13 @@ function renderDash(){
 // ═══════════════════════════════════════
 // S1: 캠페인 요청
 // ═══════════════════════════════════════
+var _s1SortOrder = 'desc'; // desc=최신순, asc=오래된순
+function toggleS1Sort(){
+  _s1SortOrder = _s1SortOrder==='desc'?'asc':'desc';
+  var btn = document.getElementById('s1-sort-btn');
+  if(btn) btn.textContent = '등록일 '+(_s1SortOrder==='desc'?'▼':'▲');
+  renderS1();
+}
 function renderS1(filter=''){
   var rows='';
   var ownerFilter = (document.getElementById('sf-s1-owner')?.value||'').trim();
@@ -4932,6 +4942,11 @@ function renderS1(filter=''){
     if(isMyOnlyFilter('s1') && !isMycamp(c)) return false;
     if(pageFilter.s1==='target') return c.stage==='1.캠페인요청';
     return c.stage==='1.캠페인요청'; // 전체: 1단계
+  });
+  // 등록일 기준 정렬
+  s1Camps.sort(function(a,b){
+    var da = a.createdAt||a.start||'', db = b.createdAt||b.start||'';
+    return _s1SortOrder==='desc' ? (db>da?1:db<da?-1:0) : (da>db?1:da<db?-1:0);
   });
   // 페이징 처리
   var _pg_s1 = _getPagedItems(s1Camps, 's1');
@@ -4964,6 +4979,7 @@ function renderS1(filter=''){
       <td style="font-weight:700;color:var(--green)">${revStr}</td>
       <td style="color:var(--text3);font-size:12px">${(c.start||c.startDate||'-').slice(5)}</td>
       <td style="color:var(--text3);font-size:12px">${(c.end||c.endDate||'-').slice(5)}</td>
+      <td class="mob-hide" style="color:var(--text3);font-size:11px">${c.createdAt?c.createdAt.slice(0,10):'-'}</td>
       <td><div class="row-acts" style="opacity:1">
         ${canEdit() ? `<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd(${c.id})">✏️</button>` : ''}
         ${isAdmin() ? `<button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delProd(${c.id})">삭제</button>` : ''}
@@ -4973,7 +4989,7 @@ function renderS1(filter=''){
   });
   
   _renderPagination('prod-pagination', s1Camps.length, 's1', 'renderS1()');
-  document.getElementById('prod-tbl').innerHTML=rows||'<tr><td colspan="11" class="empty" style="padding:32px;text-align:center;color:var(--text3)">등록된 캠페인 요청이 없습니다</td></tr>';
+  document.getElementById('prod-tbl').innerHTML=rows||'<tr><td colspan="12" class="empty" style="padding:32px;text-align:center;color:var(--text3)">등록된 캠페인 요청이 없습니다</td></tr>';
 }
 function filterProds(v2){ renderS1(v2); }
 function delProd(id){
@@ -6606,6 +6622,16 @@ function _renderCampPagination(total){
 
 function renderCamps(){
   console.log('[renderCamps] DB.campaigns:', DB.campaigns.length, 'filtered:', DB.campaigns.filter(function(c){return c.name&&c.name.trim();}).length);
+  // MCN 드롭다운 동적 채우기
+  var mcnSel = document.getElementById('sf-camp-mcn');
+  if(mcnSel){
+    var curMcn = mcnSel.value;
+    var mcnSet = {};
+    DB.campaigns.forEach(function(c){ if(c.mcn) mcnSet[c.mcn.trim()]=true; });
+    var opts = '<option value="">전체</option>';
+    Object.keys(mcnSet).sort().forEach(function(m){ opts+='<option value="'+escHtml(m)+'"'+(curMcn===m?' selected':'')+'>'+escHtml(m)+'</option>'; });
+    mcnSel.innerHTML = opts;
+  }
   var stageFilter = (document.getElementById('sf-camp-stage')?.value||'').trim();
   var campNameF   = (document.getElementById('sf-camp-name')?.value||'').trim().toLowerCase();
   var ownerFilter = (document.getElementById('sf-camp-owner')?.value||'').trim().toLowerCase();
@@ -9359,6 +9385,7 @@ function saveProd(){
   } else {
     newData.id = nid.campaigns++;
     newData.campCode = generateCampCode(newData.start || newData.startDate);
+    newData.createdAt = new Date().toISOString();
     DB.campaigns.push(newData);
     addAct('📋', name+' 캠페인 요청 등록', nowStr(), v('p-owner'));
     addNotif('📋', name+' 캠페인 요청 등록됨', '방금 전');
