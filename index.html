@@ -8428,6 +8428,7 @@ function renderWeeklyView(){
       // 매칭된 M라이브
       var ml2=c._matchedMlive||{};
       gt.mlRev+=ml2.orderAmt||0; gt.mlOrd+=ml2.orderQty||0;
+      gt.mktFee+=ml2.marketingFee||0;
       gt.brdAmt+=ml2.mobOrderAmt||0; gt.brdQty+=ml2.mobOrderQty||0;
       gt.outAmt+=(ml2.orderAmt||0)-(ml2.mobOrderAmt||0); gt.outQty+=(ml2.orderQty||0)-(ml2.mobOrderQty||0);
       gt.mlProfit+=ml2.profitAmt||0;
@@ -8456,7 +8457,7 @@ function renderWeeklyView(){
   var dl='border-left:2px dashed var(--border);';
   html += '<tr style="background:var(--accent-bg);font-weight:800;border-bottom:2px solid var(--accent)">'
     +'<td style="padding:8px"></td>'
-    +'<td style="padding:8px;font-size:13px;color:var(--accent2)">월 합계</td>'
+    +'<td style="padding:8px;font-size:13px;color:var(--accent2)">'+(s8Period==='week'?'주 합계':'월 합계')+'</td>'
     +'<td></td><td style="font-weight:800">실적</td><td></td>'
     +'<td style="text-align:right;'+dl+'color:var(--green);font-size:13px">'+fmtEok(gt.rev)+'</td>'
     +'<td style="text-align:right;font-size:13px">'+fmtNum(gt.ord)+'</td>'
@@ -8526,7 +8527,7 @@ function renderWeeklyView(){
         +'<td style="text-align:right">'+fmtNum(ml.mobOrderQty)+'</td>'
         +'<td style="text-align:right;'+dl+'">'+(totalRev?fmtCost(totalRev-(ml.mobOrderAmt||0)):'-')+'</td>'
         +'<td style="text-align:right">'+fmtNum(totalRev?((c.settleOrders||0)+((ml.orderQty||0)-(ml.mobOrderQty||0))):0)+'</td>'
-        +'<td style="text-align:right">-</td>'
+        +'<td style="text-align:right">'+(ml.marketingFee?fmtCost(ml.marketingFee):'-')+'</td>'
         +'<td style="text-align:right;'+dl+'">'+fmtCost(totalProfit)+'</td>'
         +'<td style="text-align:right">'+totalProfitRate+'</td>'
         +'<td style="text-align:right">'+(adRev?fmtCost(adRev):'-')+'</td>'
