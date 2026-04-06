@@ -9841,10 +9841,10 @@ function addSettleBlock(n, data){
     +'<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px;margin-top:10px">'
     +'<div style="font-weight:700;color:var(--text2);margin-bottom:8px;font-size:12px">📣 콘텐츠 반응도</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">'
-    +'<div><label style="font-size:11px;color:var(--text3)">조회수 (만)</label><input class="inp settle-views-'+n+'" type="number" placeholder="0" value="'+(d.views||'')+'" style="margin-top:4px"></div>'
+    +'<div><label style="font-size:11px;color:var(--text3)">조회수 (만)</label><input class="inp settle-views-'+n+'" type="number" placeholder="0" value="'+(d.views||'')+'" style="margin-top:4px" oninput="calcSettleCtr('+n+')"></div>'
     +'<div><label style="font-size:11px;color:var(--text3)">댓글수</label><input class="inp settle-comments-'+n+'" type="number" placeholder="0" value="'+(d.comments||'')+'" style="margin-top:4px"></div>'
-    +'<div><label style="font-size:11px;color:var(--text3)">당사유입</label><input class="inp settle-inflow-'+n+'" type="number" placeholder="0" value="'+(d.inflow||'')+'" style="margin-top:4px"></div>'
-    +'<div><label style="font-size:11px;color:var(--text3)">CTR (%)</label><input class="inp settle-ctr-'+n+'" type="number" step="0.01" placeholder="0" value="'+(d.ctr||'')+'" style="margin-top:4px"></div>'
+    +'<div><label style="font-size:11px;color:var(--text3)">당사유입</label><input class="inp settle-inflow-'+n+'" type="number" placeholder="0" value="'+(d.inflow||'')+'" style="margin-top:4px" oninput="calcSettleCtr('+n+')"></div>'
+    +'<div><label style="font-size:11px;color:var(--text3)">CTR (%)</label><input class="inp settle-ctr-'+n+'" type="number" step="0.01" placeholder="자동계산" value="'+(d.ctr||'')+'" style="margin-top:4px;background:var(--bg4);color:var(--accent2);font-weight:700" readonly></div>'
     +'</div></div>'
     // ── 신규회원가입
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'
@@ -9862,6 +9862,22 @@ function addSettleBlock(n, data){
   });
   container.appendChild(block);
   updateSettleCostDisplay(block, n);
+}
+
+function calcSettleCtr(n){
+  var block = document.querySelector('.settle-block:nth-child('+n+')') || document.querySelectorAll('.settle-block')[n-1];
+  if(!block) return;
+  var views = parseFloat(block.querySelector('.settle-views-'+n)?.value)||0; // 만 단위
+  var inflow = parseInt(block.querySelector('.settle-inflow-'+n)?.value)||0;
+  var ctrEl = block.querySelector('.settle-ctr-'+n);
+  if(ctrEl){
+    if(views>0){
+      var ctr = (inflow / (views*10000) * 100).toFixed(2); // CTR = 유입 / (조회수×만) × 100
+      ctrEl.value = ctr;
+    } else {
+      ctrEl.value = '';
+    }
+  }
 }
 
 function updateSettleCostDisplay(block, n){
