@@ -2318,6 +2318,10 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           </div>
         </div>
         <div class="fr2" style="margin-bottom:12px">
+          <div><label>이익율 (%) <span style="font-size:10px;color:var(--text3)">매출×이익율=이익</span></label><input class="inp" id="p-profit-rate" type="number" step="0.1" placeholder="24" oninput="calcSettleCost()"></div>
+          <div><label>업체광고비 (원) <span style="font-size:10px;color:var(--text3)">업체에서 수취한 광고비</span></label><input class="inp inp-money" id="p-ad-income" placeholder="0" oninput="calcSettleCost()"></div>
+        </div>
+        <div class="fr2" style="margin-bottom:12px">
           <div><label>정산처리일 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(캠페인 종료+14일 자동)</span></label><input class="inp" id="p-settle-process-date" type="date"></div>
           <div><label>비용지불일</label><input class="inp" id="p-settle-payment-date" type="date"></div>
         </div>
@@ -5087,6 +5091,8 @@ function editProd(id){
     revenue: p.settleRevenue||0, orders: p.settleOrders||0
   }]);
   var sdEl=document.getElementById('p-settle-da'); if(sdEl) sdEl.value=p.settleDa ? p.settleDa.toLocaleString('ko-KR') : '';
+  var prEl=document.getElementById('p-profit-rate'); if(prEl) prEl.value=p.profitRateInput||'';
+  var aiEl=document.getElementById('p-ad-income'); if(aiEl) aiEl.value=p.adIncome ? p.adIncome.toLocaleString('ko-KR') : '';
   var lcEl=document.getElementById('p-live-code'); if(lcEl) lcEl.value=(p.appMkt&&p.appMkt.liveCode)||'';
   var sdoneEl=document.getElementById('p-settle-done'); if(sdoneEl) sdoneEl.checked=!!(p.settleDone);
   var arEl3=document.getElementById('p-agency-rate'); if(arEl3) arEl3.value=p.agencyRate||'';
@@ -8450,7 +8456,8 @@ function renderWeeklyView(){
       gt.infRev+=sr; gt.infOrd+=c.settleOrders||0;
       (c.settleData||[]).forEach(function(s){ gt.views+=s.views||0; gt.inflow+=s.inflow||0; gt.newMem+=s.newMembers||0; });
       // AR: 인플이익
-      gt.infProfit += Math.round(sr*0.24) - cost2;
+      var _pr2=c.profitRateInput||0, _ai2=c.adIncome||0;
+      gt.infProfit += Math.round(sr*_pr2/100) + _ai2 - cost2;
       // 매칭된 M라이브
       var ml2=c._matchedMlive||{};
       gt.mlRev+=ml2.orderAmt||0; gt.mlOrd+=ml2.orderQty||0;
@@ -8521,15 +8528,18 @@ function renderWeeklyView(){
       var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
 
       // 인플루언서 한계이익 계산
-      // AR: 인플이익 = 인플매출(AC=sr) × 0.24 - 비용소계(cost)
-      var infProfit = Math.round(sr * 0.24) - cost;
+      // 이익 = 전체매출 × 이익율(%) + 업체광고비
+      var campProfitRate = c.profitRateInput||0;
+      var campAdIncome = c.adIncome||0;
+      var infIncome = Math.round(sr * campProfitRate / 100) + campAdIncome;
+      // 한계이익 = 이익 - 비용소계
+      var infProfit = infIncome - cost;
       var infProfitRate = sr>0?((infProfit/sr)*100).toFixed(0)+'%':'-';
       // AT: M라이브이익 (매칭된 경우)
       var mlProfit = ml.profitAmt||0;
-      var mlProfitRate = ml.orderAmt>0?((mlProfit/ml.orderAmt)*100).toFixed(0)+'%':'-';
       // AV: 광고수익 (매칭된 M라이브에서 참조)
       var adRev = ml.adRevenue||0;
-      // AP: 전체한계이익 = AR + AT + AV (DA는 이미 cost에 포함)
+      // AP: 전체한계이익 = 인플한계이익 + M라이브이익 + M라이브광고수익
       var totalProfit = infProfit + mlProfit + adRev;
       // 전체매출 = 인플매출 + M라이브매출
       var totalRev = sr + (ml.orderAmt||0);
@@ -9006,6 +9016,8 @@ function openNewProd(){
   var srEl2=document.getElementById('p-settle-revenue'); if(srEl2) srEl2.value='';
   var soEl2=document.getElementById('p-settle-orders'); if(soEl2) soEl2.value='';
   var sdEl2=document.getElementById('p-settle-da'); if(sdEl2) sdEl2.value='';
+  var prEl2=document.getElementById('p-profit-rate'); if(prEl2) prEl2.value='';
+  var aiEl2=document.getElementById('p-ad-income'); if(aiEl2) aiEl2.value='';
   var lcEl2=document.getElementById('p-live-code'); if(lcEl2) lcEl2.value='';
   var sdonEl2=document.getElementById('p-settle-done'); if(sdonEl2) sdonEl2.checked=false;
   // SKU + 가격 행 초기화 (다른 캠페인 데이터 유출 방지)
@@ -9158,6 +9170,8 @@ function saveProd(){
     // mcn/feeRate/feeAmount/agencyRate/sampleSent은 위 infBlocks 값 사용 (중복 선언 제거)
     // settleRevenue/settleOrders는 settleData에서 합산
     settleDa:      iv('p-settle-da'),
+    profitRateInput: parseFloat(document.getElementById('p-profit-rate')?.value)||0,
+    adIncome:      iv('p-ad-income'),
     settleDone:    !!(document.getElementById('p-settle-done')?.checked),
     // 모바일라이브 편성코드 → appMkt에 병합
     _liveCodeInput: (document.getElementById('p-live-code')?.value||'').trim(),
