@@ -7929,13 +7929,16 @@ function uploadMliveExcel(input){
     var headerKeywords = {
       '순주문수량':null, '순주문금액':null, '주문이익율':null, '주문이익액':null,
       '총시청자수':null, '프로그램명':null, '방송구분':null, '방송일자':null,
-      '대표담당MD':null, '시작':null, '종료':null
+      '대표담당MD':null, '시작':null, '종료':null, '마케팅':null, '광고수익':null
     };
-    for(var hi=0; hi<Math.min(5,rows.length); hi++){
+    for(var hi=0; hi<Math.min(10,rows.length); hi++){
       var hrow = rows[hi];
       for(var hj=0; hj<hrow.length; hj++){
         var hv = String(hrow[hj]||'').trim();
         if(hv in headerKeywords && headerKeywords[hv]===null) headerKeywords[hv]=hj;
+        // 부분 매칭도 시도
+        if(headerKeywords['마케팅']===null && hv.includes('마케팅')) headerKeywords['마케팅']=hj;
+        if(headerKeywords['광고수익']===null && hv.includes('광고수익')) headerKeywords['광고수익']=hj;
       }
     }
     console.log('[M라이브] 헤더 매핑:', JSON.stringify(headerKeywords));
@@ -7949,6 +7952,8 @@ function uploadMliveExcel(input){
       profitAmt:headerKeywords['주문이익액']!=null?headerKeywords['주문이익액']:19,
       profitRate:headerKeywords['주문이익율']!=null?headerKeywords['주문이익율']:20,
       viewers:headerKeywords['총시청자수']!=null?headerKeywords['총시청자수']:21,
+      mktFee:headerKeywords['마케팅']!=null?headerKeywords['마케팅']:87,
+      adRev:headerKeywords['광고수익']!=null?headerKeywords['광고수익']:88,
     };
     console.log('[M라이브] 컬럼 인덱스:', JSON.stringify(CI));
     // 첫 데이터행 원시값 디버그 (V열 위치 확인용)
@@ -8002,14 +8007,14 @@ function uploadMliveExcel(input){
         mdName: String(r[84]||r[CI.md]||'').trim(),
         mdCat: String(r[85]||'').trim(),
         cat: String(r[86]||'').trim(),
-        marketingFee: pInt(r[87]),
-        adRevenue: pInt(r[88]),
+        marketingFee: pInt(r[CI.mktFee]),
+        adRevenue: pInt(r[CI.adRev]),
       });
     }
     // 광고수익 디버그
     if(_mliveData.length>0){
       var s0=_mliveData[0];
-      console.log('[M라이브] 광고수익 col88 원시:', rows[rows.findIndex(function(rr){return String(rr[0]||'').trim()===s0.code;})]?.[88], '파싱:', s0.adRevenue);
+      console.log('[M라이브] 마케팅비 idx='+CI.mktFee+' 값:'+s0.marketingFee+' 광고수익 idx='+CI.adRev+' 값:'+s0.adRevenue);
     }
     // 수식 기반 한계이익 계산
     // M라이브율(AS) = (VLOOKUP 21st / (방송외+방송중)) - 2%  ※ 21st=주문이익율
