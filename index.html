@@ -8099,12 +8099,14 @@ function renderWeeklyView(){
     if(toVal){ var tp=toVal.split('-'); toDate=new Date(parseInt(tp[0]),parseInt(tp[1]),0); }
   }
 
+  var tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
   var camps = DB.campaigns.filter(function(c){
     var startStr = (c.start||c.startDate||'').slice(0,10);
     var endStr   = (c.end||c.endDate||'').slice(0,10);
     var endD = endStr ? new Date(endStr) : null;
-    if(s7Filter==='active'){ if(endD && endD<=today) return false; }
-    else { if(!endD || endD>today) return false; }
+    // 종료 판단: 종료일이 내일 이전이면 종료 (종료일 당일~다음날 오전 포함)
+    if(s7Filter==='active'){ if(endD && endD<tomorrow) return false; }
+    else { if(!endD || endD>=tomorrow) return false; }
     if(fromDate && new Date(startStr)<fromDate) return false;
     if(toDate && new Date(startStr)>toDate) return false;
     return true;
@@ -8635,11 +8637,12 @@ function renderReports(){
     var startD = startStr ? new Date(startStr) : null;
     var endD   = endStr   ? new Date(endStr)   : null;
 
-    // 진행중/종료 필터 (종료일=오늘이면 종료로 분류)
+    // 진행중/종료 필터 (종료일이 오늘~내일이면 종료로 분류)
+    var tmr2 = new Date(today); tmr2.setDate(tmr2.getDate()+1);
     if(s7Filter === 'active'){
-      if(endD && endD <= today) return false;
+      if(endD && endD < tmr2) return false;
     } else {
-      if(!endD || endD > today) return false;
+      if(!endD || endD >= tmr2) return false;
     }
 
     // 월 범위 필터 — 캠페인 기간이 조회 범위와 겹치면 표시
