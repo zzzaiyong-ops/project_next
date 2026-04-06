@@ -8103,8 +8103,8 @@ function renderWeeklyView(){
     var startStr = (c.start||c.startDate||'').slice(0,10);
     var endStr   = (c.end||c.endDate||'').slice(0,10);
     var endD = endStr ? new Date(endStr) : null;
-    if(s7Filter==='active'){ if(endD && endD<today) return false; }
-    else { if(!endD || endD>=today) return false; }
+    if(s7Filter==='active'){ if(endD && endD<=today) return false; }
+    else { if(!endD || endD>today) return false; }
     if(fromDate && new Date(startStr)<fromDate) return false;
     if(toDate && new Date(startStr)>toDate) return false;
     return true;
@@ -8635,11 +8635,11 @@ function renderReports(){
     var startD = startStr ? new Date(startStr) : null;
     var endD   = endStr   ? new Date(endStr)   : null;
 
-    // 진행중/종료 필터
+    // 진행중/종료 필터 (종료일=오늘이면 종료로 분류)
     if(s7Filter === 'active'){
-      if(endD && endD < today) return false;
+      if(endD && endD <= today) return false;
     } else {
-      if(!endD || endD >= today) return false;
+      if(!endD || endD > today) return false;
     }
 
     // 월 범위 필터 — 캠페인 기간이 조회 범위와 겹치면 표시
