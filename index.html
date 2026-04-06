@@ -1337,14 +1337,21 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <label class="filter-radio" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" onchange="setS7Filter('active')"> 진행중</label>
       <label class="filter-radio active" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" checked onchange="setS7Filter('done')"> 종료</label>
       <div class="date-filter" style="margin-left:16px">
+        <div style="display:flex;align-items:center;gap:6px;margin-right:8px">
+          <label class="filter-radio active" id="s8-period-month"><input type="radio" name="s8-period" value="month" checked onchange="setS8Period('month')"> 월</label>
+          <label class="filter-radio" id="s8-period-week"><input type="radio" name="s8-period" value="week" onchange="setS8Period('week')"> 주</label>
+        </div>
         <label>기간</label>
         <input type="month" class="inp" id="s7-date-from">
         <span style="font-size:12px;color:var(--text3)">~</span>
         <input type="month" class="inp" id="s7-date-to">
+        <input type="week" class="inp" id="s8-week-from" style="display:none">
+        <span id="s8-week-sep" style="display:none;font-size:12px;color:var(--text3)">~</span>
+        <input type="week" class="inp" id="s8-week-to" style="display:none">
         <button class="btn btn-primary btn-sm" onclick="renderReports()">조회</button>
         <button class="btn btn-ghost btn-sm" onclick="clearS7Filter()">초기화</button>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;margin-left:8px">
+      <div id="s8-week-dropdown" style="display:flex;align-items:center;gap:6px;margin-left:8px">
         <label style="font-size:12px;font-weight:600;color:var(--text2)">주차</label>
         <select class="sel inp-sm" id="s8-week-filter" style="height:30px;font-size:12px;width:100px" onchange="renderReports()">
           <option value="">전체</option>
@@ -7765,6 +7772,46 @@ function copyCampData(campId){
 // ═══════════════════════════════════════
 var s7Filter = 'done';
 var s8Type = 'all'; // all | mlive | inf
+var s8Period = 'month'; // month | week
+
+function setS8Period(val){
+  s8Period = val;
+  document.querySelectorAll('[name="s8-period"]').forEach(function(r){ r.closest('.filter-radio').classList.toggle('active', r.value===val); });
+  // 월/주 입력 전환
+  var mFrom=document.getElementById('s7-date-from'), mTo=document.getElementById('s7-date-to');
+  var wFrom=document.getElementById('s8-week-from'), wTo=document.getElementById('s8-week-to'), wSep=document.getElementById('s8-week-sep');
+  var wkDrop=document.getElementById('s8-week-dropdown');
+  if(val==='week'){
+    if(mFrom) mFrom.style.display='none'; if(mTo) mTo.style.display='none';
+    if(wFrom) wFrom.style.display=''; if(wTo) wTo.style.display=''; if(wSep) wSep.style.display='';
+    if(wkDrop) wkDrop.style.display='none';
+    // 기본값 세팅 (현재 주~다음 주)
+    var now=new Date(), yr=now.getFullYear();
+    var jan1=new Date(yr,0,1), wn=Math.ceil(((now-jan1)/86400000+jan1.getDay()+1)/7);
+    if(wFrom&&!wFrom.value) wFrom.value=yr+'-W'+String(wn).padStart(2,'0');
+    if(wTo&&!wTo.value) wTo.value=yr+'-W'+String(wn+1).padStart(2,'0');
+  } else {
+    if(mFrom) mFrom.style.display=''; if(mTo) mTo.style.display='';
+    if(wFrom) wFrom.style.display='none'; if(wTo) wTo.style.display='none'; if(wSep) wSep.style.display='none';
+    if(wkDrop) wkDrop.style.display='flex';
+  }
+  renderReports();
+}
+
+// 주 input → 날짜 범위 변환
+function getWeekRange(weekStr){
+  // '2026-W13' → {from:'2026-03-23', to:'2026-03-29'}
+  if(!weekStr) return null;
+  var parts=weekStr.split('-W');
+  if(parts.length!==2) return null;
+  var yr=parseInt(parts[0]), wn=parseInt(parts[1]);
+  var jan1=new Date(yr,0,1);
+  var dayOffset=(jan1.getDay()<=4?jan1.getDay()-1:jan1.getDay()-8);
+  var monday=new Date(yr,0,1+(wn-1)*7-dayOffset);
+  var sunday=new Date(monday); sunday.setDate(monday.getDate()+6);
+  var fmt=function(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+  return {from:fmt(monday), to:fmt(sunday)};
+}
 var _mliveData = []; // 모바일라이브 업로드 데이터
 var _monthlyTargets = {}; // 월별 목표 {2026-03: {mlive:금액, inf:금액}, ...}
 
@@ -8027,8 +8074,21 @@ function renderWeeklyView(){
   if(!container) return;
 
   var today = new Date(); today.setHours(0,0,0,0);
-  var fromVal = document.getElementById('s7-date-from')?.value;
-  var toVal   = document.getElementById('s7-date-to')?.value;
+  // 기간 결정: 월/주 모드
+  var fromDate=null, toDate=null, fromVal='', toVal='';
+  if(s8Period==='week'){
+    var wf=document.getElementById('s8-week-from')?.value;
+    var wt=document.getElementById('s8-week-to')?.value;
+    var wfr=getWeekRange(wf), wtr=getWeekRange(wt);
+    if(wfr) fromDate=new Date(wfr.from);
+    if(wtr) toDate=new Date(wtr.to);
+    fromVal=wf; toVal=wt;
+  } else {
+    fromVal = document.getElementById('s7-date-from')?.value||'';
+    toVal   = document.getElementById('s7-date-to')?.value||'';
+    if(fromVal) fromDate=new Date(fromVal+'-01');
+    if(toVal){ var tp=toVal.split('-'); toDate=new Date(parseInt(tp[0]),parseInt(tp[1]),0); }
+  }
 
   var camps = DB.campaigns.filter(function(c){
     var startStr = (c.start||c.startDate||'').slice(0,10);
@@ -8036,8 +8096,8 @@ function renderWeeklyView(){
     var endD = endStr ? new Date(endStr) : null;
     if(s7Filter==='active'){ if(endD && endD<today) return false; }
     else { if(!endD || endD>=today) return false; }
-    if(fromVal){ var fd=new Date(fromVal+'-01'); if(new Date(startStr)<fd) return false; }
-    if(toVal){ var tp=toVal.split('-'); var td=new Date(parseInt(tp[0]),parseInt(tp[1]),0); if(new Date(startStr)>td) return false; }
+    if(fromDate && new Date(startStr)<fromDate) return false;
+    if(toDate && new Date(startStr)>toDate) return false;
     return true;
   });
 
@@ -8046,8 +8106,8 @@ function renderWeeklyView(){
   _mliveData.forEach(function(m){
     var mDate = (m.date||'').trim().replace(/\//g,'-');
     if(!mDate) return;
-    if(fromVal && new Date(mDate)<new Date(fromVal+'-01')) return;
-    if(toVal){ var tp=toVal.split('-'); if(new Date(mDate)>new Date(parseInt(tp[0]),parseInt(tp[1]),0)) return; }
+    if(fromDate && new Date(mDate)<fromDate) return;
+    if(toDate && new Date(mDate)>toDate) return;
     var wi = getWeekInfo(mDate);
     if(!wi.key) return;
     if(!mlWeekMap[wi.key]) mlWeekMap[wi.key] = {label:wi.label, date:mDate, items:[], totAmt:0, totQty:0, totProfit:0, totBrdAmt:0, totBrdQty:0, totOutAmt:0, totOutQty:0, totMktFee:0, totAdRev:0};
@@ -8212,27 +8272,44 @@ function renderWeeklyView(){
   var colExpanded = window._s8ColExpanded||false;
   var cx = colExpanded?'':'display:none';
 
-  // 진도율 미리 계산 (카드 헤더에 표시)
-  // 조회 기간 내 모든 월의 목표를 합산
+  // 달성율 계산
+  // 1) 조회 기간에 해당하는 월 목표 합산
   var _tgtMl=0, _tgtInf=0;
-  if(fromVal && toVal){
-    var fParts=fromVal.split('-'), tParts=toVal.split('-');
-    var fy=parseInt(fParts[0]), fm=parseInt(fParts[1]);
-    var ty=parseInt(tParts[0]), tm=parseInt(tParts[1]);
-    for(var _y=fy,_m=fm; _y<ty||(_y===ty&&_m<=tm); _m++){
-      if(_m>12){_m=1;_y++;}
-      var mk=_y+'-'+String(_m).padStart(2,'0');
+  var _coveredMonths = {};
+  if(fromDate && toDate){
+    var cy=fromDate.getFullYear(), cm=fromDate.getMonth();
+    var ey=toDate.getFullYear(), em=toDate.getMonth();
+    while(cy<ey||(cy===ey&&cm<=em)){
+      var mk=cy+'-'+String(cm+1).padStart(2,'0');
+      _coveredMonths[mk]=true;
       var mt=_monthlyTargets[mk]||{};
       _tgtMl+=mt.mlive||0; _tgtInf+=mt.inf||0;
+      cm++; if(cm>11){cm=0;cy++;}
     }
   } else {
-    var _targetMonth = fromVal || (new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0'));
+    var _targetMonth = (new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0'));
+    _coveredMonths[_targetMonth]=true;
     var _tgt = _monthlyTargets[_targetMonth]||{};
     _tgtMl = _tgt.mlive||0; _tgtInf = _tgt.inf||0;
   }
   var _tgtAll = _tgtMl+_tgtInf;
 
-  // 전체 합계 미리 계산 (rows에서)
+  // 2) 일할 계산: 조회 기간의 경과일수/총일수
+  var _totalDays=0, _passedDays=0;
+  Object.keys(_coveredMonths).forEach(function(mk){
+    var pp=mk.split('-'); var yr=parseInt(pp[0]), mo=parseInt(pp[1]);
+    var dim=new Date(yr,mo,0).getDate(); // 해당 월 총일수
+    _totalDays+=dim;
+    var td=new Date();
+    if(yr<td.getFullYear()||(yr===td.getFullYear()&&mo<td.getMonth()+1)){
+      _passedDays+=dim; // 이미 지난 달은 전체일수
+    } else if(yr===td.getFullYear()&&mo===td.getMonth()+1){
+      _passedDays+=td.getDate(); // 현재 달은 오늘까지
+    }
+  });
+  var _dailyRatio = _totalDays>0?_passedDays/_totalDays:1;
+
+  // 3) 실적 합계
   var _gtRev=0, _gtMl=0, _gtInf=0;
   rows.forEach(function(r){
     if(r.type==='inf'){ var sr=r.camp.settleRevenue||0; _gtRev+=sr; _gtInf+=sr; }
@@ -8244,7 +8321,13 @@ function renderWeeklyView(){
   var _dim = new Date(_today.getFullYear(), _today.getMonth()+1, 0).getDate();
   var _dp = _today.getDate();
   var _ratio = _dp/_dim;
-  function _cp(act,tgt){ if(!tgt)return''; var r2=(act/tgt*100).toFixed(1); var cl=r2>=100?'var(--green)':r2>=80?'var(--orange)':'var(--pink)'; return '<span style="font-size:12px;font-weight:800;color:'+cl+'">'+r2+'%</span>'; }
+  function _cp(act,tgt){
+    if(!tgt) return '';
+    var dailyTgt = Math.round(tgt * _dailyRatio);
+    var r2 = dailyTgt>0?(act/dailyTgt*100).toFixed(1):'0';
+    var cl=r2>=100?'var(--green)':r2>=80?'var(--orange)':'var(--pink)';
+    return '<span style="font-size:12px;font-weight:800;color:'+cl+'">'+r2+'%</span>';
+  }
 
   var progressHtml = '';
   if(_tgtAll > 0){
@@ -8252,7 +8335,7 @@ function renderWeeklyView(){
       +'<span>전체 달성율 '+_cp(_gtRev,_tgtAll)+'</span>'
       +'<span style="color:var(--blue)">M라이브 '+_cp(_gtMl,_tgtMl)+'</span>'
       +'<span style="color:var(--green)">인플 '+_cp(_gtInf,_tgtInf)+'</span>'
-      +'<span style="font-size:10px;color:var(--text3)">(목표대비)</span>'
+      +'<span style="font-size:10px;color:var(--text3)">('+_passedDays+'/'+_totalDays+'일 기준)</span>'
       +'</div>';
   }
 
