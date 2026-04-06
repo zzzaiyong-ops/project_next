@@ -4758,7 +4758,7 @@ function renderDash(){
     var campsByMonth = months.map(function(m){
       return DB.campaigns.filter(function(c){
         var rm = r.key==='(미정)'?(!c.role||c.role===''):c.role===r.key;
-        var confirmed = c.stage && c.stage !== '1.캠페인요청';
+        var confirmed = c.stage && ['5.인플루언서확정','6.APP마케팅확정','7.정산','7.정산완료'].indexOf(c.stage) >= 0;
         return rm&&confirmed&&campInMonth(c,m.year,m.month);
       });
     });
@@ -4835,11 +4835,12 @@ function renderDash(){
     }
   });
 
-  // ── 미확정 구분 (stage === '1.캠페인요청') ──
+  // ── 미확정 구분 (인플루언서 확정 전 단계) ──
   var unconfirmed = {key:'미확정', color:'var(--text3)', bg:'var(--bg4)'};
   var ucByMonth = months.map(function(m){
     return DB.campaigns.filter(function(c){
-      return (!c.stage || c.stage === '1.캠페인요청') && campInMonth(c,m.year,m.month);
+      var isConfirmed = c.stage && ['5.인플루언서확정','6.APP마케팅확정','7.정산','7.정산완료'].indexOf(c.stage) >= 0;
+      return !isConfirmed && campInMonth(c,m.year,m.month);
     });
   });
   var ucId = 'role-expand-unconfirmed';
