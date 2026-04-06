@@ -8141,36 +8141,50 @@ function renderWeeklyView(){
         var items = r.week.items;
         // 딜코드(col BO=66) 기반 본방/재방 그룹핑
         var mainMap = {}; // 딜코드별 본방
-        var rebroadcasts = []; // 재방 목록
-        var others = []; // 딜코드 없는 것
+        var replayByDeal = {}; // 딜코드별 재방 합산
+        var others = []; // 딜코드 없는 일반 건
         items.forEach(function(m){
           var isReplay = (m.programName||'').indexOf('다시보는')===0;
           var dealCode = m.dealCode||'';
           if(isReplay && dealCode){
-            rebroadcasts.push(m);
-          } else if(dealCode){
-            if(!mainMap[dealCode]) mainMap[dealCode] = [];
-            mainMap[dealCode].push(m);
+            if(!replayByDeal[dealCode]) replayByDeal[dealCode] = {orderAmt:0,orderQty:0,mobOrderAmt:0,mobOrderQty:0,profitAmt:0,adRevenue:0,marketingFee:0,count:0,programName:'',date:'',code:'',mdCat:'',cat:''};
+            var rb = replayByDeal[dealCode];
+            rb.orderAmt+=m.orderAmt||0; rb.orderQty+=m.orderQty||0;
+            rb.mobOrderAmt+=m.mobOrderAmt||0; rb.mobOrderQty+=m.mobOrderQty||0;
+            rb.profitAmt+=m.profitAmt||0; rb.adRevenue+=m.adRevenue||0;
+            rb.marketingFee+=m.marketingFee||0; rb.count++;
+            if(!rb.programName) rb.programName='다시보는 ('+rb.count+'건)';
+            else rb.programName='다시보는 ('+rb.count+'건)';
+            if(!rb.date) rb.date=m.date; rb.code=m.code; rb.mdCat=m.mdCat||rb.mdCat; rb.cat=m.cat||rb.cat;
+            rb._isReplaySum = true;
+            rb.dealCode = dealCode;
+          } else if(!isReplay){
+            if(dealCode){
+              if(!mainMap[dealCode]) mainMap[dealCode] = [];
+              mainMap[dealCode].push(m);
+            } else {
+              others.push(m);
+            }
           } else {
+            // "다시보는"이지만 딜코드 없는 건 → 일반 건으로 처리
             others.push(m);
           }
         });
-        // 재방을 본방 뒤에 삽입
+        // 정렬: 일반 → (본방 + 재방합산) 순서
         var sorted = [];
-        var usedReplay = {};
         others.forEach(function(m){ sorted.push(m); });
         Object.keys(mainMap).forEach(function(dc){
           mainMap[dc].forEach(function(m){ sorted.push(m); });
-          rebroadcasts.forEach(function(rb, idx){
-            if(!usedReplay[idx] && (rb.dealCode||'')===dc){
-              sorted.push(rb);
-              usedReplay[idx] = true;
-            }
-          });
+          if(replayByDeal[dc]){
+            sorted.push(replayByDeal[dc]); // 재방 합산 1줄
+            delete replayByDeal[dc];
+          }
         });
-        // 미매칭 재방 추가
-        rebroadcasts.forEach(function(rb, idx){
-          if(!usedReplay[idx]) sorted.push(rb);
+        // 본방 없이 재방만 있는 케이스
+        Object.keys(replayByDeal).forEach(function(dc){
+          var rb = replayByDeal[dc];
+          rb._isOrphanReplay = true; // ㄴ 표시 안 함
+          sorted.push(rb);
         });
         r.week.items = sorted;
       }
@@ -8416,15 +8430,19 @@ function renderWeeklyView(){
       wk.items.forEach(function(m){
         var outAmt=(m.orderAmt||0)-(m.mobOrderAmt||0);
         var outQty=(m.orderQty||0)-(m.mobOrderQty||0);
-        var isReplay = (m.programName||'').indexOf('다시보는')===0;
-        var replayBg = isReplay ? 'background:rgba(0,0,0,.04);' : '';
-        var replayPrefix = isReplay ? '<span style="color:var(--text3);margin-right:4px">ㄴ</span>' : '';
+        var isReplaySum = m._isReplaySum;
+        var isOrphan = m._isOrphanReplay;
+        var replayBg = isReplaySum ? 'background:rgba(0,0,0,.04);' : '';
+        var nameHtml = escHtml(m.programName||'-');
+        if(isReplaySum && !isOrphan){
+          nameHtml = '<span style="padding-left:16px;color:var(--text3)"><span style="margin-right:4px">ㄴ</span>'+escHtml(m.programName)+'</span>';
+        }
         html += '<tr class="'+mlId+'" style="display:none;font-size:11px;'+replayBg+'">'
           +'<td></td>'
           +'<td style="padding:4px 8px;color:var(--text3)">'+escHtml(m.date||'')+'</td>'
           +'<td style="font-size:10px">'+(m.mdCat||'-')+'</td>'
           +'<td style="font-size:10px">'+(m.cat||'-')+'</td>'
-          +'<td>'+(isReplay?'<span style="padding-left:16px">'+replayPrefix+escHtml(m.programName||'-')+'</span>':escHtml(m.programName||'-'))+'</td>'
+          +'<td>'+nameHtml+'</td>'
           +'<td style="text-align:right;'+dl+'">'+fmtEok(m.orderAmt)+'</td>'
           +'<td style="text-align:right">'+fmtNum(m.orderQty)+'</td>'
           +'<td style="'+dl+'text-align:right">-</td><td style="text-align:right">-</td><td style="text-align:right">-</td>'
