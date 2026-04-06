@@ -8385,7 +8385,7 @@ function renderWeeklyView(){
     var target = s8Period==='week' ? Math.round(tgt) : Math.round(tgt * _dailyRatio);
     var r2 = target>0?(act/target*100).toFixed(1):'0';
     var cl=r2>=100?'var(--green)':r2>=80?'var(--orange)':'var(--pink)';
-    return '<span style="font-size:12px;font-weight:800;color:'+cl+'">'+r2+'%</span>';
+    return '<span style="font-size:16px;font-weight:800;color:'+cl+'">'+r2+'%</span>';
   }
 
   // 3) 실적 합계
@@ -8402,11 +8402,11 @@ function renderWeeklyView(){
 
   var progressHtml = '';
   if(_tgtAll > 0){
-    progressHtml = '<div style="display:flex;gap:12px;align-items:center;font-size:11px;color:var(--text2);margin-left:12px">'
+    progressHtml = '<div style="display:flex;gap:16px;align-items:center;font-size:13px;color:var(--text2);margin-left:16px">'
       +'<span>전체 달성율 '+_cp(_gtRev,_tgtAll)+'</span>'
       +'<span style="color:var(--blue)">M라이브 '+_cp(_gtMl,_tgtMl)+'</span>'
       +'<span style="color:var(--green)">인플 '+_cp(_gtInf,_tgtInf)+'</span>'
-      +'<span style="font-size:10px;color:var(--text3)">('+_passedDays+'/'+_totalDays+'일 기준)</span>'
+      +'<span style="font-size:11px;color:var(--text3)">('+_passedDays+'/'+_totalDays+'일 기준)</span>'
       +'</div>';
   }
 
