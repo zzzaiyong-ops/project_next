@@ -1955,6 +1955,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
 <div class="mo" id="mo-product"><div class="mo-box wide">
   <div class="mo-hd" style="flex-wrap:wrap;gap:8px">
     <span class="mo-ttl" id="prod-mo-title">캠페인 등록</span>
+    <button class="btn btn-ghost btn-xs" id="mlive-sched-cal-btn" onclick="openMliveSchedCal()" style="display:none;font-size:12px;padding:4px 10px;background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent2);font-weight:700" title="확정된 모바일라이브 편성 보기">📅 M라이브 편성</button>
     <span id="p-campcode" style="font-size:12px;font-family:monospace;font-weight:700;color:var(--accent2);background:var(--accent-bg);padding:2px 10px;border-radius:12px;display:none"></span>
     <div id="prod-stage-area" style="display:none;align-items:center;gap:8px;margin-left:0">
       <span style="font-size:11px;font-weight:600;color:var(--text3)">현재 단계</span>
@@ -1990,6 +1991,18 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           </label>
         </div>
       </div>
+      <!-- ── 캠페인 유형 선택 (인플루언서 마케팅 / 모바일라이브) ── -->
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">캠페인 유형 <span style="color:var(--red)">*</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;transition:all .15s" id="p-camptype-label-inf">
+          <input type="radio" name="p-camptype" id="p-camptype-inf" value="인플루언서" style="accent-color:var(--accent)" onchange="updateCampTypeUI()" checked>
+          <div><div style="font-size:12.5px;font-weight:700">👤 인플루언서 마케팅</div><div style="font-size:10px;color:var(--text3)">인플루언서 섭외/진행 캠페인</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;transition:all .15s" id="p-camptype-label-mlive">
+          <input type="radio" name="p-camptype" id="p-camptype-mlive" value="모바일라이브" style="accent-color:var(--accent)" onchange="updateCampTypeUI()">
+          <div><div style="font-size:12.5px;font-weight:700">📺 모바일라이브</div><div style="font-size:10px;color:var(--text3)">쇼호스트 진행 라이브 캠페인</div></div>
+        </label>
+      </div>
       <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
       <div class="fr2"><div><label>시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local"></div><div><label>종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local"></div></div>
       <div class="fr2"><div><label>예산 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-budget" placeholder="3,000,000"></div><div><label>MDCAT <span style="color:var(--red)">*</span></label>
@@ -2001,6 +2014,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         </div>
       </div></div>
 
+      <div id="p-role-wrap">
       <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin:14px 0 8px">캠페인 역할 <span style="color:var(--red)">*</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-mega">
@@ -2020,10 +2034,11 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <div><div style="font-size:12.5px;font-weight:700">시딩</div><div style="font-size:10px;color:var(--text3)">바이럴 확산</div></div>
         </label>
       </div>
+      </div>
 
 
 
-      <div class="fr2"><div><label>캠페인담당</label>
+      <div class="fr2" id="p-pd-single-row"><div><label>캠페인담당</label>
 <div class="search-sel-wrap" id="wrap-p-pd-single">
   <input class="inp search-sel-input" id="p-pd-single" placeholder="이름 검색..." autocomplete="off"
     oninput="searchSelFilter('p-pd-single','manager')"
@@ -2214,7 +2229,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     </div>
 
     <!-- ══ 섹션 D: 인플루언서 정보 ══ -->
-    <div class="mo-section">
+    <div class="mo-section" id="sec-inf-wrap">
       <div class="mo-sec-hd" onclick="toggleSection('sec-inf')">
         <div style="display:flex;align-items:center;gap:8px;flex:1">
           <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="inf" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
@@ -2460,6 +2475,35 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         <div style="font-size:24px;margin-bottom:6px">🔗</div><div style="font-weight:700;font-size:12.5px">매칭 추가</div><div style="font-size:11px;color:var(--text3);margin-top:2px">4단계</div>
       </div>
     </div>
+  </div>
+</div></div>
+
+<!-- M라이브 편성 달력 모달 -->
+<div class="mo" id="mo-mlive-sched-cal" style="z-index:1150"><div class="mo-box" style="width:min(960px,95vw)">
+  <div class="mo-hd">
+    <span class="mo-ttl">📅 M라이브 편성 달력 <span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:8px">전체 사용자 기준</span></span>
+    <button class="mo-x" onclick="closeMo('mlive-sched-cal')">✕</button>
+  </div>
+  <div class="mo-body" style="padding:16px 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="mliveCalPrev()">◀</button>
+        <div id="mlive-cal-title" style="font-size:15px;font-weight:800;min-width:120px;text-align:center">-</div>
+        <button class="btn btn-ghost btn-sm" onclick="mliveCalNext()">▶</button>
+      </div>
+      <div id="mlive-cal-count" style="font-size:11.5px;color:var(--text3)"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--red);padding:4px 0">일</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">월</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">화</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">수</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">목</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">금</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--blue);padding:4px 0">토</div>
+    </div>
+    <div id="mlive-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text3)">※ 모바일라이브 유형으로 등록된 전체 캠페인의 시작일 기준으로 표시됩니다.</div>
   </div>
 </div></div>
 
@@ -5039,6 +5083,13 @@ function editProd(id){
   var targetEl=document.getElementById('p-target'); if(targetEl) targetEl.value=p.target||'';
   document.querySelectorAll('input[name="p-role"]').forEach(function(r){ r.checked=(r.value===p.role); });
   updateProdRoleLabels();
+  // 캠페인 유형 로드
+  var _campType = p.campType || '인플루언서';
+  var _ctInf = document.getElementById('p-camptype-inf');
+  var _ctMl  = document.getElementById('p-camptype-mlive');
+  if(_ctInf) _ctInf.checked = (_campType !== '모바일라이브');
+  if(_ctMl)  _ctMl.checked  = (_campType === '모바일라이브');
+  updateCampTypeUI();
     var _endVal = p.end||p.endDate||'';
     if(_endVal && _endVal.length === 10) _endVal += 'T00:00';
     document.getElementById('p-end').value = _endVal;
@@ -8983,6 +9034,12 @@ function openNewProd(){
   var gpEl=document.getElementById('p-group-price');  if(gpEl) gpEl.value='';
   document.querySelectorAll('input[name="p-role"]').forEach(function(r){ r.checked=false; });
   updateProdRoleLabels();
+  // 캠페인 유형 초기화: 기본 인플루언서 마케팅
+  var ctInf = document.getElementById('p-camptype-inf');
+  var ctMl  = document.getElementById('p-camptype-mlive');
+  if(ctInf) ctInf.checked = true;
+  if(ctMl)  ctMl.checked  = false;
+  updateCampTypeUI();
   ['bas-reason-target','bas-reason-new','bas-reason-encore'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.checked=false;
   });
@@ -9146,6 +9203,7 @@ function saveProd(){
   });
   var editId = document.getElementById('p-edit-id').value;
   var prodRole = document.querySelector('input[name="p-role"]:checked')?.value||'';
+  var campType = document.querySelector('input[name="p-camptype"]:checked')?.value||'인플루언서';
   // getInfBlocksData 캐싱 (DOM 반복 읽기 방지)
   var _infData = getInfBlocksData();
   var _inf0 = _infData[0] || {};
@@ -9165,6 +9223,7 @@ function saveProd(){
     sampleExempt:  !!_inf0.sampleExempt,
     sampleAddress: _inf0.sampleAddress||'',
     role:prodRole,
+    campType:campType,
     channels: {
       youtube: _inf0.youtube || (document.getElementById('ch-youtube')?.checked ? (document.getElementById('p-youtube-ch')?.value.trim()||'') : ''),
       insta:   _inf0.insta   || (document.getElementById('ch-insta')?.checked   ? (document.getElementById('p-insta-ch')?.value.trim()||'')   : ''),
@@ -10052,6 +10111,93 @@ function updateProdRoleLabels(){
     l.style.borderColor = r.checked?'var(--accent)':'var(--border)';
     l.style.background  = r.checked?'var(--accent-bg)':'var(--bg3)';
   });
+}
+
+// ── 캠페인 유형(인플루언서 마케팅 / 모바일라이브) 전환 ──
+function getCampType(){
+  var mlive = document.getElementById('p-camptype-mlive');
+  return (mlive && mlive.checked) ? '모바일라이브' : '인플루언서';
+}
+function updateCampTypeUI(){
+  var type = getCampType();
+  var isMlive = (type === '모바일라이브');
+  // 라디오 버튼 시각 강조
+  var lInf = document.getElementById('p-camptype-label-inf');
+  var lMl  = document.getElementById('p-camptype-label-mlive');
+  if(lInf){ lInf.style.borderColor = !isMlive?'var(--accent)':'var(--border)'; lInf.style.background = !isMlive?'var(--accent-bg)':'var(--bg3)'; }
+  if(lMl) { lMl.style.borderColor  =  isMlive?'var(--accent)':'var(--border)'; lMl.style.background  =  isMlive?'var(--accent-bg)':'var(--bg3)'; }
+  // M라이브: 캠페인 역할 / 캠페인담당 / 인플루언서 정보 섹션 숨김
+  var roleWrap = document.getElementById('p-role-wrap');
+  if(roleWrap) roleWrap.style.display = isMlive ? 'none' : '';
+  var pdRow = document.getElementById('p-pd-single-row');
+  if(pdRow) pdRow.style.display = isMlive ? 'none' : '';
+  var infWrap = document.getElementById('sec-inf-wrap');
+  if(infWrap) infWrap.style.display = isMlive ? 'none' : '';
+  // 쇼호스트 섹션 표시/숨김 (Phase 4에서 추가 예정)
+  var hostWrap = document.getElementById('sec-host-wrap');
+  if(hostWrap) hostWrap.style.display = isMlive ? '' : 'none';
+  // M라이브 편성 달력 버튼 표시/숨김
+  var calBtn = document.getElementById('mlive-sched-cal-btn');
+  if(calBtn) calBtn.style.display = isMlive ? '' : 'none';
+}
+
+// ── M라이브 편성 달력 ──
+var _mliveCalDate = (function(){ var d=new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
+function openMliveSchedCal(){
+  _mliveCalDate = (function(){ var d=new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
+  renderMliveSchedCal();
+  openMo('mlive-sched-cal');
+}
+function mliveCalPrev(){ _mliveCalDate.setMonth(_mliveCalDate.getMonth()-1); renderMliveSchedCal(); }
+function mliveCalNext(){ _mliveCalDate.setMonth(_mliveCalDate.getMonth()+1); renderMliveSchedCal(); }
+function renderMliveSchedCal(){
+  var y=_mliveCalDate.getFullYear(), m=_mliveCalDate.getMonth();
+  var titleEl = document.getElementById('mlive-cal-title');
+  if(titleEl) titleEl.textContent = y+'년 '+(m+1)+'월';
+  var firstDay = new Date(y,m,1).getDay();
+  var daysInMonth = new Date(y,m+1,0).getDate();
+  var monthStart = y+'-'+String(m+1).padStart(2,'0')+'-01';
+  var monthEnd   = y+'-'+String(m+1).padStart(2,'0')+'-'+String(daysInMonth).padStart(2,'0');
+  // M라이브 캠페인만 (전체 사용자 기준)
+  var camps = (DB.campaigns||[]).filter(function(c){
+    if((c.campType||'') !== '모바일라이브') return false;
+    var cs=(c.start||c.startDate||'').slice(0,10);
+    if(!cs) return false;
+    return cs>=monthStart && cs<=monthEnd;
+  });
+  // 날짜별 그룹
+  var byDay = {};
+  camps.forEach(function(c){
+    var d = (c.start||c.startDate||'').slice(0,10);
+    if(!byDay[d]) byDay[d]=[];
+    byDay[d].push(c);
+  });
+  var cntEl = document.getElementById('mlive-cal-count');
+  if(cntEl) cntEl.textContent = camps.length+'건 편성';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var grid = document.getElementById('mlive-cal-grid');
+  if(!grid) return;
+  var html = '';
+  for(var i=0;i<firstDay;i++) html += '<div style="min-height:80px;background:var(--bg);border-radius:4px"></div>';
+  for(var d=1; d<=daysInMonth; d++){
+    var dStr = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var dayDate = new Date(y,m,d); dayDate.setHours(0,0,0,0);
+    var isToday = dayDate.getTime()===today.getTime();
+    var dow = dayDate.getDay();
+    var dayColor = dow===0?'var(--red)':(dow===6?'var(--blue)':'var(--text2)');
+    var dayCamps = byDay[dStr]||[];
+    var itemsHtml = dayCamps.slice(0,3).map(function(c){
+      var nm = (c.name||'-').length>10 ? (c.name.slice(0,10)+'…') : (c.name||'-');
+      var isConfirmed = c.stage && !/^1\./.test(c.stage);
+      var bg = isConfirmed ? 'rgba(108,92,231,0.18)' : 'rgba(136,136,136,0.12)';
+      var col = isConfirmed ? 'var(--accent2)' : 'var(--text3)';
+      var bd = isConfirmed ? 'var(--accent)' : 'var(--border)';
+      return '<div title="'+escHtml(c.name||'')+' · '+escHtml(c.stage||'')+'" style="font-size:10px;padding:2px 4px;background:'+bg+';border:1px solid '+bd+';color:'+col+';border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600">'+escHtml(nm)+'</div>';
+    }).join('');
+    if(dayCamps.length>3) itemsHtml += '<div style="font-size:9px;color:var(--text3);text-align:center">+'+(dayCamps.length-3)+'</div>';
+    html += '<div style="min-height:80px;background:'+(isToday?'var(--accent-bg)':'var(--bg2)')+';border:1px solid '+(isToday?'var(--accent)':'var(--border)')+';border-radius:4px;padding:4px"><div style="font-size:11px;font-weight:700;color:'+dayColor+';margin-bottom:3px">'+d+'</div>'+itemsHtml+'</div>';
+  }
+  grid.innerHTML = html;
 }
 
 function addPdRow(){
