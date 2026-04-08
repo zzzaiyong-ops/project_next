@@ -1992,16 +1992,24 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         </div>
       </div>
       <!-- ── 캠페인 유형 선택 (인플루언서 마케팅 / 모바일라이브) ── -->
-      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">캠페인 유형 <span style="color:var(--red)">*</span></div>
-      <div style="display:flex;gap:8px;margin-bottom:14px">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;transition:all .15s" id="p-camptype-label-inf">
-          <input type="radio" name="p-camptype" id="p-camptype-inf" value="인플루언서" style="accent-color:var(--accent)" onchange="updateCampTypeUI()" checked>
-          <div><div style="font-size:12.5px;font-weight:700">👤 인플루언서 마케팅</div><div style="font-size:10px;color:var(--text3)">인플루언서 섭외/진행 캠페인</div></div>
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;transition:all .15s" id="p-camptype-label-mlive">
-          <input type="radio" name="p-camptype" id="p-camptype-mlive" value="모바일라이브" style="accent-color:var(--accent)" onchange="updateCampTypeUI()">
-          <div><div style="font-size:12.5px;font-weight:700">📺 모바일라이브</div><div style="font-size:10px;color:var(--text3)">쇼호스트 진행 라이브 캠페인</div></div>
-        </label>
+      <div style="background:linear-gradient(135deg,var(--accent-bg),rgba(108,92,231,0.05));border:2px solid var(--accent);border-radius:var(--r);padding:14px 16px;margin-bottom:18px;box-shadow:0 2px 8px rgba(108,92,231,0.12)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:800;color:var(--accent2);letter-spacing:.3px">⚡ 캠페인 유형 선택</span>
+          <span style="color:var(--red);font-weight:800">*</span>
+          <span style="font-size:10.5px;color:var(--text3);font-weight:500;margin-left:4px">유형에 따라 입력 항목이 달라집니다</span>
+        </div>
+        <div style="display:flex;gap:10px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;background:var(--bg);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;transition:all .15s" id="p-camptype-label-mlive">
+            <input type="radio" name="p-camptype" id="p-camptype-mlive" value="모바일라이브" style="accent-color:var(--accent);width:18px;height:18px" onchange="updateCampTypeUI()" checked>
+            <div style="font-size:26px;line-height:1">📺</div>
+            <div><div style="font-size:14px;font-weight:800;color:var(--text)">모바일라이브</div><div style="font-size:11px;color:var(--text3);margin-top:2px">쇼호스트 진행 라이브 캠페인</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;background:var(--bg);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;transition:all .15s" id="p-camptype-label-inf">
+            <input type="radio" name="p-camptype" id="p-camptype-inf" value="인플루언서" style="accent-color:var(--accent);width:18px;height:18px" onchange="updateCampTypeUI()">
+            <div style="font-size:26px;line-height:1">👤</div>
+            <div><div style="font-size:14px;font-weight:800;color:var(--text)">인플루언서 마케팅</div><div style="font-size:11px;color:var(--text3);margin-top:2px">인플루언서 섭외/진행 캠페인</div></div>
+          </label>
+        </div>
       </div>
       <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
       <div class="fr2"><div><label>시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local"></div><div><label>종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local"></div></div>
@@ -9034,11 +9042,11 @@ function openNewProd(){
   var gpEl=document.getElementById('p-group-price');  if(gpEl) gpEl.value='';
   document.querySelectorAll('input[name="p-role"]').forEach(function(r){ r.checked=false; });
   updateProdRoleLabels();
-  // 캠페인 유형 초기화: 기본 인플루언서 마케팅
+  // 캠페인 유형 초기화: 기본 모바일라이브
   var ctInf = document.getElementById('p-camptype-inf');
   var ctMl  = document.getElementById('p-camptype-mlive');
-  if(ctInf) ctInf.checked = true;
-  if(ctMl)  ctMl.checked  = false;
+  if(ctInf) ctInf.checked = false;
+  if(ctMl)  ctMl.checked  = true;
   updateCampTypeUI();
   ['bas-reason-target','bas-reason-new','bas-reason-encore'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.checked=false;
@@ -10119,11 +10127,19 @@ function getCampType(){
 function updateCampTypeUI(){
   var type = getCampType();
   var isMlive = (type === '모바일라이브');
-  // 라디오 버튼 시각 강조
+  // 라디오 버튼 시각 강조 (선택된 카드에 accent 컬러, 볼드 박스)
   var lInf = document.getElementById('p-camptype-label-inf');
   var lMl  = document.getElementById('p-camptype-label-mlive');
-  if(lInf){ lInf.style.borderColor = !isMlive?'var(--accent)':'var(--border)'; lInf.style.background = !isMlive?'var(--accent-bg)':'var(--bg3)'; }
-  if(lMl) { lMl.style.borderColor  =  isMlive?'var(--accent)':'var(--border)'; lMl.style.background  =  isMlive?'var(--accent-bg)':'var(--bg3)'; }
+  if(lInf){
+    lInf.style.borderColor = !isMlive?'var(--accent)':'var(--border)';
+    lInf.style.background  = !isMlive?'var(--accent-bg)':'var(--bg)';
+    lInf.style.boxShadow   = !isMlive?'0 0 0 3px rgba(108,92,231,0.18)':'none';
+  }
+  if(lMl){
+    lMl.style.borderColor  =  isMlive?'var(--accent)':'var(--border)';
+    lMl.style.background   =  isMlive?'var(--accent-bg)':'var(--bg)';
+    lMl.style.boxShadow    =  isMlive?'0 0 0 3px rgba(108,92,231,0.18)':'none';
+  }
   // M라이브: 캠페인 역할 / 캠페인담당 / 인플루언서 정보 섹션 숨김
   var roleWrap = document.getElementById('p-role-wrap');
   if(roleWrap) roleWrap.style.display = isMlive ? 'none' : '';
