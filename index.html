@@ -2683,7 +2683,9 @@ let onlineUsers = new Set([ME]);
 let _suppressListener = false;
 let _myLastSaveTime = 0;
 let _myLastSaveCamps = null;
-window.addEventListener('load', function(){ _suppressListener = false; _myLastSaveTime = 0; _myLastSaveCamps = null; });
+// 최근 삭제된 캠페인 ID 맵 — listener가 stale remote에서 좀비로 복원하는 것 방지
+var _recentlyDeletedCamps = {};
+window.addEventListener('load', function(){ _suppressListener = false; _myLastSaveTime = 0; _myLastSaveCamps = null; _recentlyDeletedCamps = {}; });
 
 function initFirebase(){
   try {
@@ -3951,7 +3953,10 @@ function doLogout(){
 function mergeRemote(remote){
   var merged = {
     products:     remote.products     ? Object.values(remote.products)     : DB.products,
-    campaigns:    remote.campaigns    ? Object.values(remote.campaigns).map(function(camp){
+    campaigns:    remote.campaigns    ? Object.values(remote.campaigns).filter(function(camp){
+      // 최근 삭제된 캠페인은 listener가 복원하지 못하게 차단
+      return !_recentlyDeletedCamps[String(camp.id)];
+    }).map(function(camp){
       // appMkt.channels 정규화: Firebase에서 object 또는 undefined로 올 수 있음
       if(camp.appMkt){
         if(!camp.appMkt.channels){
@@ -6957,24 +6962,35 @@ function delCamp(id){
 }
 function _delCampConfirmed(id){
   var sid = String(id);
-  // 로컬에서 먼저 제거
+  // 30초간 listener에서 차단
+  _recentlyDeletedCamps[sid] = Date.now();
+  setTimeout(function(){ delete _recentlyDeletedCamps[sid]; }, 30000);
+  // 로컬에서 즉시 제거
   DB.campaigns = DB.campaigns.filter(function(c){ return String(c.id) !== sid; });
-  renderS1(); renderS2(); renderCamps(); renderDash(); updateBadges(); closeDetail(); showToast('삭제됨');
+  // _myLastSaveCamps에도 제거 (listener 복원 루프 방지)
+  if(_myLastSaveCamps && Array.isArray(_myLastSaveCamps)){
+    _myLastSaveCamps = _myLastSaveCamps.filter(function(c){ return String(c.id) !== sid; });
+  }
+  // 관련 데이터 정리 (정산/매칭/진행/MCN요청/APP마케팅)
+  if(DB.settlements)  DB.settlements  = DB.settlements.filter(function(s){ return String(s.campaign||s.campId) !== sid; });
+  if(DB.matches)      DB.matches      = DB.matches.filter(function(m){ return String(m.campaign||m.campId) !== sid; });
+  if(DB.progress)     DB.progress     = DB.progress.filter(function(p){ return String(p.campaign||p.campId) !== sid; });
+  if(DB.mcnRequests)  DB.mcnRequests  = DB.mcnRequests.filter(function(r){ return String(r.campaign||r.campId) !== sid; });
+  if(DB.appMarketing) DB.appMarketing = DB.appMarketing.filter(function(a){ return String(a.campaign||a.campId) !== sid; });
+  // 모든 페이지 재렌더링 (일부 뷰 누락 방지)
+  try { renderAllPages(); } catch(e){ renderS1(); renderS2(); renderCamps(); renderDash(); }
+  updateBadges(); closeDetail(); showToast('삭제됨');
   if(fbReady){
-    // 리스너가 삭제 전 데이터를 복원하지 않도록 충분히 억제
     _suppressListener = true;
+    // 특정 경로만 삭제 (전체 DB를 재기록하지 않음 → race condition 방지)
     fbDB.ref('influencer-hub/campaigns/' + sid).remove()
       .then(function(){
-        console.log('[delCamp] 삭제 성공:', sid);
-        // 삭제 완료 후 전체 DB를 Firebase에 다시 씀 (삭제 반영 확정)
-        return pushToFirebase();
-      })
-      .then(function(){
-        setTimeout(function(){ _suppressListener = false; }, 3000);
+        console.log('[delCamp] Firebase 삭제 성공:', sid);
+        setTimeout(function(){ _suppressListener = false; }, 2000);
       })
       .catch(function(e){
-        console.error('[delCamp] 삭제 실패:', e.code, e.message);
-        showToast('삭제 실패: ' + (e.code||e.message));
+        console.error('[delCamp] Firebase 삭제 실패:', e.code, e.message);
+        showToast('Firebase 삭제 실패: ' + (e.code||e.message));
         _suppressListener = false;
       });
   }
