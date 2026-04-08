@@ -1497,6 +1497,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <div class="tab" id="bm-tab-users" onclick="switchBmTab('users',this)">👥 사용자</div>
       <div class="tab" id="bm-tab-roles" onclick="switchBmTab('roles',this)">🔑 역할·권한</div>
       <div class="tab" id="bm-tab-mcn" onclick="switchBmTab('mcn',this)">🏢 MCN 업체</div>
+      <div class="tab" id="bm-tab-showhost" onclick="switchBmTab('showhost',this)">🎤 쇼호스트</div>
     </div>
 
     <!-- 탭: MDCAT 코드 -->
@@ -1640,10 +1641,48 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
     </div>
 
+    <!-- 탭: 쇼호스트 -->
+    <div id="bm-panel-showhost" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:12.5px;color:var(--text3)">모바일라이브 캠페인의 쇼호스트로 선택할 수 있는 명단을 관리합니다.</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddShowhostModal()">+ 쇼호스트 추가</button>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-ttl">쇼호스트 목록</span>
+          <span id="showhost-count" style="font-size:12px;color:var(--text3)"></span>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="width:40px;text-align:center">#</th>
+            <th>이름</th><th>소속</th><th>연락처</th><th>전문 카테고리</th><th>메모</th><th>등록일</th><th></th>
+          </tr></thead>
+          <tbody id="showhost-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
 </main>
+
+<!-- 쇼호스트 추가/수정 모달 -->
+<div class="mo" id="mo-addshowhost"><div class="mo-box" style="width:460px">
+  <div class="mo-hd"><span class="mo-ttl" id="addshowhost-title">+ 쇼호스트 추가</span><button class="mo-x" onclick="closeMo('addshowhost')">✕</button></div>
+  <div class="mo-body">
+    <input type="hidden" id="sh-edit-id" value="">
+    <div class="fr"><label>이름 <span style="color:var(--red)">*</span></label><input class="inp" id="sh-name" placeholder="홍길동"></div>
+    <div class="fr"><label>소속</label><input class="inp" id="sh-company" placeholder="예) 프리랜서, OO MCN"></div>
+    <div class="fr"><label>연락처</label><input class="inp" id="sh-phone" placeholder="010-0000-0000"></div>
+    <div class="fr"><label>전문 카테고리</label><input class="inp" id="sh-category" placeholder="예) 뷰티, 패션, 식품"></div>
+    <div class="fr"><label>메모</label><textarea class="ta" id="sh-memo" style="min-height:60px;resize:vertical"></textarea></div>
+  </div>
+  <div class="mo-ft">
+    <button class="btn btn-ghost btn-sm" onclick="closeMo('addshowhost')">취소</button>
+    <button class="btn btn-primary btn-sm" onclick="saveShowhost()">저장</button>
+  </div>
+</div></div>
 
 <!-- ── 캠페인 엑셀 일괄 등록 모달 ── -->
 <div class="mo" id="mo-campbulk"><div class="mo-box" style="width:720px">
@@ -2236,6 +2275,70 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
     </div>
 
+    <!-- ══ 섹션 D2: 쇼호스트 정보 (모바일라이브 전용) ══ -->
+    <div class="mo-section" id="sec-host-wrap" style="display:none">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-host')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="host" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
+          <span>🎤 쇼호스트 정보</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <span class="mo-sec-arr" id="arr-sec-host">▼</span>
+        </div>
+      </div>
+      <div class="mo-sec-body" id="sec-host">
+        <div class="fr2" style="margin-bottom:10px">
+          <div>
+            <label>요청 쇼호스트 1</label>
+            <div class="search-sel-wrap" id="wrap-p-host-req1">
+              <input class="inp search-sel-input" id="p-host-req1" placeholder="쇼호스트 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-host-req1','showhost')"
+                onfocus="searchSelOpen('p-host-req1','showhost')"
+                onkeydown="searchSelKey(event,'p-host-req1')">
+              <button class="search-sel-clear" id="clear-p-host-req1" onclick="searchSelClear('p-host-req1')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-host-req1"></div>
+            </div>
+          </div>
+          <div>
+            <label>요청 쇼호스트 2</label>
+            <div class="search-sel-wrap" id="wrap-p-host-req2">
+              <input class="inp search-sel-input" id="p-host-req2" placeholder="쇼호스트 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-host-req2','showhost')"
+                onfocus="searchSelOpen('p-host-req2','showhost')"
+                onkeydown="searchSelKey(event,'p-host-req2')">
+              <button class="search-sel-clear" id="clear-p-host-req2" onclick="searchSelClear('p-host-req2')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-host-req2"></div>
+            </div>
+          </div>
+        </div>
+        <div class="fr2" style="margin-bottom:10px">
+          <div>
+            <label>확정 쇼호스트 1 <span style="font-size:10px;color:var(--text3)">(DB 등록 호스트만)</span></label>
+            <div class="search-sel-wrap" id="wrap-p-host-conf1">
+              <input class="inp search-sel-input" id="p-host-conf1" placeholder="쇼호스트 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-host-conf1','showhost')"
+                onfocus="searchSelOpen('p-host-conf1','showhost')"
+                onkeydown="searchSelKey(event,'p-host-conf1')">
+              <button class="search-sel-clear" id="clear-p-host-conf1" onclick="searchSelClear('p-host-conf1')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-host-conf1"></div>
+            </div>
+          </div>
+          <div>
+            <label>확정 쇼호스트 2 <span style="font-size:10px;color:var(--text3)">(DB 등록 호스트만)</span></label>
+            <div class="search-sel-wrap" id="wrap-p-host-conf2">
+              <input class="inp search-sel-input" id="p-host-conf2" placeholder="쇼호스트 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-host-conf2','showhost')"
+                onfocus="searchSelOpen('p-host-conf2','showhost')"
+                onkeydown="searchSelKey(event,'p-host-conf2')">
+              <button class="search-sel-clear" id="clear-p-host-conf2" onclick="searchSelClear('p-host-conf2')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-host-conf2"></div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3)">※ 쇼호스트는 [기본정보 관리 → 🎤 쇼호스트] 탭에서 등록한 호스트만 선택할 수 있습니다.</div>
+      </div>
+    </div>
+
     <!-- ══ 섹션 D: 인플루언서 정보 ══ -->
     <div class="mo-section" id="sec-inf-wrap">
       <div class="mo-sec-hd" onclick="toggleSection('sec-inf')">
@@ -2281,31 +2384,17 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <span style="color:var(--orange)">⊘ 해당없음 (정산으로 이동)</span>
           </label>
         </div>
-        <div id="appmkt-channels-area" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
-            <input class="inp inp-sm appmkt-code" id="appmkt-code-super" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
-            <input class="inp inp-sm appmkt-code" id="appmkt-code-live" placeholder="편성코드 (예: 202602022467)" style="flex:1;font-size:12px" disabled>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
-            <input class="inp inp-sm appmkt-code" id="appmkt-code-popup" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
-            <input class="inp inp-sm appmkt-code" id="appmkt-code-banner" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-push" value="PUSH" onchange="toggleAppMktFields()"> PUSH</label>
-            <input class="inp inp-sm appmkt-code" id="appmkt-code-push" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-kakao" value="카톡플친" onchange="toggleAppMktFields()"> 카톡플친</label>
-            <input class="inp inp-sm appmkt-code" id="appmkt-code-kakao" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
-          </div>
+        <div id="appmkt-channels-area" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-push" value="PUSH" onchange="toggleAppMktFields()"> PUSH</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-kakao" value="카톡플친" onchange="toggleAppMktFields()"> 카톡플친</label>
+        </div>
+        <div id="appmkt-live-code-row" style="display:none;margin-bottom:12px">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">📺 모바일라이브 편성코드</label>
+          <input class="inp inp-sm" id="appmkt-code-live" placeholder="편성코드 (예: 202602022467)" style="width:100%;font-size:12px">
         </div>
         <div id="appmkt-super-fields" style="display:none;margin-bottom:12px">
           <div class="fr2">
@@ -2359,9 +2448,21 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <label for="p-settle-done" style="font-size:13px;font-weight:600;cursor:pointer">✅ 정산 완료</label>
           </div>
         </div>
+        <div class="fr" style="margin-bottom:12px">
+          <label>마케팅 항목 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(자유 기재)</span></label>
+          <textarea class="ta" id="p-marketing-items" placeholder="예) 광고 소재 제작비, 모델료, 촬영비 등..." style="min-height:60px;resize:vertical;white-space:pre-wrap"></textarea>
+        </div>
         <div class="fr2" style="margin-bottom:12px">
-          <div><label>이익율 (%) <span style="font-size:10px;color:var(--text3)">매출×이익율=이익</span></label><input class="inp" id="p-profit-rate" type="number" step="0.1" placeholder="24" oninput="calcSettleCost()"></div>
+          <div><label>실질마진이익율 (%) <span style="font-size:10px;color:var(--text3)">매출×이익율=이익</span></label><input class="inp" id="p-profit-rate" type="number" step="0.1" placeholder="24" oninput="calcSettleCost()"></div>
           <div><label>업체광고비 (원) <span style="font-size:10px;color:var(--text3)">업체에서 수취한 광고비</span></label><input class="inp inp-money" id="p-ad-income" placeholder="0" oninput="calcSettleCost()"></div>
+        </div>
+        <div class="fr2" style="margin-bottom:12px">
+          <div><label>전체 매출 (원) <span style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-total-revenue" placeholder="0" oninput="calcSettleCost()"></div>
+          <div></div>
+        </div>
+        <div class="fr2" style="margin-bottom:12px">
+          <div><label>방송중 매출 (원) <span style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-onair-revenue" placeholder="0" oninput="calcSettleCost()"></div>
+          <div><label>방송외 매출 (원) <span style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-offair-revenue" placeholder="0" oninput="calcSettleCost()"></div>
         </div>
         <div class="fr2" style="margin-bottom:12px">
           <div><label>정산처리일 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(캠페인 종료+14일 자동)</span></label><input class="inp" id="p-settle-process-date" type="date"></div>
@@ -2621,6 +2722,7 @@ let DB = {
   activities:[],
   comments:{}, files:{}, history:{},
   notifications:[],
+  showhosts:[], // 쇼호스트 DB (기본정보 관리에서 등록)
 };
 let nid={products:1,campaigns:1,influencers:1,matches:1,progress:1,mcn:1,app:1,settle:1};
 
@@ -4030,6 +4132,7 @@ function mergeRemote(remote){
     files:        DB.files,
     history:      remote.history      || DB.history,
     notifications: DB.notifications,
+    showhosts:    remote.showhosts    ? Object.values(remote.showhosts)    : (DB.showhosts||[]),
   };
   // nid를 Firebase 데이터의 최대 id+1 로 갱신 (중복 방지)
   var maxId = function(arr){ return arr.length ? Math.max.apply(null, arr.map(function(x){return parseInt(x.id)||0;})) + 1 : 1; };
@@ -4060,6 +4163,7 @@ function pushToFirebase(){
     'activities':  arrToObj(DB.activities.slice(0,30)),
     'comments':    DB.comments,
     'history':     DB.history,
+    'showhosts':   arrToObj(DB.showhosts||[]),
     '_lastWriter': ME||ME_EMAIL,
     '_lastWrite':  Date.now(),
   };
@@ -5173,9 +5277,19 @@ function editProd(id){
   renderSettleBlocks(p.settleData && p.settleData.length ? p.settleData : [{
     revenue: p.settleRevenue||0, orders: p.settleOrders||0
   }]);
+  // 쇼호스트 복원
+  var hosts = p.showhosts||{};
+  searchSelSetValue('p-host-req1',  hosts.req1||'');
+  searchSelSetValue('p-host-req2',  hosts.req2||'');
+  searchSelSetValue('p-host-conf1', hosts.conf1||'');
+  searchSelSetValue('p-host-conf2', hosts.conf2||'');
   var sdEl=document.getElementById('p-settle-da'); if(sdEl) sdEl.value=p.settleDa ? p.settleDa.toLocaleString('ko-KR') : '';
+  var miEl=document.getElementById('p-marketing-items'); if(miEl) miEl.value=p.marketingItems||'';
   var prEl=document.getElementById('p-profit-rate'); if(prEl) prEl.value=p.profitRateInput||'';
   var aiEl=document.getElementById('p-ad-income'); if(aiEl) aiEl.value=p.adIncome ? p.adIncome.toLocaleString('ko-KR') : '';
+  var trEl=document.getElementById('p-total-revenue'); if(trEl) trEl.value=p.totalRevenue ? p.totalRevenue.toLocaleString('ko-KR') : '';
+  var orEl=document.getElementById('p-onair-revenue'); if(orEl) orEl.value=p.onairRevenue ? p.onairRevenue.toLocaleString('ko-KR') : '';
+  var ofEl=document.getElementById('p-offair-revenue'); if(ofEl) ofEl.value=p.offairRevenue ? p.offairRevenue.toLocaleString('ko-KR') : '';
   var lcEl=document.getElementById('p-live-code'); if(lcEl) lcEl.value=(p.appMkt&&p.appMkt.liveCode)||'';
   var sdoneEl=document.getElementById('p-settle-done'); if(sdoneEl) sdoneEl.checked=!!(p.settleDone);
   var arEl3=document.getElementById('p-agency-rate'); if(arEl3) arEl3.value=p.agencyRate||'';
@@ -5207,27 +5321,11 @@ function editProd(id){
   var ss=document.getElementById('appmkt-super-start'); if(ss) ss.value=appMkt.superStart||'';
   var se=document.getElementById('appmkt-super-end');   if(se) se.value=appMkt.superEnd||'';
   var ld=document.getElementById('appmkt-live-dt');     if(ld) ld.value=appMkt.liveDt||'';
-  var alc=document.getElementById('appmkt-live-code');  if(alc) alc.value=appMkt.liveCode||'';
-  // 채널별 편성코드 복원
-  var codes = appMkt.channelCodes||{};
-  var codeMap = {
-    '슈퍼브랜드':'appmkt-code-super',
-    '모바일라이브':'appmkt-code-live',
-    '팝업':'appmkt-code-popup',
-    '최상단배너':'appmkt-code-banner',
-    'PUSH':'appmkt-code-push',
-    '카톡플친':'appmkt-code-kakao'
-  };
-  Object.keys(codeMap).forEach(function(key){
-    var inp = document.getElementById(codeMap[key]);
-    if(inp) inp.value = codes[key]||'';
-  });
-  // 모바일라이브 편성코드는 liveCode와도 호환 (구버전 데이터)
-  if(!codes['모바일라이브'] && appMkt.liveCode){
-    var liveInp = document.getElementById('appmkt-code-live');
-    if(liveInp) liveInp.value = appMkt.liveCode;
-  }
-  toggleAppMktFields(); // 체크박스 상태 반영하여 입력란 활성화
+  // 모바일라이브 편성코드 복원
+  var alc=document.getElementById('appmkt-code-live');  if(alc) alc.value=appMkt.liveCode||'';
+  var lcRow=document.getElementById('appmkt-live-code-row');
+  if(lcRow) lcRow.style.display=(appMkt.channels||[]).includes('모바일라이브')?'block':'none';
+  toggleAppMktFields();
   var lu=document.getElementById('appmkt-landing-url'); if(lu) lu.value=appMkt.landingUrl||'';
   var du=document.getElementById('appmkt-deal-url');    if(du) du.value=appMkt.dealUrl||'';
   initSections(false); // 수정 시에도 기본 닫힘
@@ -6510,14 +6608,17 @@ function toggleAppMktNa(){
   var area = document.getElementById('appmkt-channels-area');
   var superFlds = document.getElementById('appmkt-super-fields');
   var liveFlds  = document.getElementById('appmkt-live-fields');
+  var liveCodeRow = document.getElementById('appmkt-live-code-row');
   if(na){
     // 해당없음 체크 → 모든 채널 체크 해제 + 편성코드 초기화 + 영역 흐리게
     document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=false; });
-    document.querySelectorAll('.appmkt-code').forEach(function(inp){ inp.value=''; inp.disabled=true; });
+    var liveCodeInp = document.getElementById('appmkt-code-live');
+    if(liveCodeInp) liveCodeInp.value='';
     if(area)     area.style.opacity='0.35';
     if(area)     area.style.pointerEvents='none';
     if(superFlds) superFlds.style.display='none';
     if(liveFlds)  liveFlds.style.display='none';
+    if(liveCodeRow) liveCodeRow.style.display='none';
   } else {
     if(area) area.style.opacity='';
     if(area) area.style.pointerEvents='';
@@ -6531,23 +6632,13 @@ function toggleAppMktFields(){
   var lf = document.getElementById('appmkt-live-fields');
   if(sf) sf.style.display = superChecked?'block':'none';
   if(lf) lf.style.display = liveChecked?'block':'none';
-  // 각 채널 체크박스 상태에 따라 편성코드 입력란 활성/비활성
-  var pairs = [
-    ['appmkt-super',  'appmkt-code-super'],
-    ['appmkt-live',   'appmkt-code-live'],
-    ['appmkt-popup',  'appmkt-code-popup'],
-    ['appmkt-banner', 'appmkt-code-banner'],
-    ['appmkt-push',   'appmkt-code-push'],
-    ['appmkt-kakao',  'appmkt-code-kakao'],
-  ];
-  pairs.forEach(function(p){
-    var cb = document.getElementById(p[0]);
-    var inp = document.getElementById(p[1]);
-    if(cb && inp){
-      inp.disabled = !cb.checked;
-      if(!cb.checked) inp.value = '';
-    }
-  });
+  // 모바일라이브 편성코드는 모바일라이브 채널 체크 시에만 표시
+  var liveCodeRow = document.getElementById('appmkt-live-code-row');
+  if(liveCodeRow) liveCodeRow.style.display = liveChecked ? 'block' : 'none';
+  if(!liveChecked){
+    var liveCodeInp = document.getElementById('appmkt-code-live');
+    if(liveCodeInp) liveCodeInp.value = '';
+  }
 }
 
 function delApp(id){ var nid2=parseInt(id); DB.appMarketing=DB.appMarketing.filter(function(a){return parseInt(a.id)!==nid2;}); broadcastData(); renderS6(); showToast('삭제됨'); }
@@ -8170,10 +8261,43 @@ function uploadMliveExcel(input){
     showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?sample.programName+' / 이익:'+sample.profitAmt:'0건'));
     // Firebase에 편성코드 키로 저장 (기존 데이터와 머지)
     saveMliveToDb();
+    // 매칭되는 캠페인 정산 정보 자동 기입 (전체매출/방송중매출/방송외매출)
+    syncMliveToCampaignSettle();
     renderReports();
   };
   reader.readAsArrayBuffer(file);
   input.value = '';
+}
+
+// M라이브 Excel 데이터를 캠페인 정산정보로 동기화
+// 편성코드(code) ↔ 캠페인 appMkt.liveCode 매칭하여 전체매출/방송중매출/방송외매출 기입
+function syncMliveToCampaignSettle(){
+  if(!_mliveData || !_mliveData.length) return;
+  var byCode = {};
+  _mliveData.forEach(function(m){ if(m.code) byCode[String(m.code).trim()] = m; });
+  var changed = 0;
+  (DB.campaigns||[]).forEach(function(c){
+    var liveCode = '';
+    if(c.appMkt && c.appMkt.liveCode) liveCode = String(c.appMkt.liveCode).trim();
+    if(!liveCode && c._liveCodeInput)  liveCode = String(c._liveCodeInput).trim();
+    if(!liveCode) return;
+    var m = byCode[liveCode] || byCode[liveCode.replace(/\D/g,'')];
+    if(!m) return;
+    var total = m.orderAmt||0;
+    var onair = m.mobOrderAmt||0;
+    var offair = total - onair;
+    if(c.totalRevenue !== total || c.onairRevenue !== onair || c.offairRevenue !== offair){
+      c.totalRevenue = total;
+      c.onairRevenue = onair;
+      c.offairRevenue = offair;
+      changed++;
+    }
+  });
+  if(changed > 0){
+    console.log('[syncMliveToCampaignSettle] '+changed+'개 캠페인 매출 자동 기입');
+    if(fbReady) pushToFirebase();
+    showToast(changed+'개 캠페인에 매출 자동 기입');
+  }
 }
 
 // M라이브 데이터 Firebase 저장 (편성코드 키)
@@ -8211,6 +8335,7 @@ function loadMliveFromDb(){
       m.profitAmt = Math.round((m.orderAmt||0)*mlRate);
     });
     console.log('[M라이브] Firebase 로드:', _mliveData.length, '건');
+    syncMliveToCampaignSettle();
     renderReports();
   });
 }
@@ -9098,6 +9223,10 @@ function openNewProd(){
   // 검색형 드롭다운 초기화
   searchSelSetValue('p-owner', '');
   searchSelSetValue('p-pd-single', '');
+  searchSelSetValue('p-host-req1',  '');
+  searchSelSetValue('p-host-req2',  '');
+  searchSelSetValue('p-host-conf1', '');
+  searchSelSetValue('p-host-conf2', '');
   ['p-name','p-company','p-brand','p-cat','p-owner','p-start','p-end','p-appeal','p-product-basic-info','p-cs-info','p-delivery-info','p-inf-request','p-revenue','p-budget','p-target','p-mdcat','p-mcn','p-fee-rate','p-fee-amount','p-inf-name','p-pd-single','p-sample-address','p-youtube-ch','p-insta-ch','p-twitter-ch','p-courier','p-ship-cutoff','p-ship-fee','p-island-fee','p-exchange-fee','p-return-fee','p-settle-process-date','p-settle-payment-date'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
@@ -9124,17 +9253,11 @@ function openNewProd(){
     var el=document.getElementById(id); if(el) el.checked=false;
   });
   document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=false; });
-  // 채널별 편성코드 초기화
-  ['appmkt-code-super','appmkt-code-live','appmkt-code-popup','appmkt-code-banner','appmkt-code-push','appmkt-code-kakao'].forEach(function(id){
-    var inp=document.getElementById(id); if(inp){ inp.value=''; inp.disabled=true; }
-  });
   // 모바일라이브 캠페인은 모바일라이브 채널 디폴트 체크
   var _isMliveType = document.getElementById('p-camptype-mlive')?.checked;
   if(_isMliveType){
     var liveCb = document.getElementById('appmkt-live');
     if(liveCb) liveCb.checked = true;
-    var liveCodeInp = document.getElementById('appmkt-code-live');
-    if(liveCodeInp) liveCodeInp.disabled = false;
   }
   ['ch-youtube','ch-insta'].forEach(function(id){ var el=document.getElementById(id); if(el) el.checked=false; });
   var naCk2=document.getElementById('appmkt-na'); if(naCk2){ naCk2.checked=false; }
@@ -9145,7 +9268,8 @@ function openNewProd(){
   var cil=document.getElementById('p-insta-link');     if(cil){ cil.style.display='none'; cil.href='#'; }
   var suf2=document.getElementById('appmkt-super-fields'); if(suf2) suf2.style.display='none';
   var luf2=document.getElementById('appmkt-live-fields');  if(luf2) luf2.style.display=_isMliveType?'block':'none';
-  ['appmkt-super-start','appmkt-super-end','appmkt-live-dt','appmkt-live-code','appmkt-landing-url','appmkt-deal-url'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var lcRow2=document.getElementById('appmkt-live-code-row'); if(lcRow2) lcRow2.style.display=_isMliveType?'block':'none';
+  ['appmkt-super-start','appmkt-super-end','appmkt-live-dt','appmkt-code-live','appmkt-landing-url','appmkt-deal-url'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   var ssEl2=document.getElementById('p-sample-sent'); if(ssEl2) ssEl2.checked=false;
   var sfCk=document.getElementById('p-ship-free'); if(sfCk) sfCk.checked=false;
   var ifCk=document.getElementById('p-island-free'); if(ifCk) ifCk.checked=false;
@@ -9171,8 +9295,12 @@ function openNewProd(){
   var srEl2=document.getElementById('p-settle-revenue'); if(srEl2) srEl2.value='';
   var soEl2=document.getElementById('p-settle-orders'); if(soEl2) soEl2.value='';
   var sdEl2=document.getElementById('p-settle-da'); if(sdEl2) sdEl2.value='';
+  var miEl2=document.getElementById('p-marketing-items'); if(miEl2) miEl2.value='';
   var prEl2=document.getElementById('p-profit-rate'); if(prEl2) prEl2.value='';
   var aiEl2=document.getElementById('p-ad-income'); if(aiEl2) aiEl2.value='';
+  var trEl2=document.getElementById('p-total-revenue'); if(trEl2) trEl2.value='';
+  var orEl2=document.getElementById('p-onair-revenue'); if(orEl2) orEl2.value='';
+  var ofEl2=document.getElementById('p-offair-revenue'); if(ofEl2) ofEl2.value='';
   var lcEl2=document.getElementById('p-live-code'); if(lcEl2) lcEl2.value='';
   var sdonEl2=document.getElementById('p-settle-done'); if(sdonEl2) sdonEl2.checked=false;
   // SKU + 가격 행 초기화 (다른 캠페인 데이터 유출 방지)
@@ -9324,9 +9452,19 @@ function saveProd(){
     mdcat:v('p-mdcat'),
     // mcn/feeRate/feeAmount/agencyRate/sampleSent은 위 infBlocks 값 사용 (중복 선언 제거)
     // settleRevenue/settleOrders는 settleData에서 합산
+    showhosts: {
+      req1:  (document.getElementById('p-host-req1')?.value||'').trim(),
+      req2:  (document.getElementById('p-host-req2')?.value||'').trim(),
+      conf1: (document.getElementById('p-host-conf1')?.value||'').trim(),
+      conf2: (document.getElementById('p-host-conf2')?.value||'').trim(),
+    },
     settleDa:      iv('p-settle-da'),
+    marketingItems: (document.getElementById('p-marketing-items')?.value||'').trim(),
     profitRateInput: parseFloat(document.getElementById('p-profit-rate')?.value)||0,
     adIncome:      iv('p-ad-income'),
+    totalRevenue:  iv('p-total-revenue'),
+    onairRevenue:  iv('p-onair-revenue'),
+    offairRevenue: iv('p-offair-revenue'),
     settleDone:    !!(document.getElementById('p-settle-done')?.checked),
     // 모바일라이브 편성코드 → appMkt에 병합
     _liveCodeInput: (document.getElementById('p-live-code')?.value||'').trim(),
@@ -9436,22 +9574,13 @@ function saveProd(){
     pds:pds, pdSingle:pdSingle, skus:skus,
     appMkt: (function(){
       var cbs=[...document.querySelectorAll('.appmkt-cb:checked')].map(function(cb){return cb.value;});
-      var codes = {
-        '슈퍼브랜드':   (document.getElementById('appmkt-code-super')?.value||'').trim(),
-        '모바일라이브': (document.getElementById('appmkt-code-live')?.value||'').trim(),
-        '팝업':         (document.getElementById('appmkt-code-popup')?.value||'').trim(),
-        '최상단배너':   (document.getElementById('appmkt-code-banner')?.value||'').trim(),
-        'PUSH':         (document.getElementById('appmkt-code-push')?.value||'').trim(),
-        '카톡플친':     (document.getElementById('appmkt-code-kakao')?.value||'').trim(),
-      };
       return {
         channels:  cbs,
-        channelCodes: codes,
         na:        !!(document.getElementById('appmkt-na')?.checked),
         superStart:document.getElementById('appmkt-super-start')?.value||'',
         superEnd:  document.getElementById('appmkt-super-end')?.value||'',
         liveDt:    document.getElementById('appmkt-live-dt')?.value||'',
-        liveCode:  codes['모바일라이브']||document.getElementById('appmkt-live-code')?.value.trim()||document.getElementById('p-live-code')?.value.trim()||'',
+        liveCode:  (document.getElementById('appmkt-code-live')?.value||'').trim()||(document.getElementById('appmkt-live-code')?.value||'').trim()||(document.getElementById('p-live-code')?.value||'').trim(),
         landingUrl:document.getElementById('appmkt-landing-url')?.value||'',
         dealUrl:   document.getElementById('appmkt-deal-url')?.value||''
       };
@@ -11117,7 +11246,9 @@ document.addEventListener('click', function(e){
 var _searchSelFocusIdx = {};
 
 function _searchSelUsers(role){
-  return role === 'md' ? MD_USERS : MANAGER_USERS;
+  if(role === 'md') return MD_USERS;
+  if(role === 'showhost') return (DB.showhosts||[]).map(function(s){ return {name:s.name, id:s.id}; });
+  return MANAGER_USERS;
 }
 
 function searchSelOpen(id, role){
@@ -11240,7 +11371,7 @@ function refreshManagerDropdowns(){
 // ═══════════════════════════════════════
 function switchBmTab(tab, el){
   _bmCurrentTab = tab; // 현재 탭 기억
-  ['mdcat','users','roles','mcn'].forEach(function(t){
+  ['mdcat','users','roles','mcn','showhost'].forEach(function(t){
     var panel = document.getElementById('bm-panel-'+t);
     var tabEl  = document.getElementById('bm-tab-'+t);
     if(panel) panel.style.display = t === tab ? '' : 'none';
@@ -11252,12 +11383,14 @@ function switchBmTab(tab, el){
     else if(tab==='mcn')   area.innerHTML = '<button class="btn btn-primary btn-sm" onclick="openAddMcnModal()">+ MCN 업체 추가</button>';
     else if(tab==='mdcat') area.innerHTML = '<button class="btn btn-primary btn-sm" onclick="openAddMdcatModal()">+ MDCAT 추가</button>';
     else if(tab==='roles') area.innerHTML = '<button class="btn btn-primary btn-sm" onclick="openAddRoleModal()">+ 역할 추가</button>';
+    else if(tab==='showhost') area.innerHTML = '<button class="btn btn-primary btn-sm" onclick="openAddShowhostModal()">+ 쇼호스트 추가</button>';
     else area.innerHTML = '';
   }
   if(tab==='users') renderUserTable();
   else if(tab==='mcn') renderMcnTable();
   else if(tab==='mdcat') renderMdcatTable();
   else if(tab==='roles'){ renderRoleTable(); loadPermMatrix(); }
+  else if(tab==='showhost') renderShowhostTable();
 }
 
 var _bmCurrentTab = 'mdcat'; // 현재 열린 탭 기억
@@ -11267,6 +11400,96 @@ function renderBasemgmt(){
   var tabEl = document.getElementById('bm-tab-' + _bmCurrentTab);
   switchBmTab(_bmCurrentTab, tabEl);
   if(fbReady) syncMdcatFromCampaigns();
+}
+
+// ═══════════════════════════════════════
+// 쇼호스트 DB 관리
+// ═══════════════════════════════════════
+function renderShowhostTable(){
+  var hosts = (DB.showhosts||[]).slice().sort(function(a,b){
+    return (a.createdAt||0) - (b.createdAt||0);
+  });
+  var cnt = document.getElementById('showhost-count');
+  if(cnt) cnt.textContent = hosts.length+'명';
+  var tbl = document.getElementById('showhost-tbl');
+  if(!tbl) return;
+  if(!hosts.length){
+    tbl.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text3);font-size:13px">등록된 쇼호스트가 없습니다. [+ 쇼호스트 추가] 버튼으로 추가하세요.</td></tr>';
+    return;
+  }
+  tbl.innerHTML = hosts.map(function(h, i){
+    var dateStr = h.createdAt ? new Date(h.createdAt).toLocaleDateString('ko-KR') : '-';
+    return '<tr>'
+      +'<td style="text-align:center;color:var(--text3)">'+(i+1)+'</td>'
+      +'<td style="font-weight:700">'+escHtml(h.name||'-')+'</td>'
+      +'<td>'+escHtml(h.company||'-')+'</td>'
+      +'<td>'+escHtml(h.phone||'-')+'</td>'
+      +'<td>'+escHtml(h.category||'-')+'</td>'
+      +'<td style="font-size:11px;color:var(--text3);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(h.memo||'')+'</td>'
+      +'<td style="font-size:11px;color:var(--text3)">'+dateStr+'</td>'
+      +'<td style="white-space:nowrap"><button class="btn btn-ghost btn-xs" onclick="editShowhost('+h.id+')">수정</button> <button class="btn btn-danger btn-xs" onclick="delShowhost('+h.id+')">삭제</button></td>'
+      +'</tr>';
+  }).join('');
+}
+
+function openAddShowhostModal(){
+  document.getElementById('sh-edit-id').value = '';
+  document.getElementById('addshowhost-title').textContent = '+ 쇼호스트 추가';
+  ['sh-name','sh-company','sh-phone','sh-category','sh-memo'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  openMo('addshowhost');
+}
+
+function editShowhost(id){
+  var h = (DB.showhosts||[]).find(function(x){ return parseInt(x.id)===parseInt(id); });
+  if(!h){ showToast('쇼호스트를 찾을 수 없습니다.'); return; }
+  document.getElementById('sh-edit-id').value = h.id;
+  document.getElementById('addshowhost-title').textContent = '쇼호스트 수정';
+  document.getElementById('sh-name').value     = h.name||'';
+  document.getElementById('sh-company').value  = h.company||'';
+  document.getElementById('sh-phone').value    = h.phone||'';
+  document.getElementById('sh-category').value = h.category||'';
+  document.getElementById('sh-memo').value     = h.memo||'';
+  openMo('addshowhost');
+}
+
+function saveShowhost(){
+  if(!isAdmin()){ showToast('관리자만 쇼호스트를 관리할 수 있습니다.'); return; }
+  var name = (document.getElementById('sh-name')?.value||'').trim();
+  if(!name){ showToast('이름을 입력해주세요.'); return; }
+  var editId = document.getElementById('sh-edit-id').value;
+  var data = {
+    name:    name,
+    company: (document.getElementById('sh-company')?.value||'').trim(),
+    phone:   (document.getElementById('sh-phone')?.value||'').trim(),
+    category:(document.getElementById('sh-category')?.value||'').trim(),
+    memo:    (document.getElementById('sh-memo')?.value||'').trim(),
+  };
+  if(!DB.showhosts) DB.showhosts = [];
+  if(editId){
+    var idx = DB.showhosts.findIndex(function(x){ return parseInt(x.id)===parseInt(editId); });
+    if(idx>=0) DB.showhosts[idx] = Object.assign({}, DB.showhosts[idx], data);
+  } else {
+    var maxId = DB.showhosts.length ? Math.max.apply(null, DB.showhosts.map(function(x){return parseInt(x.id)||0;})) : 0;
+    data.id = maxId + 1;
+    data.createdAt = Date.now();
+    DB.showhosts.push(data);
+  }
+  if(fbReady) pushToFirebase();
+  closeMo('addshowhost');
+  renderShowhostTable();
+  showToast(editId?'쇼호스트 수정 완료':'쇼호스트 추가 완료');
+}
+
+function delShowhost(id){
+  if(!isAdmin()){ showToast('관리자만 쇼호스트를 관리할 수 있습니다.'); return; }
+  showConfirm('이 쇼호스트를 삭제하시겠습니까?', function(){
+    DB.showhosts = (DB.showhosts||[]).filter(function(x){ return parseInt(x.id)!==parseInt(id); });
+    if(fbReady) pushToFirebase();
+    renderShowhostTable();
+    showToast('삭제됨');
+  });
 }
 
 // ═══════════════════════════════════════
