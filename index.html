@@ -2281,13 +2281,31 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <span style="color:var(--orange)">⊘ 해당없음 (정산으로 이동)</span>
           </label>
         </div>
-        <div id="appmkt-channels-area" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="팝업"> 팝업</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="최상단배너"> 최상단배너</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="PUSH"> PUSH</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="카톡플친"> 카톡플친</label>
+        <div id="appmkt-channels-area" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
+            <input class="inp inp-sm appmkt-code" id="appmkt-code-super" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
+            <input class="inp inp-sm appmkt-code" id="appmkt-code-live" placeholder="편성코드 (예: 202602022467)" style="flex:1;font-size:12px" disabled>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
+            <input class="inp inp-sm appmkt-code" id="appmkt-code-popup" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
+            <input class="inp inp-sm appmkt-code" id="appmkt-code-banner" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-push" value="PUSH" onchange="toggleAppMktFields()"> PUSH</label>
+            <input class="inp inp-sm appmkt-code" id="appmkt-code-push" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:130px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-kakao" value="카톡플친" onchange="toggleAppMktFields()"> 카톡플친</label>
+            <input class="inp inp-sm appmkt-code" id="appmkt-code-kakao" placeholder="편성코드" style="flex:1;font-size:12px" disabled>
+          </div>
         </div>
         <div id="appmkt-super-fields" style="display:none;margin-bottom:12px">
           <div class="fr2">
@@ -5190,6 +5208,26 @@ function editProd(id){
   var se=document.getElementById('appmkt-super-end');   if(se) se.value=appMkt.superEnd||'';
   var ld=document.getElementById('appmkt-live-dt');     if(ld) ld.value=appMkt.liveDt||'';
   var alc=document.getElementById('appmkt-live-code');  if(alc) alc.value=appMkt.liveCode||'';
+  // 채널별 편성코드 복원
+  var codes = appMkt.channelCodes||{};
+  var codeMap = {
+    '슈퍼브랜드':'appmkt-code-super',
+    '모바일라이브':'appmkt-code-live',
+    '팝업':'appmkt-code-popup',
+    '최상단배너':'appmkt-code-banner',
+    'PUSH':'appmkt-code-push',
+    '카톡플친':'appmkt-code-kakao'
+  };
+  Object.keys(codeMap).forEach(function(key){
+    var inp = document.getElementById(codeMap[key]);
+    if(inp) inp.value = codes[key]||'';
+  });
+  // 모바일라이브 편성코드는 liveCode와도 호환 (구버전 데이터)
+  if(!codes['모바일라이브'] && appMkt.liveCode){
+    var liveInp = document.getElementById('appmkt-code-live');
+    if(liveInp) liveInp.value = appMkt.liveCode;
+  }
+  toggleAppMktFields(); // 체크박스 상태 반영하여 입력란 활성화
   var lu=document.getElementById('appmkt-landing-url'); if(lu) lu.value=appMkt.landingUrl||'';
   var du=document.getElementById('appmkt-deal-url');    if(du) du.value=appMkt.dealUrl||'';
   initSections(false); // 수정 시에도 기본 닫힘
@@ -6473,8 +6511,9 @@ function toggleAppMktNa(){
   var superFlds = document.getElementById('appmkt-super-fields');
   var liveFlds  = document.getElementById('appmkt-live-fields');
   if(na){
-    // 해당없음 체크 → 모든 채널 체크 해제 + 영역 흐리게
+    // 해당없음 체크 → 모든 채널 체크 해제 + 편성코드 초기화 + 영역 흐리게
     document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=false; });
+    document.querySelectorAll('.appmkt-code').forEach(function(inp){ inp.value=''; inp.disabled=true; });
     if(area)     area.style.opacity='0.35';
     if(area)     area.style.pointerEvents='none';
     if(superFlds) superFlds.style.display='none';
@@ -6492,6 +6531,23 @@ function toggleAppMktFields(){
   var lf = document.getElementById('appmkt-live-fields');
   if(sf) sf.style.display = superChecked?'block':'none';
   if(lf) lf.style.display = liveChecked?'block':'none';
+  // 각 채널 체크박스 상태에 따라 편성코드 입력란 활성/비활성
+  var pairs = [
+    ['appmkt-super',  'appmkt-code-super'],
+    ['appmkt-live',   'appmkt-code-live'],
+    ['appmkt-popup',  'appmkt-code-popup'],
+    ['appmkt-banner', 'appmkt-code-banner'],
+    ['appmkt-push',   'appmkt-code-push'],
+    ['appmkt-kakao',  'appmkt-code-kakao'],
+  ];
+  pairs.forEach(function(p){
+    var cb = document.getElementById(p[0]);
+    var inp = document.getElementById(p[1]);
+    if(cb && inp){
+      inp.disabled = !cb.checked;
+      if(!cb.checked) inp.value = '';
+    }
+  });
 }
 
 function delApp(id){ var nid2=parseInt(id); DB.appMarketing=DB.appMarketing.filter(function(a){return parseInt(a.id)!==nid2;}); broadcastData(); renderS6(); showToast('삭제됨'); }
@@ -9068,6 +9124,18 @@ function openNewProd(){
     var el=document.getElementById(id); if(el) el.checked=false;
   });
   document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=false; });
+  // 채널별 편성코드 초기화
+  ['appmkt-code-super','appmkt-code-live','appmkt-code-popup','appmkt-code-banner','appmkt-code-push','appmkt-code-kakao'].forEach(function(id){
+    var inp=document.getElementById(id); if(inp){ inp.value=''; inp.disabled=true; }
+  });
+  // 모바일라이브 캠페인은 모바일라이브 채널 디폴트 체크
+  var _isMliveType = document.getElementById('p-camptype-mlive')?.checked;
+  if(_isMliveType){
+    var liveCb = document.getElementById('appmkt-live');
+    if(liveCb) liveCb.checked = true;
+    var liveCodeInp = document.getElementById('appmkt-code-live');
+    if(liveCodeInp) liveCodeInp.disabled = false;
+  }
   ['ch-youtube','ch-insta'].forEach(function(id){ var el=document.getElementById(id); if(el) el.checked=false; });
   var naCk2=document.getElementById('appmkt-na'); if(naCk2){ naCk2.checked=false; }
   var naArea=document.getElementById('appmkt-channels-area'); if(naArea){ naArea.style.opacity=''; naArea.style.pointerEvents=''; }
@@ -9076,7 +9144,7 @@ function openNewProd(){
   var cyl=document.getElementById('p-youtube-link');   if(cyl){ cyl.style.display='none'; cyl.href='#'; }
   var cil=document.getElementById('p-insta-link');     if(cil){ cil.style.display='none'; cil.href='#'; }
   var suf2=document.getElementById('appmkt-super-fields'); if(suf2) suf2.style.display='none';
-  var luf2=document.getElementById('appmkt-live-fields');  if(luf2) luf2.style.display='none';
+  var luf2=document.getElementById('appmkt-live-fields');  if(luf2) luf2.style.display=_isMliveType?'block':'none';
   ['appmkt-super-start','appmkt-super-end','appmkt-live-dt','appmkt-live-code','appmkt-landing-url','appmkt-deal-url'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   var ssEl2=document.getElementById('p-sample-sent'); if(ssEl2) ssEl2.checked=false;
   var sfCk=document.getElementById('p-ship-free'); if(sfCk) sfCk.checked=false;
@@ -9368,13 +9436,22 @@ function saveProd(){
     pds:pds, pdSingle:pdSingle, skus:skus,
     appMkt: (function(){
       var cbs=[...document.querySelectorAll('.appmkt-cb:checked')].map(function(cb){return cb.value;});
+      var codes = {
+        '슈퍼브랜드':   (document.getElementById('appmkt-code-super')?.value||'').trim(),
+        '모바일라이브': (document.getElementById('appmkt-code-live')?.value||'').trim(),
+        '팝업':         (document.getElementById('appmkt-code-popup')?.value||'').trim(),
+        '최상단배너':   (document.getElementById('appmkt-code-banner')?.value||'').trim(),
+        'PUSH':         (document.getElementById('appmkt-code-push')?.value||'').trim(),
+        '카톡플친':     (document.getElementById('appmkt-code-kakao')?.value||'').trim(),
+      };
       return {
         channels:  cbs,
+        channelCodes: codes,
         na:        !!(document.getElementById('appmkt-na')?.checked),
         superStart:document.getElementById('appmkt-super-start')?.value||'',
         superEnd:  document.getElementById('appmkt-super-end')?.value||'',
         liveDt:    document.getElementById('appmkt-live-dt')?.value||'',
-        liveCode:  document.getElementById('appmkt-live-code')?.value.trim()||document.getElementById('p-live-code')?.value.trim()||'',
+        liveCode:  codes['모바일라이브']||document.getElementById('appmkt-live-code')?.value.trim()||document.getElementById('p-live-code')?.value.trim()||'',
         landingUrl:document.getElementById('appmkt-landing-url')?.value||'',
         dealUrl:   document.getElementById('appmkt-deal-url')?.value||''
       };
