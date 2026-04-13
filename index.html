@@ -2083,26 +2083,25 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
 
 <!-- 캠페인 요청 등록 모달 (1단계) -->
 <div class="mo" id="mo-product"><div class="mo-box wide">
-  <div class="mo-hd" style="flex-wrap:wrap;gap:8px">
-    <span class="mo-ttl" id="prod-mo-title">캠페인 등록</span>
-    <button class="btn btn-ghost btn-xs" id="mlive-sched-cal-btn" onclick="openMliveSchedCal()" style="display:none;font-size:12px;padding:4px 10px;background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent2);font-weight:700" title="확정된 모바일라이브 편성 보기">📅 M라이브 편성</button>
-    <span id="p-campcode" style="font-size:12px;font-family:monospace;font-weight:700;color:var(--accent2);background:var(--accent-bg);padding:2px 10px;border-radius:12px;display:none"></span>
-    <div id="prod-stage-area" style="display:none;align-items:center;gap:8px;margin-left:0">
-      <span style="font-size:11px;font-weight:600;color:var(--text3)">현재 단계</span>
-      <span id="prod-stage-badge" style="font-size:12px;font-weight:800;padding:3px 12px;border-radius:20px;background:var(--accent-bg);color:var(--accent2)">-</span>
-      <span style="font-size:11px;color:var(--text3)">→ 변경:</span>
-      <select id="prod-stage-select" class="sel inp-sm" style="height:28px;font-size:12px;width:160px" onchange="changeProdStageInline(this.value)">
+  <div class="mo-hd" style="flex-wrap:nowrap;gap:6px;align-items:center">
+    <span class="mo-ttl" id="prod-mo-title" style="white-space:nowrap;flex-shrink:0">캠페인 등록</span>
+    <span id="p-campcode" style="font-size:11px;font-family:monospace;font-weight:700;color:var(--accent2);background:var(--accent-bg);padding:2px 8px;border-radius:10px;display:none;white-space:nowrap"></span>
+    <span id="p-livecode-badge" style="font-size:11px;font-family:monospace;font-weight:700;color:var(--orange);background:var(--orange-bg);padding:2px 8px;border-radius:10px;display:none;white-space:nowrap"></span>
+    <button class="btn btn-ghost btn-xs" id="mlive-sched-cal-btn" onclick="openMliveSchedCal()" style="display:none;font-size:11px;padding:3px 8px;background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent2);font-weight:700;white-space:nowrap" title="확정된 모바일라이브 편성 보기">📅 편성</button>
+    <div id="prod-stage-area" style="display:none;align-items:center;gap:6px;white-space:nowrap">
+      <span id="prod-stage-badge" style="font-size:11px;font-weight:800;padding:2px 10px;border-radius:16px;background:var(--accent-bg);color:var(--accent2)">-</span>
+      <select id="prod-stage-select" class="sel inp-sm" style="height:26px;font-size:11px;width:140px;padding:0 6px" onchange="changeProdStageInline(this.value)">
         <option value="1.캠페인요청">1단계 · 캠페인요청</option>
         <option value="2.캠페인확정">2단계 · 캠페인확정</option>
         <option value="4.MCN요청">4단계 · MCN요청</option>
         <option value="5.인플루언서확정">5단계 · 인플루언서확정</option>
-        <option value="6.APP마케팅확정">6단계 · APP마케팅확정</option>
+        <option value="6.APP마케팅확정">6단계 · 모바일마케팅확정</option>
         <option value="7.정산">7단계 · 정산</option>
         <option value="8.성과분석">8단계 · 성과분석</option>
       </select>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-      <button class="btn btn-ghost btn-sm" onclick="openPasteFillModal()" style="font-size:12px;background:var(--accent-bg);border-color:var(--accent);color:var(--accent2)" title="모든 섹션 항목을 한번에 자동 입력">📋 전체붙여넣기</button>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
+      <button class="btn btn-ghost btn-sm" onclick="openPasteFillModal()" style="font-size:11px;padding:4px 8px;background:var(--accent-bg);border-color:var(--accent);color:var(--accent2)" title="모든 섹션 항목을 한번에 자동 입력">📋 붙여넣기</button>
       <button class="mo-x" onclick="closeMo('product')">✕</button>
     </div>
   </div>
@@ -5502,12 +5501,18 @@ function editProd(id){
   openMo('product');
   // 상태 배지 표시
   updateProdStageBadge(p.stage||'1.캠페인요청');
+  // 캠페인코드 배지
   var campCodeEl = document.getElementById('p-campcode');
   if(campCodeEl){
-    var isMliveCamp = (p.campType||'') === '모바일라이브';
-    var codeDisplay = isMliveCamp ? (p.appMkt&&p.appMkt.liveCode ? '편성 '+p.appMkt.liveCode : p.campCode||'-') : (p.campCode||'-');
-    campCodeEl.textContent = codeDisplay;
-    campCodeEl.style.display = codeDisplay && codeDisplay!=='-' ? '' : 'none';
+    campCodeEl.textContent = p.campCode||'';
+    campCodeEl.style.display = p.campCode ? '' : 'none';
+  }
+  // 편성코드 배지 (M-live)
+  var liveCodeBadge = document.getElementById('p-livecode-badge');
+  if(liveCodeBadge){
+    var lc = (p.appMkt&&p.appMkt.liveCode)||'';
+    liveCodeBadge.textContent = lc ? '편성 '+lc : '';
+    liveCodeBadge.style.display = lc ? '' : 'none';
   }
   // 카카오 공유 버튼 표시
   showKakaoShareBtn(id);
@@ -9736,6 +9741,7 @@ function openNewProd(){
   // 신규 등록 시 상태 배지 + 공유 버튼 숨김
   var sa=document.getElementById('prod-stage-area'); if(sa) sa.style.display='none';
   var ccEl=document.getElementById('p-campcode'); if(ccEl) ccEl.style.display='none';
+  var lcBdg=document.getElementById('p-livecode-badge'); if(lcBdg) lcBdg.style.display='none';
   showKakaoShareBtn(null);
   // 담당자 드롭다운 갱신
   refreshManagerDropdowns();
