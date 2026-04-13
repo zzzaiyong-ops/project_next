@@ -1403,6 +1403,11 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <!-- 전체캠페인 필터바: 1행 - 목록/칸반 + 캠페인명 + 조회 -->
     <div class="filter-bar" style="margin-bottom:6px">
       <div class="tabs" style="margin:0;border:none;flex-shrink:0">
+        <div class="tab active" id="camp-type-tab-inf" onclick="_campTypeFilter='인플루언서';document.getElementById('camp-type-tab-inf').classList.add('active');document.getElementById('camp-type-tab-mlive').classList.remove('active');renderCamps()">인플루언서</div>
+        <div class="tab" id="camp-type-tab-mlive" onclick="_campTypeFilter='모바일라이브';document.getElementById('camp-type-tab-mlive').classList.add('active');document.getElementById('camp-type-tab-inf').classList.remove('active');renderCamps()">모바일라이브</div>
+      </div>
+      <div style="width:1px;height:20px;background:var(--border);margin:0 6px"></div>
+      <div class="tabs" style="margin:0;border:none;flex-shrink:0">
         <div class="tab active" onclick="switchCampView('list',this)">목록</div>
         <div class="tab" onclick="switchCampView('kanban',this)">칸반</div>
       </div>
@@ -1457,7 +1462,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div id="camp-list" style="display:block">
       <div class="card">
         <div class="card-hd"><span class="card-ttl">전체 캠페인 <span id="camp-count" style="font-size:12px;font-weight:400;color:var(--text3)"></span></span></div>
-        <div style="overflow-x:auto;min-height:100px;display:block"><table style="width:100%;border-collapse:collapse;min-height:100px"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>기간</th><th>캠페인담당</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플루언서</th><th style="background:var(--bg)"></th></tr></thead>
+        <div style="overflow-x:auto;min-height:100px;display:block"><table style="width:100%;border-collapse:collapse;min-height:100px"><thead id="camp-thead"><tr><th style="width:36px;text-align:center">#</th><th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>기간</th><th>캠페인담당</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플루언서</th><th class="mob-hide">M라이브</th><th style="background:var(--bg)"></th></tr></thead>
         <tbody id="camp-tbl"></tbody></table></div>
         <div id="camp-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 18px;border-top:1px solid var(--border)"></div>
       </div>
@@ -2399,12 +2404,9 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
           <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
           <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
+          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-dmp" value="DMP광고" onchange="toggleAppMktFields()"> DMP광고</label>
           <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-push" value="PUSH" onchange="toggleAppMktFields()"> PUSH</label>
           <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-kakao" value="카톡플친" onchange="toggleAppMktFields()"> 카톡플친</label>
-        </div>
-        <div id="appmkt-live-code-row" style="display:none;margin-bottom:12px">
-          <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">📺 모바일라이브 편성코드</label>
-          <input class="inp inp-sm" id="appmkt-code-live" placeholder="편성코드 (예: 202602022467)" style="width:100%;font-size:12px">
         </div>
         <div id="appmkt-super-fields" style="display:none;margin-bottom:12px">
           <div class="fr2">
@@ -2412,14 +2414,16 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <div><label>슈퍼브랜드 종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-super-end" type="date"></div>
           </div>
         </div>
-        <div id="appmkt-live-fields" style="display:none;margin-bottom:4px">
-          <div class="fr" style="margin-bottom:8px">
-            <label>모바일라이브 방송일시 <span style="color:var(--red)">*</span></label>
-            <input class="inp" id="appmkt-live-dt" type="datetime-local">
+        <div id="appmkt-live-fields" style="display:none;margin-bottom:12px">
+          <div class="fr2">
+            <div><label>모바일라이브 편성코드 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-live-code" placeholder="예: 202602022467"></div>
+            <div><label>모바일라이브 방송일시 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-live-dt" type="datetime-local" onchange="checkMliveScheduleDup()"></div>
           </div>
-          <div class="fr">
-            <label>모바일라이브 편성코드</label>
-            <input class="inp" id="appmkt-live-code" placeholder="예: 202602022467">
+        </div>
+        <div id="appmkt-send-fields" style="display:none;margin-bottom:12px">
+          <div class="fr2">
+            <div id="appmkt-dmp-send-wrap" style="display:none"><label>DMP광고 발송모수 (명)</label><input class="inp inp-money" id="appmkt-dmp-send" placeholder="0" oninput="formatMoney(this)"></div>
+            <div id="appmkt-push-send-wrap" style="display:none"><label>PUSH 발송모수 (명)</label><input class="inp inp-money" id="appmkt-push-send" placeholder="0" oninput="formatMoney(this)"></div>
           </div>
         </div>
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
@@ -2451,7 +2455,6 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
       <div class="mo-sec-body" id="sec-settle">
         <div class="fr2" style="margin-bottom:12px">
-          <div><label>모바일라이브 편성코드</label><input class="inp" id="p-live-code" placeholder="예: 202602022467"></div>
           <div><label>DA 광고료 (원)</label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
           <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
             <input type="checkbox" id="p-settle-done" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer">
@@ -5336,10 +5339,10 @@ function editProd(id){
   var ss=document.getElementById('appmkt-super-start'); if(ss) ss.value=appMkt.superStart||'';
   var se=document.getElementById('appmkt-super-end');   if(se) se.value=appMkt.superEnd||'';
   var ld=document.getElementById('appmkt-live-dt');     if(ld) ld.value=appMkt.liveDt||'';
-  // 모바일라이브 편성코드 복원
-  var alc=document.getElementById('appmkt-code-live');  if(alc) alc.value=appMkt.liveCode||'';
-  var lcRow=document.getElementById('appmkt-live-code-row');
-  if(lcRow) lcRow.style.display=(appMkt.channels||[]).includes('모바일라이브')?'block':'none';
+  var alc=document.getElementById('appmkt-live-code');  if(alc) alc.value=appMkt.liveCode||'';
+  // DMP/PUSH 발송모수 복원
+  var dmpS=document.getElementById('appmkt-dmp-send');  if(dmpS) dmpS.value=appMkt.dmpSend ? appMkt.dmpSend.toLocaleString('ko-KR'):'';
+  var pushS=document.getElementById('appmkt-push-send');if(pushS) pushS.value=appMkt.pushSend ? appMkt.pushSend.toLocaleString('ko-KR'):'';
   toggleAppMktFields();
   var lu=document.getElementById('appmkt-landing-url'); if(lu) lu.value=appMkt.landingUrl||'';
   var du=document.getElementById('appmkt-deal-url');    if(du) du.value=appMkt.dealUrl||'';
@@ -6623,17 +6626,14 @@ function toggleAppMktNa(){
   var area = document.getElementById('appmkt-channels-area');
   var superFlds = document.getElementById('appmkt-super-fields');
   var liveFlds  = document.getElementById('appmkt-live-fields');
-  var liveCodeRow = document.getElementById('appmkt-live-code-row');
+  var sendFlds = document.getElementById('appmkt-send-fields');
   if(na){
-    // 해당없음 체크 → 모든 채널 체크 해제 + 편성코드 초기화 + 영역 흐리게
     document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=false; });
-    var liveCodeInp = document.getElementById('appmkt-code-live');
-    if(liveCodeInp) liveCodeInp.value='';
     if(area)     area.style.opacity='0.35';
     if(area)     area.style.pointerEvents='none';
     if(superFlds) superFlds.style.display='none';
     if(liveFlds)  liveFlds.style.display='none';
-    if(liveCodeRow) liveCodeRow.style.display='none';
+    if(sendFlds)  sendFlds.style.display='none';
   } else {
     if(area) area.style.opacity='';
     if(area) area.style.pointerEvents='';
@@ -6643,17 +6643,25 @@ function toggleAppMktNa(){
 function toggleAppMktFields(){
   var superChecked = document.getElementById('appmkt-super')?.checked;
   var liveChecked  = document.getElementById('appmkt-live')?.checked;
+  var dmpChecked   = document.getElementById('appmkt-dmp')?.checked;
+  var pushChecked  = document.getElementById('appmkt-push')?.checked;
   var sf = document.getElementById('appmkt-super-fields');
   var lf = document.getElementById('appmkt-live-fields');
   if(sf) sf.style.display = superChecked?'block':'none';
   if(lf) lf.style.display = liveChecked?'block':'none';
-  // 모바일라이브 편성코드는 모바일라이브 채널 체크 시에만 표시
-  var liveCodeRow = document.getElementById('appmkt-live-code-row');
-  if(liveCodeRow) liveCodeRow.style.display = liveChecked ? 'block' : 'none';
   if(!liveChecked){
-    var liveCodeInp = document.getElementById('appmkt-code-live');
-    if(liveCodeInp) liveCodeInp.value = '';
+    var lc=document.getElementById('appmkt-live-code'); if(lc) lc.value='';
+    var ld=document.getElementById('appmkt-live-dt');   if(ld) ld.value='';
   }
+  // DMP/PUSH 발송모수 표시
+  var sendArea = document.getElementById('appmkt-send-fields');
+  var dmpWrap  = document.getElementById('appmkt-dmp-send-wrap');
+  var pushWrap = document.getElementById('appmkt-push-send-wrap');
+  if(sendArea) sendArea.style.display = (dmpChecked||pushChecked)?'block':'none';
+  if(dmpWrap)  dmpWrap.style.display  = dmpChecked?'':'none';
+  if(pushWrap) pushWrap.style.display = pushChecked?'':'none';
+  if(!dmpChecked){  var ds=document.getElementById('appmkt-dmp-send');  if(ds) ds.value=''; }
+  if(!pushChecked){ var ps=document.getElementById('appmkt-push-send'); if(ps) ps.value=''; }
 }
 
 function delApp(id){ var nid2=parseInt(id); DB.appMarketing=DB.appMarketing.filter(function(a){return parseInt(a.id)!==nid2;}); broadcastData(); renderS6(); showToast('삭제됨'); }
@@ -6835,6 +6843,7 @@ function _getPagedItems(arr, pageKey){
 
 var _campPage = 1;
 var _campPageSize = 30;
+var _campTypeFilter = '인플루언서'; // 전체 캠페인 조회 유형 필터
 
 function _renderCampPagination(total){
   var pgEl = document.getElementById('camp-pagination');
@@ -6879,8 +6888,12 @@ function renderCamps(){
   dateFilter.camp = {from: dateFrom, to: dateTo};
 
   var filtered = DB.campaigns.filter(function(c){
-    if(!c.name || !c.name.trim()) return false; // 이름 없는 빈 캠페인 제외
-    // MD 권한: 본인 담당 캠페인만 (isMycamp과 동일 기준)
+    if(!c.name || !c.name.trim()) return false;
+    // 캠페인 유형 필터 (인플루언서 / 모바일라이브)
+    if(_campTypeFilter){
+      var ct = c.campType || '인플루언서';
+      if(ct !== _campTypeFilter) return false;
+    }
     if(ME_ROLE === 'md' && !isMycamp(c)) return false;
     if(campNameF   && !(c.name||'').toLowerCase().includes(campNameF)) return false;
     if(stageFilter && c.stage !== stageFilter) return false;
@@ -6914,15 +6927,20 @@ function renderCamps(){
     var revStr = c.revenue ? (c.revenue/100000000).toFixed(1)+'억' : '-';
     var pdName = c.pdSingle||(c.pds&&c.pds[0])||'-';
     var infCount = (c.infData&&c.infData.length>0) ? c.infData.filter(function(d){return d.infName;}).length : (c.infName?1:0);
+    var hasMlive = c.appMkt && c.appMkt.channels && c.appMkt.channels.indexOf('모바일라이브')>=0;
+    var isMliveCamp = (c.campType||'') === '모바일라이브';
+    var codeDisplay = isMliveCamp ? (c.appMkt&&c.appMkt.liveCode||'-') : (c.campCode||'-');
+    var lastCol = isMliveCamp ? ((c.showhosts&&(c.showhosts.conf1||c.showhosts.req1))||'-') : (infCount+'명');
     rows += '<tr onclick="editProd('+c.id+')">'
       + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
-      + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+(c.campCode||'-')+'</td>'
+      + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+escHtml(codeDisplay)+'</td>'
       + '<td><strong>'+escHtml(c.name)+'</strong><br><span style="font-size:11px;color:var(--text3)">'+(mdNm?'MD:'+mdNm:'')+'</span></td>'
       + '<td style="font-size:12px;color:var(--text3)">'+(c.start||'').slice(5)+'~'+(c.end||'').slice(5)+'</td>'
       + '<td style="color:var(--text2)">'+pdName+'</td>'
       + '<td style="font-weight:700;color:var(--green)">'+revStr+'</td>'
       + '<td><span style="background:'+stageBg(c.stage)+';color:'+col+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+c.stage+'</span></td>'
-      + '<td style="color:var(--text2)">'+infCount+'명</td>'
+      + '<td style="color:var(--text2)">'+escHtml(lastCol)+'</td>'
+      + '<td class="mob-hide" style="text-align:center">'+(hasMlive||isMliveCamp ? '<span style="background:var(--accent-bg);color:var(--accent2);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">📺</span>' : '-')+'</td>'
       + '<td><div class="row-acts">'
       + '<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️ 수정</button>'
       + (canEdit() && !isExtMcn() ? '<select class="sel inp-sm" style="width:150px" onchange="changeCampStage('+c.id+',this.value)" onclick="event.stopPropagation()">'
@@ -6935,7 +6953,7 @@ function renderCamps(){
   console.log('[renderCamps] rows length:', rows.length, 'paged:', paged.length);
   var campTbl = document.getElementById('camp-tbl');
   if(campTbl){
-    campTbl.innerHTML=rows||'<tr><td colspan="9" class="empty">캠페인 없음</td></tr>';
+    campTbl.innerHTML=rows||'<tr><td colspan="10" class="empty">캠페인 없음</td></tr>';
   }
   _renderCampPagination(filtered.length);
 }
@@ -8077,7 +8095,7 @@ function copyCampData(campId, rebroadcast){
   var naCk4=document.getElementById('appmkt-na'); if(naCk4) naCk4.checked=!!(appMkt.na);
   toggleAppMktNa();
   toggleAppMktFields();
-  var alc3=document.getElementById('appmkt-code-live'); if(alc3) alc3.value=''; // 편성코드는 비움 (새 방송이므로)
+  var alc3=document.getElementById('appmkt-live-code'); if(alc3) alc3.value=''; // 편성코드는 비움 (새 방송이므로)
   var ld3=document.getElementById('appmkt-live-dt');    if(ld3)  ld3.value='';
 
   // priceGrid는 sku에 통합됐으므로 별도 렌더 불필요
@@ -9337,8 +9355,8 @@ function openNewProd(){
   var cil=document.getElementById('p-insta-link');     if(cil){ cil.style.display='none'; cil.href='#'; }
   var suf2=document.getElementById('appmkt-super-fields'); if(suf2) suf2.style.display='none';
   var luf2=document.getElementById('appmkt-live-fields');  if(luf2) luf2.style.display=_isMliveType?'block':'none';
-  var lcRow2=document.getElementById('appmkt-live-code-row'); if(lcRow2) lcRow2.style.display=_isMliveType?'block':'none';
-  ['appmkt-super-start','appmkt-super-end','appmkt-live-dt','appmkt-code-live','appmkt-landing-url','appmkt-deal-url'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var sendFlds2=document.getElementById('appmkt-send-fields'); if(sendFlds2) sendFlds2.style.display='none';
+  ['appmkt-super-start','appmkt-super-end','appmkt-live-dt','appmkt-live-code','appmkt-dmp-send','appmkt-push-send','appmkt-landing-url','appmkt-deal-url'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   var ssEl2=document.getElementById('p-sample-sent'); if(ssEl2) ssEl2.checked=false;
   var sfCk=document.getElementById('p-ship-free'); if(sfCk) sfCk.checked=false;
   var ifCk=document.getElementById('p-island-free'); if(ifCk) ifCk.checked=false;
@@ -9414,6 +9432,8 @@ function saveProd(){
   if(isViewer()){ showToast('조회 전용 계정입니다.'); return; }
   // external_mcn은 인플루언서 정보만 저장 (별도 처리)
   if(isExtMcn()){ saveProdMcnOnly(); return; }
+  // M라이브 편성 중복 체크 (팝업만, 저장 차단 안 함)
+  if(getCampType()==='모바일라이브') checkMliveScheduleDupOnSave();
   // ── 필수값 검증 ──
   var name    = document.getElementById('p-name').value.trim();
   var pStart  = document.getElementById('p-start').value;
@@ -9536,7 +9556,7 @@ function saveProd(){
     offairRevenue: iv('p-offair-revenue'),
     settleDone:    !!(document.getElementById('p-settle-done')?.checked),
     // 모바일라이브 편성코드 → appMkt에 병합
-    _liveCodeInput: (document.getElementById('p-live-code')?.value||'').trim(),
+    _liveCodeInput: (document.getElementById('appmkt-live-code')?.value||'').trim(),
     settleData:    getSettleBlocksData(),
     settleRevenue: getSettleBlocksData().reduce(function(s,d){return s+(d.revenue||0);},0),
     settleOrders:  getSettleBlocksData().reduce(function(s,d){return s+(d.orders||0);},0),
@@ -9649,7 +9669,9 @@ function saveProd(){
         superStart:document.getElementById('appmkt-super-start')?.value||'',
         superEnd:  document.getElementById('appmkt-super-end')?.value||'',
         liveDt:    document.getElementById('appmkt-live-dt')?.value||'',
-        liveCode:  (document.getElementById('appmkt-code-live')?.value||'').trim()||(document.getElementById('appmkt-live-code')?.value||'').trim()||(document.getElementById('p-live-code')?.value||'').trim(),
+        liveCode:  (document.getElementById('appmkt-live-code')?.value||'').trim(),
+        dmpSend:   parseInt((document.getElementById('appmkt-dmp-send')?.value||'').replace(/,/g,''))||0,
+        pushSend:  parseInt((document.getElementById('appmkt-push-send')?.value||'').replace(/,/g,''))||0,
         landingUrl:document.getElementById('appmkt-landing-url')?.value||'',
         dealUrl:   document.getElementById('appmkt-deal-url')?.value||''
       };
@@ -10508,6 +10530,64 @@ function renderMliveSchedCal(){
     html += '<div style="min-height:80px;background:'+(isToday?'var(--accent-bg)':'var(--bg2)')+';border:1px solid '+(isToday?'var(--accent)':'var(--border)')+';border-radius:4px;padding:4px"><div style="font-size:11px;font-weight:700;color:'+dayColor+';margin-bottom:3px">'+d+'</div>'+itemsHtml+'</div>';
   }
   grid.innerHTML = html;
+}
+
+// ── M라이브 편성 중복 체크 ──
+function checkMliveScheduleDup(){
+  var dt = (document.getElementById('appmkt-live-dt')?.value||'').trim();
+  if(!dt) return;
+  var editId = parseInt(document.getElementById('p-edit-id')?.value)||0;
+  var inputStart = dt.slice(0,16); // YYYY-MM-DDTHH:MM
+  var dups = (DB.campaigns||[]).filter(function(c){
+    if(c.id === editId) return false;
+    if((c.campType||'') !== '모바일라이브') return false;
+    var liveDt = (c.appMkt&&c.appMkt.liveDt)||c.start||'';
+    return liveDt.slice(0,16) === inputStart;
+  });
+  if(!dups.length) return;
+  _showDupPopup(dups, inputStart);
+}
+
+function checkMliveScheduleDupOnSave(){
+  var dt = (document.getElementById('appmkt-live-dt')?.value||'').trim();
+  if(!dt) return true; // no date = no check
+  var editId = parseInt(document.getElementById('p-edit-id')?.value)||0;
+  var inputStart = dt.slice(0,16);
+  var dups = (DB.campaigns||[]).filter(function(c){
+    if(c.id === editId) return false;
+    if((c.campType||'') !== '모바일라이브') return false;
+    var liveDt = (c.appMkt&&c.appMkt.liveDt)||c.start||'';
+    return liveDt.slice(0,16) === inputStart;
+  });
+  if(dups.length) _showDupPopup(dups, inputStart);
+  return true; // don't block save
+}
+
+function _showDupPopup(dups, inputStart){
+  var existing = document.getElementById('mlive-dup-popup');
+  if(existing) existing.remove();
+  var timeStr = inputStart.replace('T',' ');
+  var listHtml = dups.map(function(c){
+    var code = (c.appMkt&&c.appMkt.liveCode)||'-';
+    return '<div style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:12.5px">'
+      +'<span style="font-weight:700">'+escHtml(c.name||'-')+'</span>'
+      +' <span style="font-family:monospace;color:var(--accent2);font-size:11px">'+escHtml(code)+'</span>'
+      +'</div>';
+  }).join('');
+  var el = document.createElement('div');
+  el.id = 'mlive-dup-popup';
+  el.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.3);z-index:99999;display:flex;align-items:center;justify-content:center';
+  el.innerHTML = '<div style="background:var(--bg2);border:2px solid var(--orange);border-radius:var(--r-lg);width:480px;max-width:90vw;overflow:hidden">'
+    +'<div style="padding:16px 20px;background:var(--orange-bg);display:flex;align-items:center;justify-content:space-between">'
+    +'<div style="font-size:14px;font-weight:800;color:var(--orange)">⚠️ 편성 시간 중복 안내</div>'
+    +'<button class="btn btn-ghost btn-xs" onclick="document.getElementById(\'mlive-dup-popup\').remove()">✕</button>'
+    +'</div>'
+    +'<div style="padding:14px 20px">'
+    +'<div style="font-size:12.5px;color:var(--text2);margin-bottom:10px"><b>'+timeStr+'</b> 에 이미 편성된 M라이브가 <b>'+dups.length+'건</b> 있습니다.</div>'
+    +listHtml
+    +'<div style="text-align:right;margin-top:14px"><button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'mlive-dup-popup\').remove()">닫기</button></div>'
+    +'</div></div>';
+  document.body.appendChild(el);
 }
 
 function addPdRow(){
