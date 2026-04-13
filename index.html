@@ -795,7 +795,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div class="nav-item" data-page="s3" id="nav-s3" onclick="goPage('s3',this)"><span class="ico">📦</span> 3단계 · 상품정보등록 <span class="nbadge" id="b-s3">0</span></div>
     <div class="nav-item" data-page="s4" id="nav-s4" onclick="goPage('s4',this)"><span class="ico">📨</span> 4단계 · MCN요청 <span class="nbadge" id="b-s4">0</span></div>
     <div class="nav-item" data-page="s5" id="nav-s5" onclick="goPage('s5',this)"><span class="ico">👤</span> 5단계 · 인플루언서확정 <span class="nbadge orange" id="b-s5">0</span></div>
-    <div class="nav-item" data-page="s6" id="nav-s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 6단계 · APP마케팅 <span class="nbadge" id="b-s6">0</span></div>
+    <div class="nav-item" data-page="s6" id="nav-s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 6단계 · 모바일마케팅 <span class="nbadge" id="b-s6">0</span></div>
     <div class="nav-item" data-page="s7" id="nav-s7" onclick="goPage('s7',this)"><span class="ico">💰</span> 7단계 · 정산 <span class="nbadge" id="b-s7">0</span></div>
     <div class="nav-item" data-page="s8" id="nav-s8" onclick="goPage('s8',this)"><span class="ico">📈</span> 8단계 · 성과분석</div>
     <div class="nav-sec">관리</div>
@@ -808,7 +808,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div class="nav-item" data-page="s1" onclick="goPage('s1',this)"><span class="ico">📋</span> 1단계 · 편성요청 <span class="nbadge" id="b-ml-s1">0</span></div>
     <div class="nav-item" data-page="s2" onclick="goPage('s2',this)"><span class="ico">✅</span> 2단계 · 편성확정 <span class="nbadge orange" id="b-ml-s2">0</span></div>
     <div class="nav-item" data-page="s3" onclick="goPage('s3',this)"><span class="ico">📦</span> 3단계 · 상품정보등록 <span class="nbadge" id="b-ml-s3">0</span></div>
-    <div class="nav-item" data-page="s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 4단계 · APP마케팅 <span class="nbadge" id="b-ml-s6">0</span></div>
+    <div class="nav-item" data-page="s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 4단계 · 모바일마케팅 <span class="nbadge" id="b-ml-s6">0</span></div>
     <div class="nav-item" data-page="s7" onclick="goPage('s7',this)"><span class="ico">💰</span> 5단계 · 정산 <span class="nbadge" id="b-ml-s7">0</span></div>
     <div class="nav-item" data-page="s8" onclick="goPage('s8',this)"><span class="ico">📈</span> 6단계 · 성과분석</div>
     <div class="nav-sec">관리</div>
@@ -1358,7 +1358,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     </div>
     <div class="card">
       <div class="card-hd">
-        <span class="card-ttl">6단계 · APP 마케팅 <span style="font-size:11px;color:var(--text3);font-weight:400">(5단계 인플루언서 확정된 캠페인)</span></span>
+        <span class="card-ttl">6단계 · 모바일마케팅 <span style="font-size:11px;color:var(--text3);font-weight:400">(5단계 인플루언서 확정된 캠페인)</span></span>
       </div>
       <div class="stage-table-wrap"><table class="stage-table">
         <thead><tr>
@@ -2483,7 +2483,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <div class="mo-sec-hd" onclick="toggleSection('sec-appmkt')">
         <div style="display:flex;align-items:center;gap:8px;flex:1">
           <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="appmkt" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
-          <span>📱 APP 마케팅</span>
+          <span>📱 모바일마케팅</span>
         </div>
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
           <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openSectionPaste('appmkt')" style="font-size:11px;padding:3px 8px;color:var(--accent2)">📋 붙여넣기</button>
@@ -2499,37 +2499,57 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <span style="color:var(--orange)">⊘ 해당없음 (정산으로 이동)</span>
           </label>
         </div>
-        <div id="appmkt-channels-area" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-dmp" value="DMP광고" onchange="toggleAppMktFields()"> DMP광고</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-push" value="PUSH" onchange="toggleAppMktFields()"> PUSH</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-kakao" value="카톡플친" onchange="toggleAppMktFields()"> 카톡플친</label>
-        </div>
-        <div id="appmkt-super-fields" style="display:none;margin-bottom:12px">
-          <div class="fr2">
-            <div><label>슈퍼브랜드 시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-super-start" type="date"></div>
-            <div><label>슈퍼브랜드 종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-super-end" type="date"></div>
+        <div id="appmkt-channels-area" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+          <!-- 슈퍼브랜드: 체크 + 시작일/종료일 (인라인) -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
+            <input class="inp inp-sm" id="appmkt-super-start" type="date" placeholder="시작일" style="flex:1" disabled>
+            <span style="font-size:11px;color:var(--text3)">~</span>
+            <input class="inp inp-sm" id="appmkt-super-end" type="date" placeholder="종료일" style="flex:1" disabled>
           </div>
-        </div>
-        <div id="appmkt-live-fields" style="display:none;margin-bottom:12px">
-          <div class="fr2">
-            <div>
-              <label>모바일라이브 편성코드 <span style="color:var(--red)">*</span></label>
-              <div style="display:flex;gap:4px">
-                <input class="inp" id="appmkt-live-code" placeholder="예: 202602022467" style="flex:1">
-                <button class="btn btn-ghost btn-xs" id="appmkt-live-code-search-btn" type="button" onclick="openMliveCodePicker()" style="white-space:nowrap;padding:4px 8px;font-size:11px" title="등록된 M라이브에서 선택">🔍 검색</button>
-              </div>
-            </div>
-            <div><label>모바일라이브 방송일시 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-live-dt" type="datetime-local" onchange="checkMliveScheduleDup()"></div>
+          <!-- 모바일라이브: 체크 + 편성코드 + 방송일시 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
+            <input class="inp inp-sm" id="appmkt-live-code" placeholder="편성코드" style="flex:1" disabled>
+            <button class="btn btn-ghost btn-xs" id="appmkt-live-code-search-btn" type="button" onclick="openMliveCodePicker()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none">🔍</button>
+            <input class="inp inp-sm" id="appmkt-live-dt" type="datetime-local" onchange="checkMliveScheduleDup()" style="flex:1" disabled>
           </div>
-        </div>
-        <div id="appmkt-send-fields" style="display:none;margin-bottom:12px">
-          <div class="fr2">
-            <div id="appmkt-dmp-send-wrap" style="display:none"><label>DMP광고 발송모수 (명)</label><input class="inp inp-money" id="appmkt-dmp-send" placeholder="0" oninput="formatMoney(this)"></div>
-            <div id="appmkt-push-send-wrap" style="display:none"><label>PUSH 발송모수 (명)</label><input class="inp inp-money" id="appmkt-push-send" placeholder="0" oninput="formatMoney(this)"></div>
+          <!-- 팝업: 체크만 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
+          </div>
+          <!-- 최상단배너: 체크만 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
+          </div>
+          <!-- DMP광고: 체크 + 발송모수 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-dmp" value="DMP광고" onchange="toggleAppMktFields()"> DMP광고</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-dmp-send" placeholder="발송모수 (명)" style="flex:1" oninput="formatMoney(this)" disabled>
+          </div>
+          <!-- PUSH: 체크 + 발송모수 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-push" value="PUSH" onchange="toggleAppMktFields()"> PUSH</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-push-send" placeholder="발송모수 (명)" style="flex:1" oninput="formatMoney(this)" disabled>
+          </div>
+          <!-- 카톡플친: 체크 + 발송모수 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-kakao" value="카톡플친" onchange="toggleAppMktFields()"> 카톡플친</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-kakao-send" placeholder="발송모수 (명)" style="flex:1" oninput="formatMoney(this)" disabled>
+          </div>
+          <!-- 신세계상품권: 체크 + 금액 + 인원 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-ssg" value="신세계상품권" onchange="toggleAppMktFields()"> 신세계상품권</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-ssg-amount" placeholder="만원" style="flex:1" oninput="formatMoney(this)" disabled>
+            <span style="font-size:11px;color:var(--text3);white-space:nowrap">만원</span>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-ssg-count" placeholder="명" style="flex:1" oninput="formatMoney(this)" disabled>
+            <span style="font-size:11px;color:var(--text3);white-space:nowrap">명</span>
+          </div>
+          <!-- 스타벅스: 체크 + 인원 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-starbucks" value="스타벅스" onchange="toggleAppMktFields()"> 스타벅스</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-starbucks-count" placeholder="명" style="flex:1" oninput="formatMoney(this)" disabled>
+            <span style="font-size:11px;color:var(--text3);white-space:nowrap">명</span>
           </div>
         </div>
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
@@ -2663,7 +2683,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
 
 <!-- APP Marketing (5단계) -->
 <div class="mo" id="mo-appmarketing"><div class="mo-box">
-  <div class="mo-hd"><span class="mo-ttl">APP마케팅 요청 (6단계)</span><button class="mo-x" onclick="closeMo('appmarketing')">✕</button></div>
+  <div class="mo-hd"><span class="mo-ttl">모바일마케팅 요청 (6단계)</span><button class="mo-x" onclick="closeMo('appmarketing')">✕</button></div>
   <div class="mo-body">
     <div class="fr"><label>캠페인 선택</label><select class="sel" id="app-camp"></select></div>
     <div class="fr2"><div><label>전시기획</label><input class="inp" id="app-display" placeholder="메인배너, 기획전 등"></div><div><label>전시 리소스</label><select class="sel" id="app-resource"><option>팝업</option><option>홈구좌</option><option>GNB</option><option>기타</option></select></div></div>
@@ -3515,7 +3535,7 @@ var PF_SECTIONS = {
     ]
   },
   appmkt: {
-    title: '📱 APP마케팅 붙여넣기',
+    title: '📱 모바일마케팅 붙여넣기',
     hint: ['채널: 슈퍼브랜드데이','슈퍼브랜드시작: 2026-06-10','슈퍼브랜드종료: 2026-06-12','모바일라이브: 2026-06-15','랜딩페이지: https://...','기획전: https://...'],
     fields: [
       { keys:['채널','channel','app채널'], id:'_app_ch', label:'채널', type:'app' },
@@ -3593,7 +3613,7 @@ function copySectionFormat(sec){
     lines.push('샘플주소: ');
 
   } else if(sec === 'appmkt'){
-    lines.push('=== APP 마케팅 ===');
+    lines.push('=== 모바일마케팅 ===');
     lines.push('채널: ');
     lines.push('슈퍼브랜드시작: ');
     lines.push('슈퍼브랜드종료: ');
@@ -3929,7 +3949,7 @@ function _buildShareText(c){
     lines.push('');
   }
   if(checked['appmkt']&&c.appMkt&&(c.appMkt.channels&&c.appMkt.channels.length||c.appMkt.landingUrl)){
-    lines.push('─ APP 마케팅');
+    lines.push('─ 모바일마케팅');
     if(c.appMkt.na) lines.push('채널: 해당없음');
     else if(c.appMkt.channels&&c.appMkt.channels.length) lines.push('채널: '+c.appMkt.channels.join(', '));
     if(c.appMkt.landingUrl) lines.push('랜딩: '+c.appMkt.landingUrl);
@@ -4506,7 +4526,7 @@ const avColor=(name)=> AV_COLORS[(name?.charCodeAt(0)||0)%AV_COLORS.length];
 // ═══════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════
-const PAGE_TITLES={dashboard:'대시보드',s1:'1단계 · 캠페인요청',s2:'2단계 · 캠페인확정',s3:'3단계 · 상품정보등록',s4:'4단계 · MCN요청',s5:'5단계 · 인플루언서확정',s6:'6단계 · APP마케팅',s7:'7단계 · 정산',s8:'8단계 · 성과분석',influencers:'인플루언서 DB',campaigns:'전체 캠페인',usermgmt:'사용자 관리',mcnmgmt:'MCN 업체 관리',basemgmt:'기본정보 관리'};
+const PAGE_TITLES={dashboard:'대시보드',s1:'1단계 · 캠페인요청',s2:'2단계 · 캠페인확정',s3:'3단계 · 상품정보등록',s4:'4단계 · MCN요청',s5:'5단계 · 인플루언서확정',s6:'6단계 · 모바일마케팅',s7:'7단계 · 정산',s8:'8단계 · 성과분석',influencers:'인플루언서 DB',campaigns:'전체 캠페인',usermgmt:'사용자 관리',mcnmgmt:'MCN 업체 관리',basemgmt:'기본정보 관리'};
 
 // ── 페이지 히스토리 스택 ──────────────────────────────────────
 var _pageStack = [];
@@ -5601,9 +5621,14 @@ function editProd(id){
   var se=document.getElementById('appmkt-super-end');   if(se) se.value=appMkt.superEnd||'';
   var ld=document.getElementById('appmkt-live-dt');     if(ld) ld.value=appMkt.liveDt||'';
   var alc=document.getElementById('appmkt-live-code');  if(alc) alc.value=appMkt.liveCode||'';
-  // DMP/PUSH 발송모수 복원
-  var dmpS=document.getElementById('appmkt-dmp-send');  if(dmpS) dmpS.value=appMkt.dmpSend ? appMkt.dmpSend.toLocaleString('ko-KR'):'';
-  var pushS=document.getElementById('appmkt-push-send');if(pushS) pushS.value=appMkt.pushSend ? appMkt.pushSend.toLocaleString('ko-KR'):'';
+  // 채널별 인라인 필드 복원
+  var _fmt=function(v){return v?v.toLocaleString('ko-KR'):'';};
+  var dmpS=document.getElementById('appmkt-dmp-send');  if(dmpS) dmpS.value=_fmt(appMkt.dmpSend);
+  var pushS=document.getElementById('appmkt-push-send');if(pushS) pushS.value=_fmt(appMkt.pushSend);
+  var kakaoS=document.getElementById('appmkt-kakao-send');if(kakaoS) kakaoS.value=_fmt(appMkt.kakaoSend);
+  var ssgA=document.getElementById('appmkt-ssg-amount');if(ssgA) ssgA.value=_fmt(appMkt.ssgAmount);
+  var ssgC=document.getElementById('appmkt-ssg-count'); if(ssgC) ssgC.value=_fmt(appMkt.ssgCount);
+  var sbC=document.getElementById('appmkt-starbucks-count');if(sbC) sbC.value=_fmt(appMkt.starbucksCount);
   toggleAppMktFields();
   var lu=document.getElementById('appmkt-landing-url'); if(lu) lu.value=appMkt.landingUrl||'';
   var du=document.getElementById('appmkt-deal-url');    if(du) du.value=appMkt.dealUrl||'';
@@ -6885,16 +6910,13 @@ function updateChannelPreview(type){
 function toggleAppMktNa(){
   var na = document.getElementById('appmkt-na')?.checked;
   var area = document.getElementById('appmkt-channels-area');
-  var superFlds = document.getElementById('appmkt-super-fields');
-  var liveFlds  = document.getElementById('appmkt-live-fields');
-  var sendFlds = document.getElementById('appmkt-send-fields');
   if(na){
     document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=false; });
-    if(area)     area.style.opacity='0.35';
-    if(area)     area.style.pointerEvents='none';
-    if(superFlds) superFlds.style.display='none';
-    if(liveFlds)  liveFlds.style.display='none';
-    if(sendFlds)  sendFlds.style.display='none';
+    // 모든 인라인 입력 비활성 + 초기화
+    document.querySelectorAll('#appmkt-channels-area input:not([type="checkbox"])').forEach(function(inp){ inp.disabled=true; inp.value=''; });
+    if(area) area.style.opacity='0.35';
+    if(area) area.style.pointerEvents='none';
+    var lsb=document.getElementById('appmkt-live-code-search-btn'); if(lsb) lsb.style.display='none';
   } else {
     if(area) area.style.opacity='';
     if(area) area.style.pointerEvents='';
@@ -6902,27 +6924,30 @@ function toggleAppMktNa(){
 }
 
 function toggleAppMktFields(){
-  var superChecked = document.getElementById('appmkt-super')?.checked;
-  var liveChecked  = document.getElementById('appmkt-live')?.checked;
-  var dmpChecked   = document.getElementById('appmkt-dmp')?.checked;
-  var pushChecked  = document.getElementById('appmkt-push')?.checked;
-  var sf = document.getElementById('appmkt-super-fields');
-  var lf = document.getElementById('appmkt-live-fields');
-  if(sf) sf.style.display = superChecked?'block':'none';
-  if(lf) lf.style.display = liveChecked?'block':'none';
-  if(!liveChecked){
-    var lc=document.getElementById('appmkt-live-code'); if(lc) lc.value='';
-    var ld=document.getElementById('appmkt-live-dt');   if(ld) ld.value='';
-  }
-  // DMP/PUSH 발송모수 표시
-  var sendArea = document.getElementById('appmkt-send-fields');
-  var dmpWrap  = document.getElementById('appmkt-dmp-send-wrap');
-  var pushWrap = document.getElementById('appmkt-push-send-wrap');
-  if(sendArea) sendArea.style.display = (dmpChecked||pushChecked)?'block':'none';
-  if(dmpWrap)  dmpWrap.style.display  = dmpChecked?'':'none';
-  if(pushWrap) pushWrap.style.display = pushChecked?'':'none';
-  if(!dmpChecked){  var ds=document.getElementById('appmkt-dmp-send');  if(ds) ds.value=''; }
-  if(!pushChecked){ var ps=document.getElementById('appmkt-push-send'); if(ps) ps.value=''; }
+  // 채널별 체크 상태 → 인라인 입력 활성/비활성
+  var pairs = [
+    ['appmkt-super',     ['appmkt-super-start','appmkt-super-end']],
+    ['appmkt-live',      ['appmkt-live-code','appmkt-live-dt']],
+    ['appmkt-dmp',       ['appmkt-dmp-send']],
+    ['appmkt-push',      ['appmkt-push-send']],
+    ['appmkt-kakao',     ['appmkt-kakao-send']],
+    ['appmkt-ssg',       ['appmkt-ssg-amount','appmkt-ssg-count']],
+    ['appmkt-starbucks', ['appmkt-starbucks-count']],
+  ];
+  pairs.forEach(function(p){
+    var cb = document.getElementById(p[0]);
+    var checked = cb && cb.checked;
+    p[1].forEach(function(inpId){
+      var inp = document.getElementById(inpId);
+      if(inp){
+        inp.disabled = !checked;
+        if(!checked) inp.value = '';
+      }
+    });
+  });
+  // 모바일라이브 검색 버튼 표시
+  var liveSearchBtn = document.getElementById('appmkt-live-code-search-btn');
+  if(liveSearchBtn) liveSearchBtn.style.display = document.getElementById('appmkt-live')?.checked ? '' : 'none';
 }
 
 function delApp(id){ var nid2=parseInt(id); DB.appMarketing=DB.appMarketing.filter(function(a){return parseInt(a.id)!==nid2;}); broadcastData(); renderS6(); showToast('삭제됨'); }
@@ -9680,10 +9705,15 @@ function openNewProd(){
   var cif=document.getElementById('ch-insta-field');   if(cif) cif.style.display='none';
   var cyl=document.getElementById('p-youtube-link');   if(cyl){ cyl.style.display='none'; cyl.href='#'; }
   var cil=document.getElementById('p-insta-link');     if(cil){ cil.style.display='none'; cil.href='#'; }
-  var suf2=document.getElementById('appmkt-super-fields'); if(suf2) suf2.style.display='none';
-  var luf2=document.getElementById('appmkt-live-fields');  if(luf2) luf2.style.display=_isMliveType?'block':'none';
-  var sendFlds2=document.getElementById('appmkt-send-fields'); if(sendFlds2) sendFlds2.style.display='none';
-  ['appmkt-super-start','appmkt-super-end','appmkt-live-dt','appmkt-live-code','appmkt-dmp-send','appmkt-push-send','appmkt-landing-url','appmkt-deal-url'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  // 인라인 입력 상태는 toggleAppMktFields에서 일괄 처리
+  toggleAppMktFields();
+  ['appmkt-super-start','appmkt-super-end','appmkt-live-dt','appmkt-live-code','appmkt-dmp-send','appmkt-push-send','appmkt-kakao-send','appmkt-ssg-amount','appmkt-ssg-count','appmkt-starbucks-count','appmkt-landing-url','appmkt-deal-url'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.value=''; el.disabled=true; } });
+  // 모바일라이브 캠페인이면 모바일라이브 채널 활성화
+  if(_isMliveType){
+    var liveCode2=document.getElementById('appmkt-live-code'); if(liveCode2) liveCode2.disabled=false;
+    var liveDt2=document.getElementById('appmkt-live-dt'); if(liveDt2) liveDt2.disabled=false;
+    var lsb2=document.getElementById('appmkt-live-code-search-btn'); if(lsb2) lsb2.style.display='';
+  }
   var ssEl2=document.getElementById('p-sample-sent'); if(ssEl2) ssEl2.checked=false;
   var sfCk=document.getElementById('p-ship-free'); if(sfCk) sfCk.checked=false;
   var ifCk=document.getElementById('p-island-free'); if(ifCk) ifCk.checked=false;
@@ -9787,10 +9817,10 @@ function saveProd(){
   var superChecked = document.getElementById('appmkt-super')?.checked;
   var liveChecked  = document.getElementById('appmkt-live')?.checked;
   if(superChecked){
-    if(!document.getElementById('appmkt-super-start')?.value) missing.push('[APP마케팅] 슈퍼브랜드 시작일');
-    if(!document.getElementById('appmkt-super-end')?.value)   missing.push('[APP마케팅] 슈퍼브랜드 종료일');
+    if(!document.getElementById('appmkt-super-start')?.value) missing.push('[모바일마케팅] 슈퍼브랜드 시작일');
+    if(!document.getElementById('appmkt-super-end')?.value)   missing.push('[모바일마케팅] 슈퍼브랜드 종료일');
   }
-  if(liveChecked && !document.getElementById('appmkt-live-dt')?.value) missing.push('[APP마케팅] 모바일라이브 방송일시');
+  if(liveChecked && !document.getElementById('appmkt-live-dt')?.value) missing.push('[모바일마케팅] 모바일라이브 방송일시');
 
   console.log('[saveProd] missing:', missing, 'name:', name, 'role:', role?.value, 'budget:', budget, 'revenue:', revenue);
   if(missing.length > 0){
@@ -10000,8 +10030,12 @@ function saveProd(){
         superEnd:  document.getElementById('appmkt-super-end')?.value||'',
         liveDt:    document.getElementById('appmkt-live-dt')?.value||'',
         liveCode:  (document.getElementById('appmkt-live-code')?.value||'').trim(),
-        dmpSend:   parseInt((document.getElementById('appmkt-dmp-send')?.value||'').replace(/,/g,''))||0,
-        pushSend:  parseInt((document.getElementById('appmkt-push-send')?.value||'').replace(/,/g,''))||0,
+        dmpSend:      parseInt((document.getElementById('appmkt-dmp-send')?.value||'').replace(/,/g,''))||0,
+        pushSend:     parseInt((document.getElementById('appmkt-push-send')?.value||'').replace(/,/g,''))||0,
+        kakaoSend:    parseInt((document.getElementById('appmkt-kakao-send')?.value||'').replace(/,/g,''))||0,
+        ssgAmount:    parseInt((document.getElementById('appmkt-ssg-amount')?.value||'').replace(/,/g,''))||0,
+        ssgCount:     parseInt((document.getElementById('appmkt-ssg-count')?.value||'').replace(/,/g,''))||0,
+        starbucksCount:parseInt((document.getElementById('appmkt-starbucks-count')?.value||'').replace(/,/g,''))||0,
         landingUrl:document.getElementById('appmkt-landing-url')?.value||'',
         dealUrl:   document.getElementById('appmkt-deal-url')?.value||''
       };
