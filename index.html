@@ -2500,27 +2500,20 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           </label>
         </div>
         <div id="appmkt-channels-area" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
-          <!-- 슈퍼브랜드: 체크 + 시작일/종료일 (인라인) -->
+          <!-- 슈퍼브랜드: 체크 + 시작일/종료일 -->
           <div style="display:flex;align-items:center;gap:8px">
             <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
             <input class="inp inp-sm" id="appmkt-super-start" type="date" placeholder="시작일" style="flex:1" disabled>
             <span style="font-size:11px;color:var(--text3)">~</span>
             <input class="inp inp-sm" id="appmkt-super-end" type="date" placeholder="종료일" style="flex:1" disabled>
           </div>
-          <!-- 모바일라이브: 체크 + 편성코드 + 방송일시 -->
+          <!-- 모바일라이브: 체크 + 편성코드 + 검색 + 바로가기 + 방송일시 -->
           <div style="display:flex;align-items:center;gap:8px">
             <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
             <input class="inp inp-sm" id="appmkt-live-code" placeholder="편성코드" style="flex:1" disabled>
-            <button class="btn btn-ghost btn-xs" id="appmkt-live-code-search-btn" type="button" onclick="openMliveCodePicker()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none">🔍</button>
+            <button class="btn btn-ghost btn-xs" id="appmkt-live-code-search-btn" type="button" onclick="openMliveCodePicker()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none" title="편성코드 검색">🔍</button>
+            <button class="btn btn-ghost btn-xs" id="appmkt-live-goto-inf-btn" type="button" onclick="gotoInfCampFromMlive()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none;color:var(--green);border-color:var(--green)" title="인플루언서 마케팅 캠페인 등록">👤+</button>
             <input class="inp inp-sm" id="appmkt-live-dt" type="datetime-local" onchange="checkMliveScheduleDup()" style="flex:1" disabled>
-          </div>
-          <!-- 팝업: 체크만 -->
-          <div style="display:flex;align-items:center;gap:8px">
-            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
-          </div>
-          <!-- 최상단배너: 체크만 -->
-          <div style="display:flex;align-items:center;gap:8px">
-            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
           </div>
           <!-- DMP광고: 체크 + 발송모수 -->
           <div style="display:flex;align-items:center;gap:8px">
@@ -2545,15 +2538,18 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-ssg-count" placeholder="명" style="flex:1" oninput="formatMoney(this)" disabled>
             <span style="font-size:11px;color:var(--text3);white-space:nowrap">명</span>
           </div>
-          <!-- 스타벅스: 체크 + 인원 -->
+          <!-- 스타벅스 + 팝업 + 최상단배너 (한 행) -->
           <div style="display:flex;align-items:center;gap:8px">
             <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-starbucks" value="스타벅스" onchange="toggleAppMktFields()"> 스타벅스</label>
-            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-starbucks-count" placeholder="명" style="flex:1" oninput="formatMoney(this)" disabled>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-starbucks-count" placeholder="명" style="width:70px" oninput="formatMoney(this)" disabled>
             <span style="font-size:11px;color:var(--text3);white-space:nowrap">명</span>
+            <span style="width:1px;height:16px;background:var(--border);margin:0 4px"></span>
+            <label class="promo-label" style="flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
+            <label class="promo-label" style="flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
           </div>
         </div>
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-          <div class="fr">
+          <div class="fr" id="appmkt-landing-row">
             <label>🔗 인플루언서 랜딩 페이지 <span style="font-size:10px;color:var(--text3);font-weight:400">(시크릿코드)</span></label>
             <input class="inp" id="appmkt-landing-url" placeholder="https://" style="font-size:12px">
           </div>
@@ -6969,9 +6965,12 @@ function toggleAppMktFields(){
       }
     });
   });
-  // 모바일라이브 검색 버튼 표시
+  // 모바일라이브 검색 + 바로가기 버튼 표시
+  var liveChecked = document.getElementById('appmkt-live')?.checked;
   var liveSearchBtn = document.getElementById('appmkt-live-code-search-btn');
-  if(liveSearchBtn) liveSearchBtn.style.display = document.getElementById('appmkt-live')?.checked ? '' : 'none';
+  var liveGotoBtn   = document.getElementById('appmkt-live-goto-inf-btn');
+  if(liveSearchBtn) liveSearchBtn.style.display = liveChecked ? '' : 'none';
+  if(liveGotoBtn)   liveGotoBtn.style.display   = liveChecked ? '' : 'none';
 }
 
 function delApp(id){ var nid2=parseInt(id); DB.appMarketing=DB.appMarketing.filter(function(a){return parseInt(a.id)!==nid2;}); broadcastData(); renderS6(); showToast('삭제됨'); }
@@ -10881,6 +10880,28 @@ function updateProdRoleLabels(){
 
 // ── 캠페인 유형(인플루언서 마케팅 / 모바일라이브) 전환 ──
 // 모바일라이브: 시작시간 입력 시 종료시간 자동 +1시간 + 방송일시 동기화
+// 인플루언서 마케팅 캠페인 등록으로 이동 (현재 편성코드를 가지고)
+function gotoInfCampFromMlive(){
+  var liveCode = (document.getElementById('appmkt-live-code')?.value||'').trim();
+  var liveDt   = (document.getElementById('appmkt-live-dt')?.value||'').trim();
+  // 현재 모달 닫고 인플루언서 캠페인 등록 열기
+  closeMo('product');
+  openNewProd();
+  // 인플루언서 마케팅으로 전환
+  var ctInf = document.getElementById('p-camptype-inf');
+  var ctMl  = document.getElementById('p-camptype-mlive');
+  if(ctInf) ctInf.checked = true;
+  if(ctMl)  ctMl.checked  = false;
+  updateCampTypeUI();
+  // 모바일라이브 채널 체크 + 편성코드/방송일시 자동 입력
+  var liveCb = document.getElementById('appmkt-live');
+  if(liveCb) liveCb.checked = true;
+  toggleAppMktFields();
+  if(liveCode){ var lc=document.getElementById('appmkt-live-code'); if(lc){lc.disabled=false; lc.value=liveCode;} }
+  if(liveDt){   var ld=document.getElementById('appmkt-live-dt');   if(ld){ld.disabled=false; ld.value=liveDt;} }
+  showToast('인플루언서 마케팅 캠페인 등록 — 편성코드 '+liveCode+' 연계');
+}
+
 function autoSetMliveEndTime(){
   if(getCampType()!=='모바일라이브') return;
   var startEl = document.getElementById('p-start');
@@ -10947,6 +10968,9 @@ function updateCampTypeUI(){
   // M라이브: 정산처리일/비용지불일 숨김
   var settleDatesRow = document.getElementById('p-settle-dates-row');
   if(settleDatesRow) settleDatesRow.style.display = isMlive ? 'none' : '';
+  // M라이브: 인플루언서 랜딩 페이지 숨김
+  var landingRow = document.getElementById('appmkt-landing-row');
+  if(landingRow) landingRow.style.display = isMlive ? 'none' : '';
 }
 
 // ── M라이브 편성 달력 ──
