@@ -2603,7 +2603,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <div><label>방송중 매출 (원) <span style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-onair-revenue" placeholder="0" oninput="calcSettleCost()"></div>
           <div><label>방송외 매출 (원) <span style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-offair-revenue" placeholder="0" oninput="calcSettleCost()"></div>
         </div>
-        <div class="fr2" style="margin-bottom:12px">
+        <div class="fr2" style="margin-bottom:12px" id="p-settle-dates-row">
           <div><label>정산처리일 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(캠페인 종료+14일 자동)</span></label><input class="inp" id="p-settle-process-date" type="date"></div>
           <div><label>비용지불일</label><input class="inp" id="p-settle-payment-date" type="date"></div>
         </div>
@@ -4622,7 +4622,13 @@ function _goPageInternal(page, el, scrollTop){
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
   var navEl = el || document.querySelector('[data-page="'+page+'"]');
   if(navEl) navEl.classList.add('active');
-  document.getElementById('page-ttl').textContent = PAGE_TITLES[page]||page;
+  var _pageTtl = PAGE_TITLES[page]||page;
+  // 단계 화면(s1~s8)에 대시보드 모드 표시
+  if(/^s\d$/.test(page)){
+    var _modeLabel = _dashMode==='mlive' ? '📺 모바일라이브' : '👤 인플루언서 마케팅';
+    _pageTtl = _modeLabel + ' · ' + _pageTtl;
+  }
+  document.getElementById('page-ttl').textContent = _pageTtl;
 
   // 모든 페이지 숨김, 대상 페이지만 표시
   document.querySelectorAll('.page').forEach(function(p){
@@ -4813,7 +4819,7 @@ function renderMliveDashCal(){
       var cursor = isMyMd||isAdmin()||ME_ROLE==='manager' ? 'cursor:pointer' : 'cursor:default;opacity:.85';
       var onclick = isMyMd||isAdmin()||ME_ROLE==='manager' ? 'onclick="editProd('+c.id+')"' : '';
       return '<div '+onclick+' title="'+escHtml(c.name||'')+' · '+(timeStr||'')+'" style="font-size:9.5px;padding:2px 4px;background:'+tc.color+'22;border-left:3px solid '+tc.color+';color:var(--text);border-radius:2px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;'+cursor+'">'
-        +(timeStr?'<span style="color:'+tc.color+';font-weight:700">'+timeStr+'</span> ':'')+escHtml(nm)+'</div>';
+        +escHtml(nm)+'</div>';
     }).join('');
     html+='<div style="min-height:90px;background:'+(isToday?'var(--accent-bg)':'var(--bg2)')+';border:1px solid '+(isToday?'var(--accent)':'var(--border)')+';border-radius:4px;padding:3px"><div style="font-size:11px;font-weight:700;color:'+dayColor+';margin-bottom:2px">'+d+'</div>'+itemsHtml+'</div>';
   }
@@ -5406,6 +5412,7 @@ function renderS1(filter=''){
   var ownerFilter = (document.getElementById('sf-s1-owner')?.value||'').trim();
   var mdFilter_s1  = (document.getElementById('sf-s1-md')?.value||'').trim();
   var s1Camps = DB.campaigns.filter(function(c){
+    if(!matchesDashMode(c)) return false;
     var matchFilter = !filter||c.name.includes(filter)||(c.company||'').includes(filter);
     if(ownerFilter && !(c.pdSingle||c.pds&&c.pds[0]||'').includes(ownerFilter)) return false;
     if(mdFilter_s1  && !(c.owner||'').includes(mdFilter_s1))  return false;
@@ -5737,6 +5744,7 @@ function renderS2(){
   var s2OwnerFilter = (document.getElementById('sf-s2-owner')?.value||'').trim();
   var s2MdFilter    = (document.getElementById('sf-s2-md')?.value||'').trim();
   var s2Camps = DB.campaigns.filter(function(c){
+    if(!matchesDashMode(c)) return false;
     if(pageFilter.s2 !== 'target' && !matchesDateFilter(c,'s2')) return false;
     var _nf=(document.getElementById('sf-s2-name')?.value||'').trim().toLowerCase();
     if(_nf && !(c.name||'').toLowerCase().includes(_nf)) return false;
@@ -5893,6 +5901,7 @@ function renderS3(){
   var ownerF = (document.getElementById('sf-s3-owner')?.value||'').trim();
   var mdF    = (document.getElementById('sf-s3-md')?.value||'').trim();
   var filtered = DB.campaigns.filter(function(c){
+    if(!matchesDashMode(c)) return false;
     if(pageFilter.s3 !== 'target' && !matchesDateFilter(c,'s3')) return false;
     var _nf=(document.getElementById('sf-s3-name')?.value||'').trim().toLowerCase();
     if(_nf && !(c.name||'').toLowerCase().includes(_nf)) return false;
@@ -5945,6 +5954,7 @@ function renderS3(){
 function renderS4(){
   // 4단계 MCN요청: 상품정보등록(3단계) 완료 후 MCN 요청 단계
   var confirmedCamps = DB.campaigns.filter(function(c){
+    if(!matchesDashMode(c)) return false;
     if(pageFilter.s4 !== 'target' && !matchesDateFilter(c,'s4')) return false;
     var _nf=(document.getElementById('sf-s4-name')?.value||'').trim().toLowerCase();
     if(_nf && !(c.name||'').toLowerCase().includes(_nf)) return false;
@@ -6500,6 +6510,7 @@ function renderS5(){
   var s4OwnerFilter = (document.getElementById('sf-s5-owner')?.value||'').trim();
   var s4MdFilter    = (document.getElementById('sf-s5-md')?.value||'').trim();
   var mcnCamps = DB.campaigns.filter(function(c){
+    if(!matchesDashMode(c)) return false;
     if(pageFilter.s5 !== 'target' && !matchesDateFilter(c,'s4')) return false;
     // external_mcn: 본인 MCN 업체 캠페인만 + 4단계만
     if(isExtMcn()){
@@ -6690,6 +6701,7 @@ function addMatch(){
 function renderS6(){
   // 4단계 인플루언서 확정된 캠페인만
   var infCamps = DB.campaigns.filter(function(c){
+    if(!matchesDashMode(c)) return false;
     if(pageFilter.s6 !== 'target' && !matchesDateFilter(c,'s5')) return false;
     var _nf=(document.getElementById('sf-s5-name')?.value||'').trim().toLowerCase();
     if(_nf && !(c.name||'').toLowerCase().includes(_nf)) return false;
@@ -6961,7 +6973,7 @@ function renderS7(){
   var s7OwnerFilter = (document.getElementById('sf-s7-owner')?.value||'').trim();
   var s7MdFilter    = (document.getElementById('sf-s7-md')?.value||'').trim();
   var validCampIds = DB.campaigns.filter(function(c){
-    // target 모드에서는 날짜 필터 무시 (처리 대상은 기간 상관없이 표시)
+    if(!matchesDashMode(c)) return false;
     if(pageFilter.s7 !== 'target' && !matchesDateFilter(c,'s7')) return false;
     var _nf=(document.getElementById('sf-s7-name')?.value||'').trim().toLowerCase();
     if(_nf && !(c.name||'').toLowerCase().includes(_nf)) return false;
@@ -10861,6 +10873,9 @@ function updateCampTypeUI(){
   // 모바일라이브 소구포인트 가이드 표시/숨김
   var appealGuide = document.getElementById('p-appeal-mlive-guide');
   if(appealGuide) appealGuide.style.display = isMlive ? '' : 'none';
+  // M라이브: 정산처리일/비용지불일 숨김
+  var settleDatesRow = document.getElementById('p-settle-dates-row');
+  if(settleDatesRow) settleDatesRow.style.display = isMlive ? 'none' : '';
 }
 
 // ── M라이브 편성 달력 ──
@@ -11493,6 +11508,11 @@ function isMycamp(c){
   var pd = (c.pdSingle||(c.pds&&c.pds[0])||'').trim();
   var owner = (c.owner||'').trim();
   return pd === ME || owner === ME;
+}
+// 현재 대시보드 모드에 따른 캠페인 유형 필터
+function matchesDashMode(c){
+  if(_dashMode==='mlive') return (c.campType||'')==='모바일라이브';
+  return (c.campType||'')!=='모바일라이브'; // inf 모드면 M-live 제외
 }
 // ═══════════════════════════════════════
 // 팝업 섹션별 권한 제어
