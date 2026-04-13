@@ -8307,7 +8307,7 @@ function _showCopyCampModal(){
     + '<button class="btn btn-ghost btn-xs" onclick="document.getElementById(&quot;copy-camp-modal&quot;).remove()">✕</button>'
     + '</div>'
     + '<div style="padding:14px 24px;border-bottom:1px solid var(--border2)">'
-    + '<input class="inp" id="copy-camp-search" placeholder="캠페인명 검색..." oninput="filterCopyCamps(this.value)" style="width:100%">'
+    + '<input class="inp" id="copy-camp-search" placeholder="캠페인명 또는 편성코드 검색..." oninput="filterCopyCamps(this.value)" style="width:100%">'
     + '</div>'
     + '<div id="copy-camp-list" style="overflow-y:auto;max-height:50vh;padding:8px 0"></div>'
     + '</div>';
@@ -8323,7 +8323,7 @@ function renderCopyCampList(keyword){
       var ct = camp.campType || '인플루언서';
       if(ct !== _copyCampType) return false;
     }
-    return !keyword || (camp.name||'').includes(keyword);
+    return !keyword || (camp.name||'').includes(keyword) || (camp.appMkt&&String(camp.appMkt.liveCode||'')).includes(keyword);
   }).sort(function(a,b){ return (b.start||'') > (a.start||'') ? 1 : -1; });
 
   var el = document.getElementById('copy-camp-list');
@@ -10880,26 +10880,22 @@ function updateProdRoleLabels(){
 
 // ── 캠페인 유형(인플루언서 마케팅 / 모바일라이브) 전환 ──
 // 모바일라이브: 시작시간 입력 시 종료시간 자동 +1시간 + 방송일시 동기화
-// 인플루언서 마케팅 캠페인 등록으로 이동 (현재 편성코드를 가지고)
+// 동일 편성코드로 등록된 인플루언서 마케팅 캠페인으로 이동
 function gotoInfCampFromMlive(){
   var liveCode = (document.getElementById('appmkt-live-code')?.value||'').trim();
-  var liveDt   = (document.getElementById('appmkt-live-dt')?.value||'').trim();
-  // 현재 모달 닫고 인플루언서 캠페인 등록 열기
+  if(!liveCode){ showToast('편성코드가 입력되지 않았습니다.'); return; }
+  // 동일 편성코드를 가진 인플루언서 마케팅 캠페인 찾기
+  var infCamp = DB.campaigns.find(function(c){
+    if((c.campType||'')==='모바일라이브') return false;
+    return c.appMkt && String(c.appMkt.liveCode||'').trim() === liveCode;
+  });
+  if(!infCamp){
+    showToast('편성코드 '+liveCode+'로 등록된 인플루언서 마케팅 캠페인이 없습니다.');
+    return;
+  }
   closeMo('product');
-  openNewProd();
-  // 인플루언서 마케팅으로 전환
-  var ctInf = document.getElementById('p-camptype-inf');
-  var ctMl  = document.getElementById('p-camptype-mlive');
-  if(ctInf) ctInf.checked = true;
-  if(ctMl)  ctMl.checked  = false;
-  updateCampTypeUI();
-  // 모바일라이브 채널 체크 + 편성코드/방송일시 자동 입력
-  var liveCb = document.getElementById('appmkt-live');
-  if(liveCb) liveCb.checked = true;
-  toggleAppMktFields();
-  if(liveCode){ var lc=document.getElementById('appmkt-live-code'); if(lc){lc.disabled=false; lc.value=liveCode;} }
-  if(liveDt){   var ld=document.getElementById('appmkt-live-dt');   if(ld){ld.disabled=false; ld.value=liveDt;} }
-  showToast('인플루언서 마케팅 캠페인 등록 — 편성코드 '+liveCode+' 연계');
+  editProd(infCamp.id);
+  showToast('인플루언서 마케팅 캠페인 ['+infCamp.name+'] 으로 이동');
 }
 
 function autoSetMliveEndTime(){
