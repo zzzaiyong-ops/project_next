@@ -2012,7 +2012,6 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
       <button class="btn btn-ghost btn-sm" onclick="openPasteFillModal()" style="font-size:12px;background:var(--accent-bg);border-color:var(--accent);color:var(--accent2)" title="모든 섹션 항목을 한번에 자동 입력">📋 전체붙여넣기</button>
-      <button class="btn btn-ghost btn-sm" onclick="openCopyCampModal()" style="font-size:12px">📋 캠페인복사</button>
       <button class="mo-x" onclick="closeMo('product')">✕</button>
     </div>
   </div>
@@ -2038,16 +2037,27 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <span style="font-size:10.5px;color:var(--text3);font-weight:500;margin-left:4px">유형에 따라 입력 항목이 달라집니다</span>
         </div>
         <div style="display:flex;gap:10px">
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;background:var(--bg);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;transition:all .15s" id="p-camptype-label-mlive">
-            <input type="radio" name="p-camptype" id="p-camptype-mlive" value="모바일라이브" style="accent-color:var(--accent);width:18px;height:18px" onchange="updateCampTypeUI()" checked>
-            <div style="font-size:26px;line-height:1">📺</div>
-            <div><div style="font-size:14px;font-weight:800;color:var(--text)">모바일라이브</div><div style="font-size:11px;color:var(--text3);margin-top:2px">쇼호스트 진행 라이브 캠페인</div></div>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;background:var(--bg);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;transition:all .15s" id="p-camptype-label-inf">
-            <input type="radio" name="p-camptype" id="p-camptype-inf" value="인플루언서" style="accent-color:var(--accent);width:18px;height:18px" onchange="updateCampTypeUI()">
-            <div style="font-size:26px;line-height:1">👤</div>
-            <div><div style="font-size:14px;font-weight:800;color:var(--text)">인플루언서 마케팅</div><div style="font-size:11px;color:var(--text3);margin-top:2px">인플루언서 섭외/진행 캠페인</div></div>
-          </label>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--bg);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;transition:all .15s" id="p-camptype-label-mlive">
+              <input type="radio" name="p-camptype" id="p-camptype-mlive" value="모바일라이브" style="accent-color:var(--accent);width:18px;height:18px" onchange="updateCampTypeUI()" checked>
+              <div style="font-size:26px;line-height:1">📺</div>
+              <div><div style="font-size:14px;font-weight:800;color:var(--text)">모바일라이브</div><div style="font-size:11px;color:var(--text3);margin-top:2px">쇼호스트 진행 라이브 캠페인</div></div>
+            </label>
+            <div id="p-camptype-mlive-btns" style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openCopyCampModal('모바일라이브')" style="flex:1;font-size:11.5px;padding:6px 8px;border-color:var(--accent);color:var(--accent2)">📋 M라이브 복사</button>
+              <button class="btn btn-ghost btn-sm" onclick="openRebroadcastModal()" style="flex:1;font-size:11.5px;padding:6px 8px;border-color:var(--orange);color:var(--orange)">🔄 재방등록</button>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--bg);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;transition:all .15s" id="p-camptype-label-inf">
+              <input type="radio" name="p-camptype" id="p-camptype-inf" value="인플루언서" style="accent-color:var(--accent);width:18px;height:18px" onchange="updateCampTypeUI()">
+              <div style="font-size:26px;line-height:1">👤</div>
+              <div><div style="font-size:14px;font-weight:800;color:var(--text)">인플루언서 마케팅</div><div style="font-size:11px;color:var(--text3);margin-top:2px">인플루언서 섭외/진행 캠페인</div></div>
+            </label>
+            <div id="p-camptype-inf-btns" style="display:none;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openCopyCampModal('인플루언서')" style="flex:1;font-size:11.5px;padding:6px 8px">📋 캠페인복사</button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
@@ -5197,7 +5207,12 @@ function editProd(id){
   // 상태 배지 표시
   updateProdStageBadge(p.stage||'1.캠페인요청');
   var campCodeEl = document.getElementById('p-campcode');
-  if(campCodeEl){ campCodeEl.textContent = p.campCode||'-'; campCodeEl.style.display = p.campCode ? '' : 'none'; }
+  if(campCodeEl){
+    var isMliveCamp = (p.campType||'') === '모바일라이브';
+    var codeDisplay = isMliveCamp ? (p.appMkt&&p.appMkt.liveCode ? '편성 '+p.appMkt.liveCode : p.campCode||'-') : (p.campCode||'-');
+    campCodeEl.textContent = codeDisplay;
+    campCodeEl.style.display = codeDisplay && codeDisplay!=='-' ? '' : 'none';
+  }
   // 카카오 공유 버튼 표시
   showKakaoShareBtn(id);
 
@@ -7874,9 +7889,27 @@ function setCat(c){ infFilter.cat=c; renderInfs(); }
 // ═══════════════════════════════════════
 // 캠페인 복사하기 팝업
 // ═══════════════════════════════════════
-function openCopyCampModal(){
+var _copyCampType = ''; // 현재 복사 모달에서 필터링하는 캠페인 유형
+var _copyCampRebroadcast = false; // 재방등록 모드
+
+function openCopyCampModal(campType){
+  _copyCampType = campType || '';
+  _copyCampRebroadcast = false;
+  _showCopyCampModal();
+}
+
+function openRebroadcastModal(){
+  _copyCampType = '모바일라이브';
+  _copyCampRebroadcast = true;
+  _showCopyCampModal();
+}
+
+function _showCopyCampModal(){
   var existing = document.getElementById('copy-camp-modal');
   if(existing) existing.remove();
+
+  var title = _copyCampRebroadcast ? '🔄 재방등록 — 원본 M라이브 선택' :
+              _copyCampType === '모바일라이브' ? '📋 M라이브 복사 — 원본 선택' : '📋 캠페인 불러오기';
 
   var el = document.createElement('div');
   el.id = 'copy-camp-modal';
@@ -7884,7 +7917,7 @@ function openCopyCampModal(){
 
   el.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:0;min-width:560px;max-width:700px;width:100%;max-height:80vh;display:flex;flex-direction:column">'
     + '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between">'
-    + '<div style="font-size:16px;font-weight:800">📋 캠페인 불러오기</div>'
+    + '<div style="font-size:16px;font-weight:800">'+title+'</div>'
     + '<button class="btn btn-ghost btn-xs" onclick="document.getElementById(&quot;copy-camp-modal&quot;).remove()">✕</button>'
     + '</div>'
     + '<div style="padding:14px 24px;border-bottom:1px solid var(--border2)">'
@@ -7894,13 +7927,17 @@ function openCopyCampModal(){
     + '</div>';
 
   document.body.appendChild(el);
-  // 외부 클릭으로 닫기 비활성화
   renderCopyCampList('');
 }
 
 function renderCopyCampList(keyword){
   var list = DB.campaigns.filter(function(camp){
-    return !keyword || camp.name.includes(keyword);
+    // 캠페인 유형 필터
+    if(_copyCampType){
+      var ct = camp.campType || '인플루언서';
+      if(ct !== _copyCampType) return false;
+    }
+    return !keyword || (camp.name||'').includes(keyword);
   }).sort(function(a,b){ return (b.start||'') > (a.start||'') ? 1 : -1; });
 
   var el = document.getElementById('copy-camp-list');
@@ -7911,24 +7948,29 @@ function renderCopyCampList(keyword){
     return;
   }
 
+  var btnLabel = _copyCampRebroadcast ? '재방등록' : '복사';
+
   el.innerHTML = list.map(function(camp){
+    var isMlive = (camp.campType||'') === '모바일라이브';
     var roleColor = camp.role==='메가'?'var(--pink)':camp.role==='앵콜'?'var(--orange)':camp.role==='미들'?'var(--blue)':'var(--green)';
     var roleBg    = camp.role==='메가'?'var(--pink-bg)':camp.role==='앵콜'?'var(--orange-bg)':camp.role==='미들'?'var(--blue-bg)':'var(--green-bg)';
     var revStr = camp.revenue ? (camp.revenue/100000000).toFixed(1)+'억' : '-';
     var dateStr = ((camp.start||'-').slice(5)) + ' ~ ' + ((camp.end||'-').slice(5));
+    var codeStr = isMlive && camp.appMkt && camp.appMkt.liveCode ? '<span style="font-family:monospace;color:var(--accent2)">'+escHtml(camp.appMkt.liveCode)+'</span>' : '';
     return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .15s" '
       + 'class="copy-camp-item" '
-      + 'onclick="copyCampData('+camp.id+')">'
+      + 'onclick="copyCampData('+camp.id+','+_copyCampRebroadcast+')">'
       + '<div style="flex:1;min-width:0">'
-      + '<div style="font-weight:700;font-size:13.5px;margin-bottom:4px">'+camp.name+'</div>'
+      + '<div style="font-weight:700;font-size:13.5px;margin-bottom:4px">'+(isMlive?'📺 ':'')+escHtml(camp.name||'-')+'</div>'
       + '<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text3)">'
       + (camp.role ? '<span style="background:'+roleBg+';color:'+roleColor+';padding:1px 7px;border-radius:20px;font-size:11px;font-weight:700">'+camp.role+'</span>' : '')
       + '<span>'+dateStr+'</span>'
       + '<span style="color:var(--green);font-weight:600">'+revStr+'</span>'
+      + codeStr
       + (camp.mdcat ? '<span>MDCAT: '+camp.mdcat+'</span>' : '')
       + '</div>'
       + '</div>'
-      + '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();copyCampData('+camp.id+')" style="margin-left:16px;white-space:nowrap">이 캠페인으로 복사</button>'
+      + '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();copyCampData('+camp.id+','+_copyCampRebroadcast+')" style="margin-left:16px;white-space:nowrap">'+btnLabel+'</button>'
       + '</div>';
   }).join('');
 }
@@ -7937,17 +7979,27 @@ function filterCopyCamps(keyword){
   renderCopyCampList(keyword);
 }
 
-function copyCampData(campId){
+function copyCampData(campId, rebroadcast){
   var p = DB.campaigns.find(function(x){return x.id===campId;});
   if(!p) return;
 
   // 기존 등록 모달 초기화
   document.getElementById('p-edit-id').value = '';
-  document.getElementById('prod-mo-title').textContent = '캠페인 등록 (1단계 · 캠페인 요청)';
+  document.getElementById('prod-mo-title').textContent = rebroadcast ? '재방등록' : '캠페인 등록';
   document.getElementById('prod-save-btn').textContent = '캠페인 등록';
 
-  // 캠페인명 복사
-  document.getElementById('p-name').value = p.name||'';
+  // 캠페인 유형 복원
+  var isMlive = (p.campType||'') === '모바일라이브';
+  var ctInf = document.getElementById('p-camptype-inf');
+  var ctMl  = document.getElementById('p-camptype-mlive');
+  if(ctInf) ctInf.checked = !isMlive;
+  if(ctMl)  ctMl.checked  = isMlive;
+  updateCampTypeUI();
+
+  // 캠페인명 복사 (재방등록 시 "다시보는" 접두어)
+  var campName = p.name||'';
+  if(rebroadcast && !campName.startsWith('다시보는')) campName = '다시보는 ' + campName;
+  document.getElementById('p-name').value = campName;
   // 날짜도 비워둠
   var startEl = document.getElementById('p-start'); if(startEl) startEl.value='';
   var endEl   = document.getElementById('p-end');   if(endEl)   endEl.value='';
@@ -8012,6 +8064,22 @@ function copyCampData(campId){
     }
   }
 
+  // 쇼호스트 복사 (M라이브)
+  var hosts = p.showhosts||{};
+  searchSelSetValue('p-host-req1',  hosts.req1||'');
+  searchSelSetValue('p-host-req2',  hosts.req2||'');
+  searchSelSetValue('p-host-conf1', hosts.conf1||'');
+  searchSelSetValue('p-host-conf2', hosts.conf2||'');
+
+  // APP 마케팅 복원
+  var appMkt = p.appMkt||{};
+  document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=(appMkt.channels||[]).includes(cb.value); });
+  var naCk4=document.getElementById('appmkt-na'); if(naCk4) naCk4.checked=!!(appMkt.na);
+  toggleAppMktNa();
+  toggleAppMktFields();
+  var alc3=document.getElementById('appmkt-code-live'); if(alc3) alc3.value=''; // 편성코드는 비움 (새 방송이므로)
+  var ld3=document.getElementById('appmkt-live-dt');    if(ld3)  ld3.value='';
+
   // priceGrid는 sku에 통합됐으므로 별도 렌더 불필요
   initSections(false);
 
@@ -8019,7 +8087,8 @@ function copyCampData(campId){
   var modal = document.getElementById('copy-camp-modal');
   if(modal) modal.remove();
 
-  showToast('캠페인 정보를 불러왔습니다. 캠페인명과 날짜를 입력해주세요.');
+  var msg = rebroadcast ? '재방 정보를 불러왔습니다. 편성코드와 방송일시를 입력해주세요.' : '캠페인 정보를 불러왔습니다. 캠페인명과 날짜를 입력해주세요.';
+  showToast(msg);
 }
 
 // ═══════════════════════════════════════
@@ -10375,6 +10444,11 @@ function updateCampTypeUI(){
   // M라이브 편성 달력 버튼 표시/숨김
   var calBtn = document.getElementById('mlive-sched-cal-btn');
   if(calBtn) calBtn.style.display = isMlive ? '' : 'none';
+  // 유형 아래 버튼 표시/숨김
+  var mliveBtns = document.getElementById('p-camptype-mlive-btns');
+  if(mliveBtns) mliveBtns.style.display = isMlive ? 'flex' : 'none';
+  var infBtns = document.getElementById('p-camptype-inf-btns');
+  if(infBtns) infBtns.style.display = !isMlive ? 'flex' : 'none';
 }
 
 // ── M라이브 편성 달력 ──
