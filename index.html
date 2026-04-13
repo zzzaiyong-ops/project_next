@@ -9759,7 +9759,7 @@ function saveProd(){
   if(!pEnd)              missing.push('종료일');
   if(!revenue.trim())    missing.push('예상 매출');
   if(!budget.trim())     missing.push('예산');
-  if(!role)              missing.push('캠페인 역할');
+  if(!role && getCampType()!=='모바일라이브') missing.push('캠페인 역할');
   var _noMdcat = !(v('p-mdcat')); // MDCAT 없으면 저장 후 경고 표시
 
   // 확정 사유 체크 여부만 확인 (상품정보 필수 검증 제거)
