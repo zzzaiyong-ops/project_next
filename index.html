@@ -2245,7 +2245,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/2000</div>
         </div>
         <div class="fr2"><div><label>브랜드</label><input class="inp" id="p-brand" placeholder="스킨랩"></div><div><label>협력업체</label><input class="inp" id="p-company" placeholder="(주)스킨랩"></div></div>
-        <div class="fr2"><div><label>담당 MD</label>
+        <div class="fr2"><div><label>카테고리</label><input class="inp" id="p-cat" placeholder="예) 뷰티, 식품, 패션"></div><div><label>담당 MD</label>
 <div class="search-sel-wrap" id="wrap-p-owner">
   <input class="inp search-sel-input" id="p-owner" placeholder="이름 검색..." autocomplete="off"
     oninput="searchSelFilter('p-owner','md')"
@@ -2254,11 +2254,15 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   <button class="search-sel-clear" id="clear-p-owner" onclick="searchSelClear('p-owner')" tabindex="-1">✕</button>
   <div class="search-sel-list" id="list-p-owner"></div>
 </div>
-</div><div></div></div>
-        <div class="fr2"><div><label>카테고리</label><input class="inp" id="p-cat" placeholder="예) 뷰티, 식품, 패션"></div><div></div></div>
+</div></div>
         <div class="fr"><label>캠페인 소구 포인트</label>
           <textarea class="ta" id="p-appeal" placeholder="핵심 소구 포인트, 차별화 요소, 타겟 메시지..." maxlength="500" style="min-height:80px;resize:vertical" oninput="this.nextElementSibling.textContent=this.value.length+'/500'"></textarea>
           <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
+        </div>
+        <!-- 상품딜코드 (모바일라이브용) -->
+        <div class="fr2" id="p-deal-code-row" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
+          <div><label>상품 딜코드</label><input class="inp" id="p-deal-code" placeholder="예) D202604001"></div>
+          <div></div>
         </div>
         <!-- 상세 상품코드 + 가격 통합 테이블 -->
         <div style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
@@ -2296,9 +2300,6 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
               </thead>
               <tbody id="sku-list"></tbody>
             </table>
-          </div>
-          <div style="margin-top:8px;background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--r-sm);padding:7px 12px;font-size:11px;color:var(--blue)">
-            💡 최종공구가 = MD할인가 - 카드할인 - 신규적립금 - 신규쿠폰 &nbsp;|&nbsp; 상품코드 입력 시 MDCAT·카테고리·상품명·브랜드 자동완성
           </div>
         </div>
         <!-- CS정보 / 배송정보 -->
@@ -5467,6 +5468,7 @@ function editProd(id){
     document.getElementById('p-company').value = p.company||'';
     document.getElementById('p-brand').value   = p.brand||'';
     document.getElementById('p-cat').value     = p.cat||'';
+    var dcEl=document.getElementById('p-deal-code'); if(dcEl) dcEl.value=p.dealCode||'';
     // p-owner(담당MD) - 검색형 드롭다운에 값 설정
   var ownerSel = document.getElementById('p-owner');
   if(ownerSel) ownerSel.value = p.owner||'';
@@ -9622,7 +9624,7 @@ function openNewProd(){
   searchSelSetValue('p-host-req2',  '');
   searchSelSetValue('p-host-conf1', '');
   searchSelSetValue('p-host-conf2', '');
-  ['p-name','p-company','p-brand','p-cat','p-owner','p-start','p-end','p-appeal','p-product-basic-info','p-cs-info','p-delivery-info','p-inf-request','p-revenue','p-budget','p-target','p-mdcat','p-mcn','p-fee-rate','p-fee-amount','p-inf-name','p-pd-single','p-sample-address','p-youtube-ch','p-insta-ch','p-twitter-ch','p-courier','p-ship-cutoff','p-ship-fee','p-island-fee','p-exchange-fee','p-return-fee','p-settle-process-date','p-settle-payment-date'].forEach(function(id){
+  ['p-name','p-company','p-brand','p-cat','p-deal-code','p-owner','p-start','p-end','p-appeal','p-product-basic-info','p-cs-info','p-delivery-info','p-inf-request','p-revenue','p-budget','p-target','p-mdcat','p-mcn','p-fee-rate','p-fee-amount','p-inf-name','p-pd-single','p-sample-address','p-youtube-ch','p-insta-ch','p-twitter-ch','p-courier','p-ship-cutoff','p-ship-fee','p-island-fee','p-exchange-fee','p-return-fee','p-settle-process-date','p-settle-payment-date'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   // 고정 기본 텍스트 복원
@@ -9873,6 +9875,7 @@ function saveProd(){
     appeal:v('p-appeal'), productBasicInfo:v('p-product-basic-info'), csInfo:v('p-cs-info'), deliveryInfo:v('p-delivery-info'), infRequest:v('p-inf-request'),
     settleProcessDate:v('p-settle-process-date'), settlePaymentDate:v('p-settle-payment-date'),
     promos:promos,
+    dealCode:v('p-deal-code'),
     courier:v('p-courier'), shipCutoff:v('p-ship-cutoff'),
     shipFree:!!(document.getElementById('p-ship-free')?.checked),
     shipFee:parseInt((document.getElementById('p-ship-fee')?.value||'').replace(/,/g,''))||0,
@@ -11406,6 +11409,7 @@ function closeMo(t){
 function renderAllPages(){
   renderS1(); renderS2(); renderS3(); renderS4(); renderS5(); renderS6(); renderS7();
   renderCamps(); renderReports(); renderDash(); updateBadges();
+  if(_dashMode==='mlive') renderMliveDash();
 }
 function openQuick(){ openMo('quick'); }
 // 팝업 외부클릭 닫힘 비활성화 - 닫기/취소 버튼으로만 닫힘
