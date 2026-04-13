@@ -1406,7 +1406,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s7')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
         </div>
       </div>
-      <div class="stage-table-wrap"><table class="stage-table"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck('s7',this.checked)" style="cursor:pointer"></th><th>캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr></thead>
+      <div class="stage-table-wrap"><table class="stage-table"><thead id="s7-thead"></thead>
       <tbody id="s6-tbl"></tbody></table>
         <div id="s6-pg-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
     </div>
@@ -2861,7 +2861,12 @@ let DB = {
   activities:[],
   comments:{}, files:{}, history:{},
   notifications:[],
-  showhosts:[], // 쇼호스트 DB (기본정보 관리에서 등록)
+  showhosts:[
+    {id:1,name:'김쇼호',company:'프리랜서',category:'뷰티,식품',createdAt:Date.now()},
+    {id:2,name:'박라이브',company:'SSG MCN',category:'식품,가전',createdAt:Date.now()},
+    {id:3,name:'이호스트',company:'프리랜서',category:'패션,가전',createdAt:Date.now()},
+    {id:4,name:'최호스트',company:'SSG MCN',category:'패션,뷰티',createdAt:Date.now()},
+  ],
 };
 let nid={products:1,campaigns:1,influencers:1,matches:1,progress:1,mcn:1,app:1,settle:1};
 
@@ -4491,6 +4496,13 @@ function _demoSampleCampaigns(){
     {id:1010,name:'나이키 러닝화 신상',stage:'4.MCN요청',cat:'패션',role:'미들',infSize:'미들',revenue:45000000,start:add(8),end:add(15),owner:'박민준',pdSingle:'박민준',mcn:'스타MCN',infName:'스포츠H',infData:[{infName:'스포츠H',infSize:'미들',feeRate:14}]},
     {id:1011,name:'다이슨 헤어드라이어',stage:'3.상품정보등록',cat:'IT/가전',role:'메가',infSize:'메가',revenue:90000000,start:add(6),end:add(13),owner:'김담당',pdSingle:'김담당',mcn:'테크MCN',infName:'테크리뷰어I',infData:[{infName:'테크리뷰어I',infSize:'메가',feeRate:16}]},
     {id:1012,name:'제주삼다수 정기배송',stage:'1.캠페인요청',cat:'식품',role:'앵콜',infSize:'시딩',revenue:8000000,start:add(4),end:add(11),owner:'최현우',pdSingle:'최현우',mcn:'푸드MCN',infName:'일상유튜버J',infData:[{infName:'일상유튜버J',infSize:'시딩',feeRate:8}]},
+    // ── 모바일라이브 데모 ──
+    {id:2001,name:'스킨랩 비타민C 세럼 라이브',stage:'6.APP마케팅확정',cat:'뷰티',campType:'모바일라이브',revenue:80000000,start:add(0)+'T10:00',end:add(0)+'T11:00',owner:'이소연',mdcat:'뷰티',appMkt:{channels:['모바일라이브'],liveCode:'202604130101',liveDt:add(0)+'T10:00'},totalRevenue:42000000,onairRevenue:28000000,offairRevenue:14000000,showhosts:{req1:'김쇼호',conf1:'김쇼호'}},
+    {id:2002,name:'헬씨팜 그린스무디 라이브',stage:'7.정산',cat:'식품',campType:'모바일라이브',revenue:50000000,start:add(1)+'T18:00',end:add(1)+'T19:00',owner:'박민준',mdcat:'식품',appMkt:{channels:['모바일라이브'],liveCode:'202604140201',liveDt:add(1)+'T18:00'},totalRevenue:35000000,onairRevenue:22000000,offairRevenue:13000000,settleDone:false,showhosts:{req1:'박라이브',conf1:'박라이브'}},
+    {id:2003,name:'모던핏 린넨셔츠 라이브',stage:'2.캠페인확정',cat:'패션',campType:'모바일라이브',revenue:30000000,start:add(3)+'T20:00',end:add(3)+'T21:00',owner:'최현우',mdcat:'패션',appMkt:{channels:['모바일라이브'],liveCode:'202604160301',liveDt:add(3)+'T20:00'},showhosts:{req1:'이호스트',req2:'최호스트'}},
+    {id:2004,name:'다시보는 스킨랩 비타민C 세럼',stage:'6.APP마케팅확정',cat:'뷰티',campType:'모바일라이브',revenue:15000000,start:add(2)+'T10:00',end:add(2)+'T11:00',owner:'이소연',mdcat:'뷰티',appMkt:{channels:['모바일라이브'],liveCode:'202604150102',liveDt:add(2)+'T10:00'},showhosts:{conf1:'김쇼호'}},
+    {id:2005,name:'나이키 러닝화 라이브',stage:'1.캠페인요청',cat:'패션',campType:'모바일라이브',revenue:60000000,start:add(5)+'T18:00',end:add(5)+'T19:00',owner:'박민준',mdcat:'패션',appMkt:{channels:['모바일라이브'],liveDt:add(5)+'T18:00'},showhosts:{req1:'박라이브'}},
+    {id:2006,name:'다이슨 에어랩 라이브',stage:'3.상품정보등록',cat:'IT/가전',campType:'모바일라이브',revenue:120000000,start:add(7)+'T20:00',end:add(7)+'T21:00',owner:'김담당',mdcat:'가전',appMkt:{channels:['모바일라이브'],liveCode:'202604200401',liveDt:add(7)+'T20:00'},showhosts:{req1:'이호스트',conf1:'이호스트'}},
   ];
 }
 function updateOnline(){
@@ -6996,6 +7008,7 @@ function renderS7(){
   // 캠페인별 직접 표시 (정산 데이터 없어도 랜딩URL 있는 캠페인은 표시)
   // validCampIds 방식 대신 직접 필터 (id includes 비교 문제 회피)
   var campList = DB.campaigns.filter(function(c){
+    if(!matchesDashMode(c)) return false;
     if(pageFilter.s7 !== 'target' && !matchesDateFilter(c,'s7')) return false;
     var _nf2=(document.getElementById('sf-s7-name')?.value||'').trim().toLowerCase();
     if(_nf2 && !(c.name||'').toLowerCase().includes(_nf2)) return false;
@@ -7006,6 +7019,16 @@ function renderS7(){
     return c.stage==='6.APP마케팅확정'||c.stage==='7.정산'||c.stage==='7.정산완료';
   });
   console.log('[renderS7] campList:', campList.length);
+  // 동적 헤더 (인플루언서 vs 모바일라이브)
+  var _s7Mlive = _dashMode==='mlive';
+  var s7thead = document.getElementById('s7-thead');
+  if(s7thead){
+    if(_s7Mlive){
+      s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>편성코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th>담당MD</th><th>전체매출</th><th>방송중매출</th><th>방송외매출</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
+    } else {
+      s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
+    }
+  }
   // 페이징 처리
   var _pg_s7 = _getPagedItems(campList, 's7');
   _pg_s7.items.forEach(function(camp, _pi7){
@@ -7016,62 +7039,83 @@ function renderS7(){
     var settleStatus = camp.settleDone ? '정산완료' : '미확정';
     var statusBadge = badge(settleStatus);
 
-    // 멀티 인플루언서 여부 확인
-    var infList = camp.infData && camp.infData.length > 0 ? camp.infData : [{
-      infName: camp.infName||'-', mcn: camp.mcn||'', infSize: camp.infSize||camp.role||'',
-      feeRate: camp.feeRate||0, feeAmount: camp.feeAmount||0, agencyRate: camp.agencyRate||0
-    }];
-    var settleList = camp.settleData && camp.settleData.length > 0 ? camp.settleData : [{
-      revenue: camp.settleRevenue||0, orders: camp.settleOrders||0
-    }];
-    var da = camp.settleDa || 0;
-    var rowspan = infList.length;
+    if(_s7Mlive){
+      // ── M-live 정산 행: 편성코드, 캠페인명, 기간, 담당MD, 전체/방송중/방송외매출, 상태
+      var totalRev  = camp.totalRevenue||0;
+      var onairRev  = camp.onairRevenue||0;
+      var offairRev = camp.offairRevenue||0;
+      rows += '<tr style="cursor:pointer" onclick="editProd('+camp.id+')">'
+        +'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
+        +'<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+camp.id+'" data-stage="s7" style="cursor:pointer"></td>'
+        +'<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+displayCampCode(camp)+'</td>'
+        +'<td style="font-weight:600">'+escHtml(camp.name)+'</td>'
+        +'<td style="font-size:12px;color:var(--text3)">'+dateStr+'</td>'
+        +'<td style="color:var(--text2)">'+escHtml(camp.owner||'-')+'</td>'
+        +'<td style="font-weight:700;color:var(--green)">'+(totalRev?totalRev.toLocaleString()+'원':'-')+'</td>'
+        +'<td style="font-weight:600;color:var(--blue)">'+(onairRev?onairRev.toLocaleString()+'원':'-')+'</td>'
+        +'<td style="font-weight:600;color:var(--orange)">'+(offairRev?offairRev.toLocaleString()+'원':'-')+'</td>'
+        +'<td>'+statusBadge+'</td>'
+        +'<td><div class="row-acts">'
+        +(canEdit()&&!isExtMcn()?'<button class="btn btn-primary btn-xs" onclick="editProd('+camp.id+')">수정</button>':'<span style="font-size:11px;color:var(--text3)">조회전용</span>')
+        +'</div></td></tr>';
+    } else {
+      // ── 인플루언서 정산 행 (기존)
+      var infList = camp.infData && camp.infData.length > 0 ? camp.infData : [{
+        infName: camp.infName||'-', mcn: camp.mcn||'', infSize: camp.infSize||camp.role||'',
+        feeRate: camp.feeRate||0, feeAmount: camp.feeAmount||0, agencyRate: camp.agencyRate||0
+      }];
+      var settleList = camp.settleData && camp.settleData.length > 0 ? camp.settleData : [{
+        revenue: camp.settleRevenue||0, orders: camp.settleOrders||0
+      }];
+      var da = camp.settleDa || 0;
+      var rowspan = infList.length;
 
-    infList.forEach(function(inf, infIdx){
-      var sd = settleList[infIdx] || {};
-      var rev = sd.revenue || 0;
-      var infFeeAmt   = Math.round(rev * (inf.feeRate||0) / 100);
-      var agFeeAmt    = Math.round(rev * (inf.agencyRate||0) / 100);
-      var totalCost   = infFeeAmt + (inf.feeAmount||0) + agFeeAmt + (infIdx===0 ? da : 0);
-      var revStr  = rev  ? rev.toLocaleString()+'원'       : '-';
-      var costStr = totalCost ? totalCost.toLocaleString()+'원' : '-';
-      var ordStr  = sd.orders ? sd.orders+'건' : '-';
-      var infSize = inf.infSize || '-';
+      infList.forEach(function(inf, infIdx){
+        var sd = settleList[infIdx] || {};
+        var rev = sd.revenue || 0;
+        var infFeeAmt   = Math.round(rev * (inf.feeRate||0) / 100);
+        var agFeeAmt    = Math.round(rev * (inf.agencyRate||0) / 100);
+        var totalCost   = infFeeAmt + (inf.feeAmount||0) + agFeeAmt + (infIdx===0 ? da : 0);
+        var revStr  = rev  ? rev.toLocaleString()+'원'       : '-';
+        var costStr = totalCost ? totalCost.toLocaleString()+'원' : '-';
+        var ordStr  = sd.orders ? sd.orders+'건' : '-';
+        var infSize = inf.infSize || '-';
 
-      if(infIdx === 0){
-        // 첫 행: 캠페인명/날짜/MDCAT/체크박스 rowspan
-        rows += '<tr style="cursor:pointer" onclick="editProd('+camp.id+')">'
-      + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px" rowspan="'+rowspan+'">'+rowNum+'</td>'
-          +'<td rowspan="'+rowspan+'" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+camp.id+'" data-stage="s7" style="cursor:pointer"></td>'
-          +'<td class="mob-hide" rowspan="'+rowspan+'" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap;vertical-align:top;padding-top:10px">'+(camp.campCode||'-')+'</td>'
-          +'<td rowspan="'+rowspan+'" style="font-weight:600;vertical-align:top;padding-top:10px">'
-            +'<div>'+camp.name+'</div>'
-            +(rowspan>1?'<div style="font-size:10px;color:var(--accent);margin-top:3px;font-weight:700">👥 인플루언서 '+rowspan+'명</div>':'')
-          +'</td>'
-          +'<td rowspan="'+rowspan+'" style="font-size:12px;color:var(--text3);vertical-align:top;padding-top:10px">'+dateStr+'</td>'
-          +'<td rowspan="'+rowspan+'" style="font-size:12px;font-family:monospace;color:var(--text3);vertical-align:top;padding-top:10px">'+mdcatVal+'</td>';
-      } else {
-        rows += '<tr style="border-top:1px dashed var(--border)">';
-      }
+        if(infIdx === 0){
+          rows += '<tr style="cursor:pointer" onclick="editProd('+camp.id+')">'
+        + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px" rowspan="'+rowspan+'">'+rowNum+'</td>'
+            +'<td rowspan="'+rowspan+'" onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+camp.id+'" data-stage="s7" style="cursor:pointer"></td>'
+            +'<td class="mob-hide" rowspan="'+rowspan+'" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap;vertical-align:top;padding-top:10px">'+displayCampCode(camp)+'</td>'
+            +'<td rowspan="'+rowspan+'" style="font-weight:600;vertical-align:top;padding-top:10px">'
+              +'<div>'+camp.name+'</div>'
+              +(rowspan>1?'<div style="font-size:10px;color:var(--accent);margin-top:3px;font-weight:700">👥 인플루언서 '+rowspan+'명</div>':'')
+            +'</td>'
+            +'<td rowspan="'+rowspan+'" style="font-size:12px;color:var(--text3);vertical-align:top;padding-top:10px">'+dateStr+'</td>'
+            +'<td rowspan="'+rowspan+'" style="font-size:12px;font-family:monospace;color:var(--text3);vertical-align:top;padding-top:10px">'+mdcatVal+'</td>';
+        } else {
+          rows += '<tr style="border-top:1px dashed var(--border)">';
+        }
 
-      rows += '<td style="font-size:12px">'+(infSize!=='-'?'<span style="background:var(--bg3);padding:1px 6px;border-radius:10px;font-size:11px">'+infSize+'</span>':'-')+'</td>'
-        +'<td style="font-size:12px;color:var(--text2)">'+(inf.mcn||'-')+'</td>'
-        +'<td style="font-size:12px;font-weight:600">'+(inf.infName||'-')+'</td>'
-        +'<td style="font-weight:700;color:var(--green)">'+revStr+'</td>'
-        +'<td style="font-size:11px;color:var(--text3)">'+ordStr+'</td>'
-        +'<td style="font-weight:700;color:var(--orange);text-align:left">'+costStr+'</td>';
+        rows += '<td style="font-size:12px">'+(infSize!=='-'?'<span style="background:var(--bg3);padding:1px 6px;border-radius:10px;font-size:11px">'+infSize+'</span>':'-')+'</td>'
+          +'<td style="font-size:12px;color:var(--text2)">'+(inf.mcn||'-')+'</td>'
+          +'<td style="font-size:12px;font-weight:600">'+(inf.infName||'-')+'</td>'
+          +'<td style="font-weight:700;color:var(--green)">'+revStr+'</td>'
+          +'<td style="font-size:11px;color:var(--text3)">'+ordStr+'</td>'
+          +'<td style="font-weight:700;color:var(--orange);text-align:left">'+costStr+'</td>';
 
-      if(infIdx === 0){
-        rows += '<td rowspan="'+rowspan+'">'+ statusBadge +'</td>'
-          +'<td rowspan="'+rowspan+'"><div class="row-acts">'
-          +(canEdit() && !isExtMcn() ? '<button class="btn btn-primary btn-xs" onclick="editProd('+camp.id+')">수정</button>' : '<span style="font-size:11px;color:var(--text3)">조회전용</span>')
-          +'</div></td>';
-      }
-      rows += '</tr>';
-    });
+        if(infIdx === 0){
+          rows += '<td rowspan="'+rowspan+'">'+ statusBadge +'</td>'
+            +'<td rowspan="'+rowspan+'"><div class="row-acts">'
+            +(canEdit() && !isExtMcn() ? '<button class="btn btn-primary btn-xs" onclick="editProd('+camp.id+')">수정</button>' : '<span style="font-size:11px;color:var(--text3)">조회전용</span>')
+            +'</div></td>';
+        }
+        rows += '</tr>';
+      });
+    }
   });
   _renderPagination('s6-pagination', campList.length, 's7', 'renderS7()');
-  document.getElementById('s6-tbl').innerHTML=rows||'<tr><td colspan="14" class="empty">정산 대상 캠페인 없음</td></tr>';
+  var s7ColSpan = _s7Mlive ? 11 : 14;
+  document.getElementById('s6-tbl').innerHTML=rows||'<tr><td colspan="'+s7ColSpan+'" class="empty">정산 대상 캠페인 없음</td></tr>';
 }
 
 function openSettleByCamp(campId){
