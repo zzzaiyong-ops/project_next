@@ -787,6 +787,8 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   <nav>
     <div class="nav-sec">메인</div>
     <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard',this)"><span class="ico">▦</span> 대시보드</div>
+    <!-- 인플루언서 마케팅 사이드바 -->
+    <div id="sidebar-inf-nav">
     <div class="nav-sec">7단계 업무 흐름</div>
     <div class="nav-item" data-page="s1" id="nav-s1" onclick="goPage('s1',this)"><span class="ico">📋</span> 1단계 · 캠페인요청</div>
     <div class="nav-item" data-page="s2" id="nav-s2" onclick="goPage('s2',this)"><span class="ico">✅</span> 2단계 · 캠페인확정 <span class="nbadge orange" id="b-s2">0</span></div>
@@ -799,6 +801,19 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div class="nav-sec">관리</div>
     <div class="nav-item" data-page="influencers" id="nav-influencers" onclick="goPage('influencers',this)"><span class="ico">🗂️</span> 인플루언서 DB</div>
     <div class="nav-item" data-page="campaigns" id="nav-campaigns" onclick="goPage('campaigns',this)"><span class="ico">🚀</span> 전체 캠페인 <span class="nbadge" id="b-camp">3</span></div>
+    </div>
+    <!-- 모바일라이브 사이드바 -->
+    <div id="sidebar-mlive-nav" style="display:none">
+    <div class="nav-sec">📺 M라이브 업무 흐름</div>
+    <div class="nav-item" data-page="s1" onclick="goPage('s1',this)"><span class="ico">📋</span> 1단계 · 편성요청 <span class="nbadge" id="b-ml-s1">0</span></div>
+    <div class="nav-item" data-page="s2" onclick="goPage('s2',this)"><span class="ico">✅</span> 2단계 · 편성확정 <span class="nbadge orange" id="b-ml-s2">0</span></div>
+    <div class="nav-item" data-page="s3" onclick="goPage('s3',this)"><span class="ico">📦</span> 3단계 · 상품정보등록 <span class="nbadge" id="b-ml-s3">0</span></div>
+    <div class="nav-item" data-page="s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 4단계 · APP마케팅 <span class="nbadge" id="b-ml-s6">0</span></div>
+    <div class="nav-item" data-page="s7" onclick="goPage('s7',this)"><span class="ico">💰</span> 5단계 · 정산 <span class="nbadge" id="b-ml-s7">0</span></div>
+    <div class="nav-item" data-page="s8" onclick="goPage('s8',this)"><span class="ico">📈</span> 6단계 · 성과분석</div>
+    <div class="nav-sec">관리</div>
+    <div class="nav-item" data-page="campaigns" onclick="goPage('campaigns',this)"><span class="ico">🚀</span> 전체 캠페인</div>
+    </div>
     <div class="nav-item" data-page="basemgmt" id="nav-basemgmt" style="display:none" onclick="goPage('basemgmt',this)"><span class="ico">⚙️</span> 기본정보 관리</div>
   </nav>
   <div style="padding:4px 8px;border-top:1px solid var(--border)">
@@ -854,6 +869,14 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
 
   <!-- ═══ DASHBOARD ═══ -->
   <div id="page-dashboard" class="page active">
+    <!-- ── 대시보드 유형 탭 (인플루언서 / 모바일라이브) ── -->
+    <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
+      <div class="tab active" id="dash-tab-inf" onclick="switchDashMode('inf')" style="padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;border-bottom:3px solid var(--accent);margin-bottom:-2px">👤 인플루언서 마케팅</div>
+      <div class="tab" id="dash-tab-mlive" onclick="switchDashMode('mlive')" style="padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;color:var(--text3);border-bottom:3px solid transparent;margin-bottom:-2px">📺 모바일라이브</div>
+    </div>
+
+    <!-- ══ 인플루언서 대시보드 영역 ══ -->
+    <div id="dash-inf-area">
 
     <!-- MD 전용 대시보드 블록 (md 역할 로그인 시 표시) -->
     <div id="dash-md-block" style="display:none;margin-bottom:18px">
@@ -994,6 +1017,69 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         <div id="cal-grid"></div>
       </div>
     </div>
+
+    </div><!-- /dash-inf-area -->
+
+    <!-- ══ 모바일라이브 대시보드 영역 ══ -->
+    <div id="dash-mlive-area" style="display:none">
+      <!-- MD 전용: M-live 상품정보 입력대상 -->
+      <div id="dash-mlive-md-block" style="display:none;margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:18px">📺</span>
+          <div style="font-size:15px;font-weight:800" id="dash-mlive-md-greeting">안녕하세요!</div>
+          <div style="font-size:12px;color:var(--text3);margin-left:4px">모바일라이브 현황</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div onclick="goPage('campaigns',document.getElementById('nav-campaigns'))"
+            style="background:var(--bg2);border:2px solid var(--blue);border-radius:var(--r-lg);padding:22px 24px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden"
+            onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background='var(--bg2)'">
+            <div style="font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.4px;margin-bottom:10px">📦 상품 정보 입력 대상</div>
+            <div style="display:flex;align-items:flex-end;gap:6px">
+              <div style="font-size:42px;font-weight:900;color:var(--blue);line-height:1" id="dash-mlive-md-req-count">0</div>
+              <div style="font-size:16px;font-weight:700;color:var(--blue);margin-bottom:6px">건</div>
+            </div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:8px">본인 MD 담당 모바일라이브 중 상품정보 미입력 건</div>
+          </div>
+          <div style="background:var(--bg2);border:2px solid var(--accent);border-radius:var(--r-lg);padding:22px 24px;position:relative;overflow:hidden">
+            <div style="font-size:12px;font-weight:700;color:var(--accent2);letter-spacing:.4px;margin-bottom:10px">📈 <span id="dash-mlive-md-rev-month">4월</span> M라이브 실적</div>
+            <div style="display:flex;align-items:flex-end;gap:6px">
+              <div style="font-size:42px;font-weight:900;color:var(--accent2);line-height:1" id="dash-mlive-md-revenue">0</div>
+              <div style="font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:6px">억원</div>
+            </div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:8px">이번 달 모바일라이브 예상 매출 합계</div>
+          </div>
+        </div>
+      </div>
+      <!-- M-live 월간 캘린더 (색상별 시간대) -->
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-hd">
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="mlDashCalPrev()">◀</button>
+            <span id="ml-dash-cal-title" style="font-size:15px;font-weight:800;min-width:120px;text-align:center">-</span>
+            <button class="btn btn-ghost btn-sm" onclick="mlDashCalNext()">▶</button>
+          </div>
+          <div style="display:flex;gap:12px;font-size:11px;align-items:center" id="ml-dash-cal-legend">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#e17055"></span> 본방10시</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#0984e3"></span> 본방18시</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#6c5ce7"></span> 본방20시</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#a29bfe"></span> 기타시간</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#b2bec3"></span> 재방</span>
+          </div>
+        </div>
+        <div style="padding:12px">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--red);padding:4px 0">일</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">월</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">화</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">수</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">목</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">금</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--blue);padding:4px 0">토</div>
+          </div>
+          <div id="ml-dash-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+        </div>
+      </div>
+    </div><!-- /dash-mlive-area -->
 
   </div>
 
@@ -4542,6 +4628,158 @@ function renderPage(p){
 }
 
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// DASHBOARD MODE (인플루언서 / 모바일라이브)
+// ═══════════════════════════════════════
+var _dashMode = 'inf'; // 'inf' | 'mlive'
+var _mlDashCalDate = (function(){ var d=new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
+
+function switchDashMode(mode){
+  _dashMode = mode;
+  // 탭 스타일
+  var tabInf  = document.getElementById('dash-tab-inf');
+  var tabMl   = document.getElementById('dash-tab-mlive');
+  if(tabInf){
+    tabInf.style.borderBottomColor = mode==='inf'?'var(--accent)':'transparent';
+    tabInf.style.color = mode==='inf'?'':'var(--text3)';
+    tabInf.classList.toggle('active', mode==='inf');
+  }
+  if(tabMl){
+    tabMl.style.borderBottomColor = mode==='mlive'?'var(--accent)':'transparent';
+    tabMl.style.color = mode==='mlive'?'':'var(--text3)';
+    tabMl.classList.toggle('active', mode==='mlive');
+  }
+  // 영역 표시/숨김
+  var infArea  = document.getElementById('dash-inf-area');
+  var mlArea   = document.getElementById('dash-mlive-area');
+  if(infArea) infArea.style.display = mode==='inf'?'':'none';
+  if(mlArea)  mlArea.style.display  = mode==='mlive'?'':'none';
+  // 사이드바 전환
+  switchSidebarMode(mode);
+  // M-live 대시보드 렌더
+  if(mode==='mlive'){
+    renderMliveDash();
+  } else {
+    renderDash();
+  }
+}
+
+function switchSidebarMode(mode){
+  var infNav  = document.getElementById('sidebar-inf-nav');
+  var mlNav   = document.getElementById('sidebar-mlive-nav');
+  if(infNav) infNav.style.display = mode==='inf'?'':'none';
+  if(mlNav)  mlNav.style.display  = mode==='mlive'?'':'none';
+}
+
+// M-live 대시보드 렌더
+function renderMliveDash(){
+  // MD 블록
+  var mdBlock = document.getElementById('dash-mlive-md-block');
+  if(ME_ROLE==='md' && mdBlock){
+    mdBlock.style.display = '';
+    var greet = document.getElementById('dash-mlive-md-greeting');
+    if(greet) greet.textContent = ME+'님, 안녕하세요!';
+    // 본인 MD 담당 M-live 중 상품정보 미입력
+    var myMlive = DB.campaigns.filter(function(c){
+      if((c.campType||'')!=='모바일라이브') return false;
+      return (c.owner||'').trim()===ME;
+    });
+    var noInfoCnt = myMlive.filter(function(c){
+      return c.stage==='2.캠페인확정'||c.stage==='3.상품정보등록';
+    }).length;
+    var cntEl = document.getElementById('dash-mlive-md-req-count');
+    if(cntEl) cntEl.textContent = noInfoCnt;
+    // 이번 달 매출
+    var now=new Date(), curY=now.getFullYear(), curM=now.getMonth();
+    var msStart=curY+'-'+String(curM+1).padStart(2,'0')+'-01';
+    var msEnd=curY+'-'+String(curM+1).padStart(2,'0')+'-'+String(new Date(curY,curM+1,0).getDate()).padStart(2,'0');
+    var allMlive = DB.campaigns.filter(function(c){ return (c.campType||'')==='모바일라이브'; });
+    var monthRev = allMlive.filter(function(c){
+      var cs=(c.start||'').slice(0,10), ce=(c.end||'').slice(0,10);
+      return cs&&ce&&cs<=msEnd&&ce>=msStart;
+    }).reduce(function(s,c){return s+(c.revenue||0);},0);
+    var revEl = document.getElementById('dash-mlive-md-revenue');
+    if(revEl) revEl.textContent = (monthRev/100000000).toFixed(1);
+    var rmEl = document.getElementById('dash-mlive-md-rev-month');
+    if(rmEl) rmEl.textContent = (curM+1)+'월';
+  } else if(mdBlock){
+    mdBlock.style.display = 'none';
+  }
+  renderMliveDashCal();
+}
+
+// M-live 대시보드 캘린더
+function mlDashCalPrev(){ _mlDashCalDate.setMonth(_mlDashCalDate.getMonth()-1); renderMliveDashCal(); }
+function mlDashCalNext(){ _mlDashCalDate.setMonth(_mlDashCalDate.getMonth()+1); renderMliveDashCal(); }
+
+function _mliveTimeColor(camp){
+  var nm = (camp.name||'').trim();
+  if(nm.startsWith('다시보는')||nm.includes('(재방)')) return {color:'#b2bec3',label:'재방'};
+  var dt = (camp.appMkt&&camp.appMkt.liveDt)||camp.start||'';
+  var hh = 0;
+  if(dt.length>=16){ hh = parseInt(dt.slice(11,13))||0; }
+  if(hh>=9&&hh<12) return {color:'#e17055',label:'10시'};
+  if(hh>=17&&hh<19) return {color:'#0984e3',label:'18시'};
+  if(hh>=19&&hh<21) return {color:'#6c5ce7',label:'20시'};
+  return {color:'#a29bfe',label:hh+'시'};
+}
+
+function renderMliveDashCal(){
+  var y=_mlDashCalDate.getFullYear(), m=_mlDashCalDate.getMonth();
+  var titleEl=document.getElementById('ml-dash-cal-title');
+  if(titleEl) titleEl.textContent=y+'년 '+(m+1)+'월';
+  var firstDay=new Date(y,m,1).getDay();
+  var daysInMonth=new Date(y,m+1,0).getDate();
+  var monthStart=y+'-'+String(m+1).padStart(2,'0')+'-01';
+  var monthEnd=y+'-'+String(m+1).padStart(2,'0')+'-'+String(daysInMonth).padStart(2,'0');
+  // 전체 사용자 M-live (MD도 모든 캠페인 표시)
+  var camps=DB.campaigns.filter(function(c){
+    if((c.campType||'')!=='모바일라이브') return false;
+    var cs=(c.start||c.startDate||'').slice(0,10);
+    if(!cs) return false;
+    return cs>=monthStart&&cs<=monthEnd;
+  });
+  var byDay={};
+  camps.forEach(function(c){
+    var d=(c.start||c.startDate||'').slice(0,10);
+    if(!byDay[d]) byDay[d]=[];
+    byDay[d].push(c);
+  });
+  var today=new Date(); today.setHours(0,0,0,0);
+  var grid=document.getElementById('ml-dash-cal-grid');
+  if(!grid) return;
+  var html='';
+  for(var i=0;i<firstDay;i++) html+='<div style="min-height:90px;background:var(--bg);border-radius:4px"></div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var dStr=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var dayDate=new Date(y,m,d); dayDate.setHours(0,0,0,0);
+    var isToday=dayDate.getTime()===today.getTime();
+    var dow=dayDate.getDay();
+    var dayColor=dow===0?'var(--red)':(dow===6?'var(--blue)':'var(--text2)');
+    var dayCamps=byDay[dStr]||[];
+    // 시간순 정렬
+    dayCamps.sort(function(a,b){
+      var at=(a.appMkt&&a.appMkt.liveDt)||a.start||'';
+      var bt=(b.appMkt&&b.appMkt.liveDt)||b.start||'';
+      return at>bt?1:-1;
+    });
+    var itemsHtml=dayCamps.map(function(c){
+      var tc=_mliveTimeColor(c);
+      var nm=(c.name||'-');
+      if(nm.length>8) nm=nm.slice(0,8)+'…';
+      var dt=(c.appMkt&&c.appMkt.liveDt)||c.start||'';
+      var timeStr=dt.length>=16?dt.slice(11,16):'';
+      var isMyMd = (c.owner||'').trim()===ME;
+      var cursor = isMyMd||isAdmin()||ME_ROLE==='manager' ? 'cursor:pointer' : 'cursor:default;opacity:.85';
+      var onclick = isMyMd||isAdmin()||ME_ROLE==='manager' ? 'onclick="editProd('+c.id+')"' : '';
+      return '<div '+onclick+' title="'+escHtml(c.name||'')+' · '+(timeStr||'')+'" style="font-size:9.5px;padding:2px 4px;background:'+tc.color+'22;border-left:3px solid '+tc.color+';color:var(--text);border-radius:2px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;'+cursor+'">'
+        +(timeStr?'<span style="color:'+tc.color+';font-weight:700">'+timeStr+'</span> ':'')+escHtml(nm)+'</div>';
+    }).join('');
+    html+='<div style="min-height:90px;background:'+(isToday?'var(--accent-bg)':'var(--bg2)')+';border:1px solid '+(isToday?'var(--accent)':'var(--border)')+';border-radius:4px;padding:3px"><div style="font-size:11px;font-weight:700;color:'+dayColor+';margin-bottom:2px">'+d+'</div>'+itemsHtml+'</div>';
+  }
+  grid.innerHTML=html;
+}
+
 // CALENDAR
 // ═══════════════════════════════════════
 let calDate = (function(){ var d=new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
@@ -10997,6 +11235,14 @@ function updateBadges(){
   setBadge('b-s5', s5cnt);
   setBadge('b-s6', s6cnt);
   setBadge('b-s7', s7cnt);
+
+  // M-live 사이드바 뱃지
+  var mlCamps = allValid.filter(function(c){ return (c.campType||'')==='모바일라이브'; });
+  setBadge('b-ml-s1', mlCamps.filter(function(c){ return c.stage==='1.캠페인요청'; }).length);
+  setBadge('b-ml-s2', mlCamps.filter(function(c){ return c.stage==='1.캠페인요청'; }).length);
+  setBadge('b-ml-s3', mlCamps.filter(function(c){ return c.stage==='2.캠페인확정'||c.stage==='3.상품정보등록'; }).length);
+  setBadge('b-ml-s6', mlCamps.filter(function(c){ return c.stage==='6.APP마케팅확정'&&(!c.appMkt||!(c.appMkt.channels||[]).length); }).length);
+  setBadge('b-ml-s7', mlCamps.filter(function(c){ return c.stage==='6.APP마케팅확정'||(c.stage==='7.정산'&&!c.settleDone); }).length);
 }
 function openMo(t){
   var el=document.getElementById('mo-'+t); if(!el) return;
