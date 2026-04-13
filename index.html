@@ -10973,6 +10973,9 @@ function updateCampTypeUI(){
   // M라이브: 인플루언서 랜딩 페이지 숨김
   var landingRow = document.getElementById('appmkt-landing-row');
   if(landingRow) landingRow.style.display = isMlive ? 'none' : '';
+  // M라이브: 인플루언서 정산 블록 숨김
+  var settleBlocks = document.getElementById('settle-blocks-container');
+  if(settleBlocks) settleBlocks.style.display = isMlive ? 'none' : '';
 }
 
 // ── M라이브 편성 달력 ──
