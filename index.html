@@ -2152,7 +2152,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         </div>
       </div>
       <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
-      <div class="fr2"><div><label>시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local" onchange="autoSetMliveEndTime()"></div><div><label>종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local"></div></div>
+      <div class="fr2"><div><label>시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local" step="60" onchange="autoSetMliveEndTime()"></div><div><label>종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local" step="60"></div></div>
       <div class="fr2"><div><label>예산 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-budget" placeholder="3,000,000"></div><div><label>MDCAT <span style="color:var(--red)">*</span></label>
         <div class="fdd-wrap" id="fdd-wrap-p-mdcat">
           <input class="inp fdd-input" id="p-mdcat" placeholder="MDCAT 선택..." readonly style="cursor:pointer" onclick="mdcatDdOpen()" onkeydown="if(event.key==='Escape')mdcatDdClose()">
@@ -2258,6 +2258,19 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         <div class="fr"><label>캠페인 소구 포인트</label>
           <textarea class="ta" id="p-appeal" placeholder="핵심 소구 포인트, 차별화 요소, 타겟 메시지..." maxlength="500" style="min-height:80px;resize:vertical" oninput="this.nextElementSibling.textContent=this.value.length+'/500'"></textarea>
           <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
+        </div>
+        <!-- 모바일라이브 소구포인트 가이드 (삭제 불가 라벨) -->
+        <div id="p-appeal-mlive-guide" style="display:none">
+          <div class="fr" style="margin-bottom:8px">
+            <label style="font-size:11.5px;font-weight:700;color:var(--accent2)">①전체 소구 포인트</label>
+            <textarea class="ta" id="p-appeal-total" placeholder="전체 소구 포인트를 입력하세요..." maxlength="500" style="min-height:60px;resize:vertical" oninput="this.nextElementSibling.textContent=this.value.length+'/500'"></textarea>
+            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
+          </div>
+          <div class="fr">
+            <label style="font-size:11.5px;font-weight:700;color:var(--orange)">②PUSH 소구 포인트</label>
+            <textarea class="ta" id="p-appeal-push" placeholder="PUSH 발송용 소구 포인트를 입력하세요..." maxlength="300" style="min-height:60px;resize:vertical" oninput="this.nextElementSibling.textContent=this.value.length+'/300'"></textarea>
+            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/300</div>
+          </div>
         </div>
         <!-- 상품딜코드 (모바일라이브용) -->
         <div class="fr2" id="p-deal-code-row" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
@@ -5469,6 +5482,8 @@ function editProd(id){
     document.getElementById('p-brand').value   = p.brand||'';
     document.getElementById('p-cat').value     = p.cat||'';
     var dcEl=document.getElementById('p-deal-code'); if(dcEl) dcEl.value=p.dealCode||'';
+    var atEl=document.getElementById('p-appeal-total'); if(atEl) atEl.value=p.appealTotal||'';
+    var apEl=document.getElementById('p-appeal-push');  if(apEl) apEl.value=p.appealPush||'';
     // p-owner(담당MD) - 검색형 드롭다운에 값 설정
   var ownerSel = document.getElementById('p-owner');
   if(ownerSel) ownerSel.value = p.owner||'';
@@ -9624,6 +9639,8 @@ function openNewProd(){
   searchSelSetValue('p-host-req2',  '');
   searchSelSetValue('p-host-conf1', '');
   searchSelSetValue('p-host-conf2', '');
+  var atEl3=document.getElementById('p-appeal-total'); if(atEl3) atEl3.value='';
+  var apEl3=document.getElementById('p-appeal-push');  if(apEl3) apEl3.value='';
   ['p-name','p-company','p-brand','p-cat','p-deal-code','p-owner','p-start','p-end','p-appeal','p-product-basic-info','p-cs-info','p-delivery-info','p-inf-request','p-revenue','p-budget','p-target','p-mdcat','p-mcn','p-fee-rate','p-fee-amount','p-inf-name','p-pd-single','p-sample-address','p-youtube-ch','p-insta-ch','p-twitter-ch','p-courier','p-ship-cutoff','p-ship-fee','p-island-fee','p-exchange-fee','p-return-fee','p-settle-process-date','p-settle-payment-date'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
@@ -9876,6 +9893,8 @@ function saveProd(){
     settleProcessDate:v('p-settle-process-date'), settlePaymentDate:v('p-settle-payment-date'),
     promos:promos,
     dealCode:v('p-deal-code'),
+    appealTotal: (document.getElementById('p-appeal-total')?.value||'').trim(),
+    appealPush:  (document.getElementById('p-appeal-push')?.value||'').trim(),
     courier:v('p-courier'), shipCutoff:v('p-ship-cutoff'),
     shipFree:!!(document.getElementById('p-ship-free')?.checked),
     shipFee:parseInt((document.getElementById('p-ship-fee')?.value||'').replace(/,/g,''))||0,
@@ -10805,6 +10824,9 @@ function updateCampTypeUI(){
   if(mliveBtns) mliveBtns.style.display = isMlive ? 'flex' : 'none';
   var infBtns = document.getElementById('p-camptype-inf-btns');
   if(infBtns) infBtns.style.display = !isMlive ? 'flex' : 'none';
+  // 모바일라이브 소구포인트 가이드 표시/숨김
+  var appealGuide = document.getElementById('p-appeal-mlive-guide');
+  if(appealGuide) appealGuide.style.display = isMlive ? '' : 'none';
 }
 
 // ── M라이브 편성 달력 ──
