@@ -9213,13 +9213,13 @@ function renderWeeklyView(){
   var _dim = new Date(_today.getFullYear(), _today.getMonth()+1, 0).getDate();
 
 
-  var _fmtAmt = function(v){ var t=v>0?(v/100000000).toFixed(1)+'억':'0'; return '<span style="font-size:16px;font-weight:800">'+t+'</span>'; };
+  var _fmtAmt = function(v){ var t=v>0?(v/100000000).toFixed(1)+'억':'0'; return '<span style="font-size:20px;font-weight:900">'+t+'</span>'; };
   var progressHtml = '';
   if(_tgtAll > 0){
-    progressHtml = '<div style="display:flex;gap:16px;align-items:center;font-size:13px;color:var(--text2);margin-left:16px">'
-      +'<span>전체 '+_fmtAmt(_gtRev)+' '+_cp(_gtRev,_tgtAll)+'</span>'
-      +'<span style="color:var(--blue)">M라이브 '+_fmtAmt(_gtMl)+' '+_cp(_gtMl,_tgtMl)+'</span>'
-      +'<span style="color:var(--green)">인플 '+_fmtAmt(_gtInf)+' '+_cp(_gtInf,_tgtInf)+'</span>'
+    progressHtml = '<div style="display:flex;gap:20px;align-items:baseline;font-size:13px;color:var(--text2);margin-left:16px">'
+      +'<span>전체 '+_fmtAmt(_gtRev)+' <span style="font-size:12px;color:var(--text3)">'+_cp(_gtRev,_tgtAll)+'</span></span>'
+      +'<span style="color:var(--blue)">M라이브 '+_fmtAmt(_gtMl)+' <span style="font-size:12px">'+_cp(_gtMl,_tgtMl)+'</span></span>'
+      +'<span style="color:var(--green)">인플 '+_fmtAmt(_gtInf)+' <span style="font-size:12px">'+_cp(_gtInf,_tgtInf)+'</span></span>'
       +'<span style="font-size:11px;color:var(--text3)">('+_passedDays+'/'+_totalDays+'일 기준)</span>'
       +'</div>';
   }
