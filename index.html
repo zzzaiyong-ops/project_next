@@ -4478,7 +4478,7 @@ function _demoSampleCampaigns(){
   var today = new Date();
   var fmt = function(d){ return d.toISOString().slice(0,10); };
   var add = function(days){ var d=new Date(today); d.setDate(d.getDate()+days); return fmt(d); };
-  return [
+  var _demoCamps = [
     {id:1001,name:'봄 신상 뷰티 캠페인',stage:'1.캠페인요청',cat:'뷰티',role:'메가',infSize:'메가',revenue:50000000,start:add(5),end:add(12),owner:'이소연',pdSingle:'박민준',mcn:'뷰티MCN',infName:'뷰티크리에이터A',campType:'온라인',mdcat:'온라인',infData:[{infName:'뷰티크리에이터A',infSize:'메가',feeRate:15}]},
     {id:1002,name:'여름 패션 앵콜',stage:'1.캠페인요청',cat:'패션',role:'앵콜',infSize:'미들',revenue:30000000,start:add(3),end:add(10),owner:'김담당',pdSingle:'이소연',mcn:'패션MCN',infName:'패션스타B',campType:'방송',mdcat:'패션',infData:[{infName:'패션스타B',infSize:'미들',feeRate:12}]},
     {id:1003,name:'신세계 맨즈컬렉션',stage:'2.캠페인확정',cat:'패션',role:'미들',infSize:'메가',revenue:80000000,start:add(7),end:add(14),owner:'박민준',pdSingle:'박민준',mcn:'패션MCN',infName:'멘즈패션C',campType:'방송',mdcat:'패션',infData:[{infName:'멘즈패션C',infSize:'메가',feeRate:18}]},
@@ -4505,7 +4505,7 @@ function _demoSampleCampaigns(){
     {id:3004,name:'모두투어-방콕',stage:'7.정산',cat:'여행',role:'미들',infSize:'미들',revenue:12000000,start:add(-8),end:add(-1),owner:'최현우',pdSingle:'최현우',mcn:'트래블MCN',infName:'여행유튜버F',mdcat:'온라인',settleRevenue:12000000,settleOrders:3,settleDa:500000,infData:[{infName:'여행유튜버F',infSize:'미들',feeRate:10}],settleData:[{revenue:12000000,orders:3}]},
     {id:3005,name:'제스프리 키위',stage:'7.정산',cat:'식품',role:'앵콜',infSize:'미들',revenue:320000000,start:add(-15),end:add(-8),owner:'김담당',pdSingle:'김담당',mcn:'푸드MCN',infName:'위드허니',mdcat:'온라인',settleRevenue:320000000,settleOrders:50,settleDa:800000,infData:[{infName:'위드허니',infSize:'미들',feeRate:10}],settleData:[{revenue:320000000,orders:50}]},
   ];
-  // ── 성과분석용 M라이브 데모 데이터 ──
+  // ── 성과분석용 M라이브 데모 데이터 (return 전에 세팅) ──
   _mliveData = [
     {code:'202603020101',date:add(-42),broadcastType:'본방',programName:'유러피안샐러드',startTime:'10:00',endTime:'11:00',orderQty:3,orderAmt:15200000,mobOrderAmt:10200000,mobOrderQty:2,profitRate:5,profitAmt:760000,viewers:49,marketingFee:230000,adRevenue:217000,dealCode:'D0301',mdName:'이소연'},
     {code:'202603200201',date:add(-25),broadcastType:'본방',programName:'모두투어-나트랑',startTime:'18:00',endTime:'19:00',orderQty:40,orderAmt:27500000,mobOrderAmt:18900000,mobOrderQty:28,profitRate:6,profitAmt:1650000,viewers:26,marketingFee:200000,adRevenue:118000,dealCode:'D0302',mdName:'박민준'},
@@ -4519,6 +4519,7 @@ function _demoSampleCampaigns(){
   _monthlyTargets[_mk(_cy,_cm)]   = {mlive:150000000, inf:100000000};
   _monthlyTargets[_mk(_cy,_cm-1)] = {mlive:200000000, inf:120000000};
   _monthlyTargets[_mk(_cy,_cm-2)] = {mlive:180000000, inf:90000000};
+  return _demoCamps;
 }
 function updateOnline(){
   var n = onlineUsers.size;
