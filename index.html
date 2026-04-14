@@ -9198,7 +9198,7 @@ function renderWeeklyView(){
     var target = s8Period==='week' ? Math.round(tgt) : Math.round(tgt * _dailyRatio);
     var r2 = target>0?(act/target*100).toFixed(1):'0';
     var cl=r2>=100?'var(--green)':r2>=80?'var(--orange)':'var(--pink)';
-    return '<span style="font-size:16px;font-weight:800;color:'+cl+'">'+r2+'%</span>';
+    return '(<span style="font-size:16px;font-weight:800;color:'+cl+'">'+r2+'%</span>)';
   }
 
   // 3) 실적 합계
@@ -9213,7 +9213,7 @@ function renderWeeklyView(){
   var _dim = new Date(_today.getFullYear(), _today.getMonth()+1, 0).getDate();
 
 
-  var _fmtAmt = function(v){ return v>0?(v/100000000).toFixed(1)+'억':'0'; };
+  var _fmtAmt = function(v){ var t=v>0?(v/100000000).toFixed(1)+'억':'0'; return '<span style="font-size:16px;font-weight:800">'+t+'</span>'; };
   var progressHtml = '';
   if(_tgtAll > 0){
     progressHtml = '<div style="display:flex;gap:16px;align-items:center;font-size:13px;color:var(--text2);margin-left:16px">'
