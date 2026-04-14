@@ -2588,7 +2588,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         </div>
         <div class="fr2" style="margin-bottom:12px">
           <div><label>실질마진이익율 (%) <span style="font-size:10px;color:var(--text3)">매출×이익율=이익</span></label><input class="inp" id="p-profit-rate" type="number" step="0.1" placeholder="24" oninput="calcSettleCost()"></div>
-          <div><label>업체광고비 (원) <span style="font-size:10px;color:var(--text3)">업체에서 수취한 광고비</span></label><input class="inp inp-money" id="p-ad-income" placeholder="0" oninput="calcSettleCost()"></div>
+          <div id="p-ad-income-wrap"><label><span id="p-ad-income-label">업체광고비</span> (원) <span style="font-size:10px;color:var(--text3)">업체에서 수취한 광고비</span></label><input class="inp inp-money" id="p-ad-income" placeholder="0" oninput="calcSettleCost()"></div>
         </div>
         <div class="fr2" style="margin-bottom:12px">
           <div><label>전체 매출 (원) <span style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-total-revenue" placeholder="0" oninput="calcSettleCost()"></div>
@@ -5624,7 +5624,14 @@ function editProd(id){
   var sdEl=document.getElementById('p-settle-da'); if(sdEl) sdEl.value=p.settleDa ? p.settleDa.toLocaleString('ko-KR') : '';
   var miEl=document.getElementById('p-marketing-items'); if(miEl) miEl.value=p.marketingItems||'';
   var prEl=document.getElementById('p-profit-rate'); if(prEl) prEl.value=p.profitRateInput||'';
-  var aiEl=document.getElementById('p-ad-income'); if(aiEl) aiEl.value=p.adIncome ? p.adIncome.toLocaleString('ko-KR') : '';
+  // 광고수익: 캠페인 adIncome 또는 매칭 _mliveData adRevenue 중 유효한 값 표시
+  var _adIncVal = p.adIncome||0;
+  if(!_adIncVal && p.campType==='모바일라이브' && p.appMkt && p.appMkt.liveCode && _mliveData && _mliveData.length){
+    var _lc = String(p.appMkt.liveCode).trim();
+    var _mm = _mliveData.find(function(m){ return String(m.code).trim()===_lc; });
+    if(_mm && (_mm.adRevenue||0)) _adIncVal = _mm.adRevenue;
+  }
+  var aiEl=document.getElementById('p-ad-income'); if(aiEl) aiEl.value=_adIncVal ? _adIncVal.toLocaleString('ko-KR') : '';
   var trEl=document.getElementById('p-total-revenue'); if(trEl) trEl.value=p.totalRevenue ? p.totalRevenue.toLocaleString('ko-KR') : '';
   var orEl=document.getElementById('p-onair-revenue'); if(orEl) orEl.value=p.onairRevenue ? p.onairRevenue.toLocaleString('ko-KR') : '';
   var ofEl=document.getElementById('p-offair-revenue'); if(ofEl) ofEl.value=p.offairRevenue ? p.offairRevenue.toLocaleString('ko-KR') : '';
@@ -7055,7 +7062,7 @@ function renderS7(){
   var s7thead = document.getElementById('s7-thead');
   if(s7thead){
     if(_s7Mlive){
-      s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>편성코드</th><th>라이브명</th><th>방송일시</th><th>담당MD</th><th>매출</th><th>광고비</th><th>업체광고비</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
+      s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>편성코드</th><th>라이브명</th><th>방송일시</th><th>담당MD</th><th>매출</th><th>광고비</th><th>광고수익</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
     } else {
       s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
     }
@@ -7071,7 +7078,7 @@ function renderS7(){
     var statusBadge = badge(settleStatus);
 
     if(_s7Mlive){
-      // ── M-live 정산 행: 편성코드, 라이브명, 방송일시, 담당MD, 매출, 광고비, 업체광고비, 정산상태
+      // ── M-live 정산 행: 편성코드, 라이브명, 방송일시, 담당MD, 매출, 광고비, 광고수익, 정산상태
       var totalRev = camp.totalRevenue||camp.revenue||0;
       var daFee    = camp.settleDa||0;
       var adIncome = camp.adIncome||0;
@@ -8843,11 +8850,22 @@ function syncMliveToCampaignSettle(){
       c.offairRevenue = offair;
       changed++;
     }
+    // 광고수익 양방향 동기화: 한쪽만 입력하면 다른쪽에 반영
+    var campAdRev = c.adIncome||0;
+    var excelAdRev = m.adRevenue||0;
+    if(excelAdRev && !campAdRev){
+      // 엑셀에 광고수익이 있고 캠페인에 없으면 → 캠페인에 반영
+      c.adIncome = excelAdRev;
+      changed++;
+    } else if(campAdRev && !excelAdRev){
+      // 캠페인에 광고수익이 있고 엑셀에 없으면 → 엑셀 데이터에 반영
+      m.adRevenue = campAdRev;
+    }
   });
   if(changed > 0){
-    console.log('[syncMliveToCampaignSettle] '+changed+'개 캠페인 매출 자동 기입');
+    console.log('[syncMliveToCampaignSettle] '+changed+'개 캠페인 매출/광고수익 자동 기입');
     if(fbReady) pushToFirebase();
-    showToast(changed+'개 캠페인에 매출 자동 기입');
+    showToast(changed+'개 캠페인에 매출/광고수익 자동 기입');
   }
 }
 
@@ -9264,7 +9282,7 @@ function renderWeeklyView(){
       gt.brdAmt+=ml2.mobOrderAmt||0; gt.brdQty+=ml2.mobOrderQty||0;
       gt.outAmt+=(ml2.orderAmt||0)-(ml2.mobOrderAmt||0); gt.outQty+=(ml2.orderQty||0)-(ml2.mobOrderQty||0);
       gt.mlProfit+=ml2.profitAmt||0;
-      gt.adRev+=ml2.adRevenue||0;
+      gt.adRev+=(ml2.adRevenue||0)||_ai2; // 광고수익: 엑셀 또는 캠페인 입력값 중 유효한 값
       // 전체매출 = 인플 + 매칭M라이브
       gt.rev+=sr+(ml2.orderAmt||0); gt.ord+=(c.settleOrders||0)+(ml2.orderQty||0);
     } else if(row.type==='mlive'){
@@ -9327,7 +9345,7 @@ function renderWeeklyView(){
       var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
 
       // 인플루언서 한계이익 계산
-      // 이익 = 전체매출 × 이익율(%) + 업체광고비
+      // 이익 = 전체매출 × 이익율(%) + 광고수익
       var campProfitRate = c.profitRateInput||0;
       var campAdIncome = c.adIncome||0;
       var infIncome = Math.round(sr * campProfitRate / 100) + campAdIncome;
@@ -9336,9 +9354,9 @@ function renderWeeklyView(){
       var infProfitRate = sr>0?((infProfit/sr)*100).toFixed(0)+'%':'-';
       // AT: M라이브이익 (매칭된 경우)
       var mlProfit = ml.profitAmt||0;
-      // AV: 광고수익 (매칭된 M라이브에서 참조)
-      var adRev = ml.adRevenue||0;
-      // AP: 전체한계이익 = 인플한계이익 + M라이브이익 + M라이브광고수익
+      // AV: 광고수익 (캠페인 adIncome 또는 매칭된 M라이브 adRevenue 중 유효한 값 사용)
+      var adRev = (ml.adRevenue||0) || campAdIncome;
+      // AP: 전체한계이익 = 인플한계이익 + M라이브이익 + 광고수익
       var totalProfit = infProfit + mlProfit + adRev;
       // 전체매출 = 인플매출 + M라이브매출
       var totalRev = sr + (ml.orderAmt||0);
@@ -10242,6 +10260,18 @@ function saveProd(){
       newData.appMkt.liveCode = newData._liveCodeInput;
     }
     delete newData._liveCodeInput;
+    // 광고수익 양방향 동기화: 캠페인 adIncome ↔ _mliveData adRevenue
+    if(newData.campType==='모바일라이브' && newData.appMkt && newData.appMkt.liveCode && _mliveData && _mliveData.length){
+      var _syncCode = String(newData.appMkt.liveCode).trim();
+      var _syncMl = _mliveData.find(function(m){ return String(m.code).trim()===_syncCode; });
+      if(_syncMl){
+        if(newData.adIncome && !((_syncMl.adRevenue||0))){
+          _syncMl.adRevenue = newData.adIncome;
+        } else if((_syncMl.adRevenue||0) && !newData.adIncome){
+          newData.adIncome = _syncMl.adRevenue;
+        }
+      }
+    }
     console.log('[saveProd] 수정 저장 실행, id:', newData.id);
     if(_noMdcat) showToast('⚠️ MDCAT을 선택해주세요 (기본정보 관리에서 추가 가능)');
     showCompleteModal('수정');  // Firebase 응답과 무관하게 즉시 표시
@@ -10270,6 +10300,18 @@ function saveProd(){
       newData.appMkt.liveCode = newData._liveCodeInput;
     }
     delete newData._liveCodeInput;
+    // 광고수익 양방향 동기화: 캠페인 adIncome ↔ _mliveData adRevenue
+    if(newData.campType==='모바일라이브' && newData.appMkt && newData.appMkt.liveCode && _mliveData && _mliveData.length){
+      var _syncCode2 = String(newData.appMkt.liveCode).trim();
+      var _syncMl2 = _mliveData.find(function(m){ return String(m.code).trim()===_syncCode2; });
+      if(_syncMl2){
+        if(newData.adIncome && !((_syncMl2.adRevenue||0))){
+          _syncMl2.adRevenue = newData.adIncome;
+        } else if((_syncMl2.adRevenue||0) && !newData.adIncome){
+          newData.adIncome = _syncMl2.adRevenue;
+        }
+      }
+    }
     console.log('[saveProd] 신규 저장 실행, id:', newData.id);
     closeMo('product');
     // 저장 완료 팝업 즉시 표시
@@ -10999,6 +11041,11 @@ function updateCampTypeUI(){
   // M라이브: 인플루언서 정산 블록 숨김
   var settleBlocks = document.getElementById('settle-blocks-container');
   if(settleBlocks) settleBlocks.style.display = isMlive ? 'none' : '';
+  // M라이브: 업체광고비 → 광고수익 라벨 변경
+  var adIncLabel = document.getElementById('p-ad-income-label');
+  var adIncDesc = document.querySelector('#p-ad-income-wrap label span[style*="font-size:10px"]');
+  if(adIncLabel) adIncLabel.textContent = isMlive ? '광고수익' : '업체광고비';
+  if(adIncDesc) adIncDesc.textContent = isMlive ? '업체에서 수취한 광고수익' : '업체에서 수취한 광고비';
 }
 
 // ── M라이브 편성 달력 ──
