@@ -4498,7 +4498,27 @@ function _demoSampleCampaigns(){
     {id:2004,name:'다시보는 스킨랩 비타민C 세럼',stage:'6.APP마케팅확정',cat:'뷰티',campType:'모바일라이브',revenue:15000000,start:add(2)+'T10:00',end:add(2)+'T11:00',owner:'이소연',mdcat:'뷰티',appMkt:{channels:['모바일라이브'],liveCode:'202604150102',liveDt:add(2)+'T10:00'},showhosts:{conf1:'김쇼호'}},
     {id:2005,name:'나이키 러닝화 라이브',stage:'1.캠페인요청',cat:'패션',campType:'모바일라이브',revenue:60000000,start:add(5)+'T18:00',end:add(5)+'T19:00',owner:'박민준',mdcat:'패션',appMkt:{channels:['모바일라이브'],liveDt:add(5)+'T18:00'},showhosts:{req1:'박라이브'}},
     {id:2006,name:'다이슨 에어랩 라이브',stage:'3.상품정보등록',cat:'IT/가전',campType:'모바일라이브',revenue:120000000,start:add(7)+'T20:00',end:add(7)+'T21:00',owner:'김담당',mdcat:'가전',appMkt:{channels:['모바일라이브'],liveCode:'202604200401',liveDt:add(7)+'T20:00'},showhosts:{req1:'이호스트',conf1:'이호스트'}},
+    // ── 성과분석용 과거 완료 데모 (인플루언서) ──
+    {id:3001,name:'유러피안샐러드',stage:'7.정산',cat:'식품',role:'미들',infSize:'미들',revenue:152000000,start:add(-42),end:add(-35),owner:'이소연',pdSingle:'이소연',mcn:'푸드MCN',infName:'유러피안셀러드',mdcat:'온라인',settleRevenue:152000000,settleOrders:2,settleDa:500000,infData:[{infName:'유러피안셀러드',infSize:'미들',feeRate:12}],settleData:[{revenue:152000000,orders:2}],appMkt:{channels:['모바일라이브'],liveCode:'202603020101',liveDt:add(-42)+'T10:00'}},
+    {id:3002,name:'모두투어-나트랑',stage:'7.정산',cat:'여행',role:'미들',infSize:'미들',revenue:275000000,start:add(-25),end:add(-18),owner:'박민준',pdSingle:'박민준',mcn:'트래블MCN',infName:'여행유튜버F',mdcat:'온라인',settleRevenue:275000000,settleOrders:40,settleDa:600000,infData:[{infName:'여행유튜버F',infSize:'미들',feeRate:10}],settleData:[{revenue:275000000,orders:40}],appMkt:{channels:['모바일라이브'],liveCode:'202603200201',liveDt:add(-25)+'T18:00'}},
+    {id:3003,name:'태국망고',stage:'7.정산',cat:'식품',role:'메가',infSize:'메가',revenue:950000000,start:add(-22),end:add(-15),owner:'이소연',pdSingle:'이소연',mcn:'푸드MCN',infName:'암암해혜야',mdcat:'온라인',settleRevenue:950000000,settleOrders:35,settleDa:1300000,infData:[{infName:'암암해혜야',infSize:'메가',feeRate:15}],settleData:[{revenue:950000000,orders:35}],appMkt:{channels:['모바일라이브'],liveCode:'202603220301',liveDt:add(-22)+'T20:00'}},
+    {id:3004,name:'모두투어-방콕',stage:'7.정산',cat:'여행',role:'미들',infSize:'미들',revenue:12000000,start:add(-8),end:add(-1),owner:'최현우',pdSingle:'최현우',mcn:'트래블MCN',infName:'여행유튜버F',mdcat:'온라인',settleRevenue:12000000,settleOrders:3,settleDa:500000,infData:[{infName:'여행유튜버F',infSize:'미들',feeRate:10}],settleData:[{revenue:12000000,orders:3}]},
+    {id:3005,name:'제스프리 키위',stage:'7.정산',cat:'식품',role:'앵콜',infSize:'미들',revenue:320000000,start:add(-15),end:add(-8),owner:'김담당',pdSingle:'김담당',mcn:'푸드MCN',infName:'위드허니',mdcat:'온라인',settleRevenue:320000000,settleOrders:50,settleDa:800000,infData:[{infName:'위드허니',infSize:'미들',feeRate:10}],settleData:[{revenue:320000000,orders:50}]},
   ];
+  // ── 성과분석용 M라이브 데모 데이터 ──
+  _mliveData = [
+    {code:'202603020101',date:add(-42),broadcastType:'본방',programName:'유러피안샐러드',startTime:'10:00',endTime:'11:00',orderQty:3,orderAmt:15200000,mobOrderAmt:10200000,mobOrderQty:2,profitRate:5,profitAmt:760000,viewers:49,marketingFee:230000,adRevenue:217000,dealCode:'D0301',mdName:'이소연'},
+    {code:'202603200201',date:add(-25),broadcastType:'본방',programName:'모두투어-나트랑',startTime:'18:00',endTime:'19:00',orderQty:40,orderAmt:27500000,mobOrderAmt:18900000,mobOrderQty:28,profitRate:6,profitAmt:1650000,viewers:26,marketingFee:200000,adRevenue:118000,dealCode:'D0302',mdName:'박민준'},
+    {code:'202603220301',date:add(-22),broadcastType:'본방',programName:'태국망고',startTime:'20:00',endTime:'21:00',orderQty:50,orderAmt:95000000,mobOrderAmt:48800000,mobOrderQty:35,profitRate:9.5,profitAmt:9025000,viewers:45,marketingFee:1300000,adRevenue:414000,dealCode:'D0303',mdName:'이소연'},
+    {code:'202604130101',date:add(0),broadcastType:'본방',programName:'스킨랩 비타민C 세럼',startTime:'10:00',endTime:'11:00',orderQty:15,orderAmt:42000000,mobOrderAmt:28000000,mobOrderQty:10,profitRate:7,profitAmt:2940000,viewers:85,marketingFee:500000,adRevenue:364900,dealCode:'D0401',mdName:'이소연'},
+    {code:'202604140201',date:add(1),broadcastType:'본방',programName:'헬씨팜 그린스무디',startTime:'18:00',endTime:'19:00',orderQty:22,orderAmt:35000000,mobOrderAmt:22000000,mobOrderQty:14,profitRate:6.5,profitAmt:2275000,viewers:54,marketingFee:350000,adRevenue:138300,dealCode:'D0402',mdName:'박민준'},
+  ];
+  // 데모 월별 목표
+  var _now=new Date(), _cy=_now.getFullYear(), _cm=_now.getMonth();
+  var _mk=function(y,m){return y+'-'+String(m+1).padStart(2,'0');};
+  _monthlyTargets[_mk(_cy,_cm)]   = {mlive:150000000, inf:100000000};
+  _monthlyTargets[_mk(_cy,_cm-1)] = {mlive:200000000, inf:120000000};
+  _monthlyTargets[_mk(_cy,_cm-2)] = {mlive:180000000, inf:90000000};
 }
 function updateOnline(){
   var n = onlineUsers.size;
