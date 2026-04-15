@@ -2509,7 +2509,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <!-- 모바일라이브: 체크 + 편성코드 + 검색 + 바로가기 + 방송일시 -->
           <div style="display:flex;align-items:center;gap:8px">
             <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
-            <input class="inp inp-sm" id="appmkt-live-code" placeholder="편성코드" style="flex:1" disabled>
+            <input class="inp inp-sm" id="appmkt-live-code" placeholder="편성코드" style="flex:1" disabled onchange="updateTotalRevLabel()">
             <button class="btn btn-ghost btn-xs" id="appmkt-live-code-search-btn" type="button" onclick="openMliveCodePicker()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none" title="편성코드 검색">🔍</button>
             <button class="btn btn-ghost btn-xs" id="appmkt-live-goto-inf-btn" type="button" onclick="gotoInfCampFromMlive()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none;color:var(--green);border-color:var(--green)" title="인플루언서 마케팅 캠페인 등록">👤+</button>
             <input class="inp inp-sm" id="appmkt-live-dt" type="datetime-local" onchange="checkMliveScheduleDup()" style="flex:1" disabled>
@@ -2591,7 +2591,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <div id="p-ad-income-wrap"><label><span id="p-ad-income-label">업체광고비</span> (원) <span style="font-size:10px;color:var(--text3)">업체에서 수취한 광고비</span></label><input class="inp inp-money" id="p-ad-income" placeholder="0" oninput="calcSettleCost()"></div>
         </div>
         <div class="fr2" style="margin-bottom:12px">
-          <div><label>전체 매출 (원) <span style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-total-revenue" placeholder="0" oninput="calcSettleCost()"></div>
+          <div id="p-total-revenue-wrap"><label><span id="p-total-revenue-label">전체 매출</span> (원) <span id="p-total-revenue-desc" style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-total-revenue" placeholder="0" oninput="calcSettleCost()"></div>
           <div></div>
         </div>
         <div class="fr2" style="margin-bottom:12px">
@@ -5680,6 +5680,8 @@ function editProd(id){
   var du=document.getElementById('appmkt-deal-url');    if(du) du.value=appMkt.dealUrl||'';
   initSections(false); // 수정 시에도 기본 닫힘
   applyModalPermissions();
+  // 인플루언서 전체매출 라벨/연동 갱신
+  updateTotalRevLabel();
   // 상태 배지 갱신
   setTimeout(function(){ if(p && p.stage) updateProdStageBadge(p.stage); }, 10);
 }
@@ -7010,6 +7012,8 @@ function toggleAppMktFields(){
   var liveGotoBtn   = document.getElementById('appmkt-live-goto-inf-btn');
   if(liveSearchBtn) liveSearchBtn.style.display = liveChecked ? '' : 'none';
   if(liveGotoBtn)   liveGotoBtn.style.display   = liveChecked ? '' : 'none';
+  // 편성코드 변경 시 전체매출 라벨 갱신
+  updateTotalRevLabel();
 }
 
 function delApp(id){ var nid2=parseInt(id); DB.appMarketing=DB.appMarketing.filter(function(a){return parseInt(a.id)!==nid2;}); broadcastData(); renderS6(); showToast('삭제됨'); }
@@ -8465,6 +8469,7 @@ function pickMliveCode(code, liveDt){
   if(dtEl && liveDt)   dtEl.value = liveDt;
   var modal = document.getElementById('mlive-code-picker');
   if(modal) modal.remove();
+  updateTotalRevLabel(); // 편성코드 연동 → 전체매출 갱신
   showToast('편성코드 '+code+' 선택 — 방송일시 자동 입력');
 }
 
@@ -10995,6 +11000,75 @@ function getCampType(){
   var mlive = document.getElementById('p-camptype-mlive');
   return (mlive && mlive.checked) ? '모바일라이브' : '인플루언서';
 }
+// 전체매출 라벨/DIM: 인플루언서일 때 편성코드 유무에 따라 변경
+function updateTotalRevLabel(){
+  var isMlive = getCampType()==='모바일라이브';
+  var label = document.getElementById('p-total-revenue-label');
+  var desc  = document.getElementById('p-total-revenue-desc');
+  var wrap  = document.getElementById('p-total-revenue-wrap');
+  var inp   = document.getElementById('p-total-revenue');
+  if(!label) return;
+  if(isMlive){
+    // M라이브: 기존 라벨 유지
+    label.textContent = '전체 매출';
+    if(desc) desc.textContent = '엑셀 업로드 자동 기입';
+    if(wrap) wrap.style.opacity = '';
+    if(inp){ inp.style.background = ''; inp.readOnly = false; }
+  } else {
+    // 인플루언서: 편성코드 입력 여부 확인
+    var liveCode = (document.getElementById('appmkt-live-code')?.value||'').trim();
+    var hasCode = !!liveCode;
+    label.textContent = '모바일라이브포함 전체매출';
+    if(desc) desc.textContent = hasCode ? '편성코드 연동 자동 합산' : '편성코드 미입력';
+    if(wrap){ wrap.style.opacity = hasCode ? '' : '0.4'; }
+    if(inp){
+      inp.style.background = hasCode ? '' : 'var(--bg)';
+      inp.readOnly = true; // 인플루언서에서는 자동 합산값이므로 수정 불가
+    }
+    // 편성코드가 있으면 M라이브 매출 연동 값 표시
+    if(hasCode) syncInfTotalRevFromMlive(liveCode);
+  }
+}
+// 인플루언서 캠페인: 편성코드 기반 M라이브 매출 연동
+function syncInfTotalRevFromMlive(liveCode){
+  if(!liveCode) return;
+  var mlData = null;
+  // _mliveData에서 편성코드로 검색
+  if(_mliveData && _mliveData.length){
+    mlData = _mliveData.find(function(m){ return String(m.code).trim()===liveCode; })
+          || _mliveData.find(function(m){ return String(m.code).trim()===liveCode.replace(/\D/g,''); });
+  }
+  // 또는 M라이브 캠페인에서 검색
+  var mlCamp = null;
+  if(!mlData){
+    mlCamp = (DB.campaigns||[]).find(function(c){
+      return c.campType==='모바일라이브' && c.appMkt && String(c.appMkt.liveCode||'').trim()===liveCode;
+    });
+  }
+  var mlRevenue = mlData ? (mlData.orderAmt||0) : (mlCamp ? (mlCamp.totalRevenue||0) : 0);
+  // 인플루언서 자체 매출 (settleRevenue)
+  var infRev = 0;
+  var settleBlocks = document.querySelectorAll('#settle-blocks-container .settle-block-row');
+  if(settleBlocks.length){
+    settleBlocks.forEach(function(blk){
+      infRev += parseInt((blk.querySelector('.settle-revenue')?.value||'').replace(/,/g,''))||0;
+    });
+  }
+  // 또는 현재 편집 중인 캠페인의 settleRevenue
+  var editId = parseInt(document.getElementById('p-edit-id')?.value)||0;
+  if(!infRev && editId){
+    var camp = DB.campaigns.find(function(c){ return c.id===editId; });
+    if(camp) infRev = camp.settleRevenue||0;
+  }
+  var totalRev = infRev + mlRevenue;
+  var inp = document.getElementById('p-total-revenue');
+  if(inp && totalRev) inp.value = totalRev.toLocaleString('ko-KR');
+  // 부가 정보 표시
+  var desc = document.getElementById('p-total-revenue-desc');
+  if(desc && mlRevenue){
+    desc.textContent = '인플 '+(infRev?Math.round(infRev/10000).toLocaleString()+'만':'0')+' + M라이브 '+Math.round(mlRevenue/10000).toLocaleString()+'만';
+  }
+}
 function updateCampTypeUI(){
   var type = getCampType();
   var isMlive = (type === '모바일라이브');
@@ -11046,6 +11120,8 @@ function updateCampTypeUI(){
   var adIncDesc = document.querySelector('#p-ad-income-wrap label span[style*="font-size:10px"]');
   if(adIncLabel) adIncLabel.textContent = isMlive ? '광고수익' : '업체광고비';
   if(adIncDesc) adIncDesc.textContent = isMlive ? '업체에서 수취한 광고수익' : '업체에서 수취한 광고비';
+  // 인플루언서: 전체매출 라벨/DIM 상태 (편성코드 연동)
+  updateTotalRevLabel();
 }
 
 // ── M라이브 편성 달력 ──
