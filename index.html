@@ -787,6 +787,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   <nav>
     <div class="nav-sec">메인</div>
     <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard',this)"><span class="ico">▦</span> 대시보드</div>
+    <div class="nav-item" data-page="campaigns" id="nav-campaigns" onclick="goPage('campaigns',this)"><span class="ico">🚀</span> 전체 캠페인 <span class="nbadge" id="b-camp">3</span></div>
     <!-- 인플루언서 마케팅 사이드바 -->
     <div id="sidebar-inf-nav">
     <div class="nav-sec">7단계 업무 흐름</div>
@@ -800,7 +801,6 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div class="nav-item" data-page="s8" id="nav-s8" onclick="goPage('s8',this)"><span class="ico">📈</span> 8단계 · 성과분석</div>
     <div class="nav-sec">관리</div>
     <div class="nav-item" data-page="influencers" id="nav-influencers" onclick="goPage('influencers',this)"><span class="ico">🗂️</span> 인플루언서 DB</div>
-    <div class="nav-item" data-page="campaigns" id="nav-campaigns" onclick="goPage('campaigns',this)"><span class="ico">🚀</span> 전체 캠페인 <span class="nbadge" id="b-camp">3</span></div>
     </div>
     <!-- 모바일라이브 사이드바 -->
     <div id="sidebar-mlive-nav" style="display:none">
@@ -811,8 +811,6 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div class="nav-item" data-page="s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 4단계 · 모바일마케팅 <span class="nbadge" id="b-ml-s6">0</span></div>
     <div class="nav-item" data-page="s7" onclick="goPage('s7',this)"><span class="ico">💰</span> 5단계 · 정산 <span class="nbadge" id="b-ml-s7">0</span></div>
     <div class="nav-item" data-page="s8" onclick="goPage('s8',this)"><span class="ico">📈</span> 6단계 · 성과분석</div>
-    <div class="nav-sec">관리</div>
-    <div class="nav-item" data-page="campaigns" onclick="goPage('campaigns',this)"><span class="ico">🚀</span> 전체 캠페인</div>
     </div>
     <div class="nav-item" data-page="basemgmt" id="nav-basemgmt" style="display:none" onclick="goPage('basemgmt',this)"><span class="ico">⚙️</span> 기본정보 관리</div>
   </nav>
@@ -1538,6 +1536,12 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <div class="stage-filter mob-filter-hide">
         <label>MCN</label>
         <select class="sel inp-sm" id="sf-camp-mcn" style="height:30px;font-size:12px;width:120px" onchange="renderCamps()">
+          <option value="">전체</option>
+        </select>
+      </div>
+      <div class="stage-filter mob-filter-hide" id="sf-camp-week-wrap">
+        <label>주차</label>
+        <select class="sel inp-sm" id="sf-camp-week" style="height:30px;font-size:12px;width:120px" onchange="renderCamps()">
           <option value="">전체</option>
         </select>
       </div>
@@ -2531,6 +2535,48 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
     </div>
 
+    <!-- ══ 섹션 F2: APP PUSH (모바일라이브 전용) ══ -->
+    <div class="mo-section" id="sec-push-wrap" style="display:none;border-bottom:none">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-push')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="push" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
+          <span>🔔 APP PUSH</span>
+        </div>
+        <span class="mo-sec-arr" id="arr-sec-push">▼</span>
+      </div>
+      <div class="mo-sec-body" id="sec-push">
+        <!-- 선정사유 -->
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">선정사유 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:5px 12px"><input type="checkbox" class="push-reason-cb" value="편성이슈" style="accent-color:var(--orange);width:14px;height:14px"> 편성이슈</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:5px 12px"><input type="checkbox" class="push-reason-cb" value="광고비" style="accent-color:var(--orange);width:14px;height:14px"> 광고비</label>
+          </div>
+        </div>
+        <!-- 소구포인트 -->
+        <div class="fr" style="margin-bottom:12px">
+          <label>소구포인트 <span style="font-size:10px;color:var(--text3);font-weight:400">MD 입력</span></label>
+          <textarea class="ta" id="p-push-appeal" placeholder="PUSH 발송용 핵심 소구 포인트를 입력하세요..." maxlength="300" style="min-height:60px;resize:vertical"></textarea>
+        </div>
+        <!-- 내용기입 -->
+        <div class="fr" style="margin-bottom:12px">
+          <label>내용기입</label>
+          <textarea class="ta" id="p-push-content" placeholder="PUSH 메시지 내용을 입력하세요..." maxlength="500" style="min-height:80px;resize:vertical"></textarea>
+        </div>
+        <!-- 랜딩링크 -->
+        <div class="fr">
+          <label>랜딩링크 <span style="font-size:10px;color:var(--text3);font-weight:400">입력값 뒤에 고정 파라미터가 자동 추가됩니다</span></label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="inp" id="p-push-landing-base" placeholder="https://example.com/page" style="flex:1;font-size:12px" oninput="updatePushLandingPreview()">
+          </div>
+          <div style="margin-top:6px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">완성된 랜딩링크:</div>
+            <div id="p-push-landing-preview" style="font-size:11px;font-family:monospace;color:var(--accent2);word-break:break-all">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ 섹션 G: 정산 정보 ══ -->
     <div class="mo-section" style="border-bottom:none">
       <div class="mo-sec-hd" onclick="toggleSection('sec-settle')">
@@ -2552,7 +2598,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <label for="p-settle-done" style="font-size:13px;font-weight:600;cursor:pointer">✅ 정산 완료</label>
           </div>
         </div>
-        <div class="fr" style="margin-bottom:12px">
+        <div class="fr" style="margin-bottom:12px" id="p-marketing-items-wrap">
           <label>마케팅 항목 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(자유 기재)</span></label>
           <textarea class="ta" id="p-marketing-items" placeholder="예) 광고 소재 제작비, 모델료, 촬영비 등..." style="min-height:60px;resize:vertical;white-space:pre-wrap"></textarea>
         </div>
@@ -5648,6 +5694,13 @@ function editProd(id){
   // 모바일라이브 확정일자 복원
   var csEl2=document.getElementById('p-confirm-start'); if(csEl2) csEl2.value=p.confirmStart||'';
   var ceEl2=document.getElementById('p-confirm-end');   if(ceEl2) ceEl2.value=p.confirmEnd||'';
+  // APP PUSH 복원
+  var pushD = p.pushData||{};
+  document.querySelectorAll('.push-reason-cb').forEach(function(cb){ cb.checked=(pushD.reasons||[]).includes(cb.value); });
+  var paEl=document.getElementById('p-push-appeal');  if(paEl) paEl.value=pushD.appeal||'';
+  var pcEl=document.getElementById('p-push-content'); if(pcEl) pcEl.value=pushD.content||'';
+  var plEl=document.getElementById('p-push-landing-base'); if(plEl) plEl.value=pushD.landingBase||'';
+  updatePushLandingPreview();
   // APP 마케팅 복원
   var appMkt = p.appMkt||{};
   document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=(appMkt.channels||[]).includes(cb.value); });
@@ -7252,11 +7305,28 @@ function renderCamps(){
     Object.keys(mcnSet).sort().forEach(function(m){ opts+='<option value="'+escHtml(m)+'"'+(curMcn===m?' selected':'')+'>'+escHtml(m)+'</option>'; });
     mcnSel.innerHTML = opts;
   }
+  // 주차 드롭다운 동적 채우기 (모바일라이브 탭일 때)
+  var weekSel = document.getElementById('sf-camp-week');
+  var weekWrap = document.getElementById('sf-camp-week-wrap');
+  if(weekWrap) weekWrap.style.display = (_campTypeFilter==='모바일라이브') ? '' : 'none';
+  if(weekSel && _campTypeFilter==='모바일라이브'){
+    var curWeek = weekSel.value;
+    var weekSet = {};
+    DB.campaigns.forEach(function(c){
+      if((c.campType||'')!=='모바일라이브') return;
+      var wl = getWeekLabel(c);
+      if(wl && wl!=='-') weekSet[wl]=true;
+    });
+    var wOpts = '<option value="">전체</option>';
+    Object.keys(weekSet).sort().forEach(function(w){ wOpts+='<option value="'+escHtml(w)+'"'+(curWeek===w?' selected':'')+'>'+escHtml(w)+'</option>'; });
+    weekSel.innerHTML = wOpts;
+  }
   var stageFilter = (document.getElementById('sf-camp-stage')?.value||'').trim();
   var campNameF   = (document.getElementById('sf-camp-name')?.value||'').trim().toLowerCase();
   var ownerFilter = (document.getElementById('sf-camp-owner')?.value||'').trim().toLowerCase();
   var mdFilter    = (document.getElementById('sf-camp-md')?.value||'').trim().toLowerCase();
   var mcnFilter   = (document.getElementById('sf-camp-mcn')?.value||'').trim().toLowerCase();
+  var weekFilter  = (document.getElementById('sf-camp-week')?.value||'').trim();
   var dateFrom    = document.getElementById('df-camp-from')?.value||'';
   var dateTo      = document.getElementById('df-camp-to')?.value||'';
   var myOnly      = document.getElementById('my-only-camp')?.checked;
@@ -7278,6 +7348,7 @@ function renderCamps(){
     if(ownerFilter && !(c.pdSingle||c.pds&&c.pds[0]||'').toLowerCase().includes(ownerFilter)) return false;
     if(mdFilter    && !(c.owner||'').toLowerCase().includes(mdFilter)) return false;
     if(mcnFilter   && !(c.mcn||'').toLowerCase().includes(mcnFilter)) return false;
+    if(weekFilter  && getWeekLabel(c)!==weekFilter) return false;
     if(myOnly && !isMycamp(c)) return false;
     if(dateFrom || dateTo){
       var cStart = (c.start||c.startDate||'').slice(0,7);
@@ -7302,7 +7373,7 @@ function renderCamps(){
   var thead = document.getElementById('camp-thead');
   if(thead){
     if(isMliveTab){
-      thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:100px" class="mob-hide">편성코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>방송일시</th><th>담당MD</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플마케팅</th><th style="background:var(--bg)"></th></tr>';
+      thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th>주차</th><th>방송일시</th><th style="width:100px" class="mob-hide">편성코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>담당MD</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플마케팅</th><th style="background:var(--bg)"></th></tr>';
     } else {
       thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:100px" class="mob-hide">캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>기간</th><th>캠페인담당</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플루언서</th><th class="mob-hide">M라이브</th><th style="background:var(--bg)"></th></tr>';
     }
@@ -7320,14 +7391,15 @@ function renderCamps(){
     var hasInfMkt = c.appMkt && c.appMkt.channels && c.appMkt.channels.some(function(ch){return ch!=='모바일라이브';});
 
     if(isMliveTab){
-      // M-live tab: 편성코드, 캠페인명, 기간, 담당MD, 매출, 단계, 인플마케팅 진행여부
+      // M-live tab: 주차, 방송일시, 편성코드, 캠페인명, 담당MD, 매출, 단계, 인플마케팅
       var liveCode = (c.appMkt&&c.appMkt.liveCode)||'-';
       var infMktBadge = hasInfMkt ? '<span style="background:var(--green-bg);color:var(--green);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">👤 진행</span>' : '-';
+      var _weekLabel = getWeekLabel(c);
       rows += '<tr onclick="editProd('+c.id+')">'
         + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
+        + '<td style="font-size:11px;color:var(--accent2);font-weight:700;white-space:nowrap">'+_weekLabel+'</td>'
+        + '<td style="font-size:12px;color:var(--text3);white-space:nowrap">'+fmtBroadcastDt(c)+'</td>'
         + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+escHtml(liveCode)+'</td>'
-        + '<td><strong>'+escHtml(c.name)+'</strong></td>'
-        + '<td style="font-size:12px;color:var(--text3)">'+fmtBroadcastDt(c)+'</td>'
         + '<td style="color:var(--text2)">'+escHtml(mdNm||'-')+'</td>'
         + '<td style="font-weight:700;color:var(--green)">'+revStr+'</td>'
         + '<td><span style="background:'+stageBg(c.stage)+';color:'+col+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+c.stage+'</span></td>'
@@ -7358,7 +7430,7 @@ function renderCamps(){
   console.log('[renderCamps] rows length:', rows.length, 'paged:', paged.length);
   var campTbl = document.getElementById('camp-tbl');
   if(campTbl){
-    campTbl.innerHTML=rows||'<tr><td colspan="'+(isMliveTab?9:10)+'" class="empty">캠페인 없음</td></tr>';
+    campTbl.innerHTML=rows||'<tr><td colspan="'+(isMliveTab?10:10)+'" class="empty">캠페인 없음</td></tr>';
   }
   _renderCampPagination(filtered.length);
 }
@@ -7368,7 +7440,7 @@ function filterCamps(v2){
   renderCamps();
 }
 function clearCampFilter(){
-  ['sf-camp-stage','sf-camp-owner','sf-camp-md','sf-camp-mcn','sf-camp-name','df-camp-from','df-camp-to'].forEach(function(id){
+  ['sf-camp-stage','sf-camp-owner','sf-camp-md','sf-camp-mcn','sf-camp-week','sf-camp-name','df-camp-from','df-camp-to'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   var ck=document.getElementById('my-only-camp'); if(ck) ck.checked=false;
@@ -10061,6 +10133,13 @@ function saveProd(){
     mliveMktReq: (function(){ var r=[]; document.querySelectorAll('.mlive-mktreq-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
     mlivePartner: (function(){ var r=[]; document.querySelectorAll('.mlive-partner-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
     confirmStart: v('p-confirm-start'), confirmEnd: v('p-confirm-end'),
+    pushData: {
+      reasons: (function(){ var r=[]; document.querySelectorAll('.push-reason-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
+      appeal: (document.getElementById('p-push-appeal')?.value||'').trim(),
+      content: (document.getElementById('p-push-content')?.value||'').trim(),
+      landingBase: (document.getElementById('p-push-landing-base')?.value||'').trim(),
+      landingUrl: (function(){ var b=(document.getElementById('p-push-landing-base')?.value||'').trim(); return b ? b+PUSH_LANDING_SUFFIX : ''; })()
+    },
     appealTotal: (document.getElementById('p-appeal-total')?.value||'').trim(),
     appealPush:  (document.getElementById('p-appeal-push')?.value||'').trim(),
     courier:v('p-courier'), shipCutoff:v('p-ship-cutoff'),
@@ -11160,6 +11239,12 @@ function updateCampTypeUI(){
   // M라이브: 인플루언서 정산 블록 숨김
   var settleBlocks = document.getElementById('settle-blocks-container');
   if(settleBlocks) settleBlocks.style.display = isMlive ? 'none' : '';
+  // M라이브: 마케팅 항목 숨김
+  var mktItemsWrap = document.getElementById('p-marketing-items-wrap');
+  if(mktItemsWrap) mktItemsWrap.style.display = isMlive ? 'none' : '';
+  // M라이브: APP PUSH 섹션 표시
+  var pushWrap = document.getElementById('sec-push-wrap');
+  if(pushWrap) pushWrap.style.display = isMlive ? '' : 'none';
   // M라이브: 업체광고비 → 광고수익 라벨 변경
   var adIncLabel = document.getElementById('p-ad-income-label');
   var adIncDesc = document.querySelector('#p-ad-income-wrap label span[style*="font-size:10px"]');
@@ -11840,6 +11925,35 @@ function displayCampCode(c){
   return c.campCode||'-';
 }
 // M-live 방송일시 포맷: 2026/4/13 20시
+// APP PUSH 랜딩링크 미리보기
+var PUSH_LANDING_SUFFIX = '?viewType&broadcastId=lkshinsegaelive-2b088e36671d4747a59c2a80a958750f&fc=apppush';
+function updatePushLandingPreview(){
+  var base = (document.getElementById('p-push-landing-base')?.value||'').trim();
+  var preview = document.getElementById('p-push-landing-preview');
+  if(preview) preview.textContent = base ? base + PUSH_LANDING_SUFFIX : '-';
+}
+// 주차 계산: 월~일 기준, 4월 17일 → "4월 3주차"
+function getWeekLabel(c){
+  var dt = (c.appMkt&&c.appMkt.liveDt)||c.start||'';
+  if(!dt||dt.length<10) return '-';
+  var d = new Date(dt);
+  if(isNaN(d.getTime())) return '-';
+  var month = d.getMonth()+1;
+  // 해당 월 1일의 요일 (0=일, 1=월...)
+  var firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
+  var firstMonday = new Date(firstDay);
+  var dow = firstDay.getDay(); // 0=일
+  // 첫 월요일 찾기
+  if(dow===0) firstMonday.setDate(firstDay.getDate()+1);
+  else if(dow===1) firstMonday = firstDay;
+  else firstMonday.setDate(firstDay.getDate()+(8-dow));
+  // 해당 날짜가 첫 월요일 이전이면 1주차
+  var dayOfMonth = d.getDate();
+  var diff = Math.floor((d - firstMonday)/(86400000));
+  var week = diff < 0 ? 1 : Math.floor(diff/7)+1+(firstMonday.getDate()>1?1:0);
+  if(week < 1) week = 1;
+  return month+'월 '+week+'주차';
+}
 function fmtBroadcastDt(c){
   var dt = (c.appMkt&&c.appMkt.liveDt)||c.start||'';
   if(!dt||dt.length<10) return '-';
