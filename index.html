@@ -12091,7 +12091,7 @@ function updatePushLandingPreview(){
 }
 // 주차 계산: 월~일 기준, 4월 17일 → "4월 3주차"
 function getWeekLabel(c){
-  var dt = c.confirmStart||(c.appMkt&&c.appMkt.liveDt)||c.start||'';
+  var dt = c.confirmStart||'';
   if(!dt||dt.length<10) return '-';
   var d = new Date(dt);
   if(isNaN(d.getTime())) return '-';
@@ -12112,7 +12112,7 @@ function getWeekLabel(c){
   return month+'월 '+week+'주차';
 }
 function fmtBroadcastDt(c){
-  var dt = c.confirmStart||(c.appMkt&&c.appMkt.liveDt)||c.start||'';
+  var dt = c.confirmStart||'';
   if(!dt||dt.length<10) return '-';
   var d = new Date(dt);
   if(isNaN(d.getTime())) return dt.slice(0,10);
