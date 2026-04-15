@@ -7189,7 +7189,7 @@ function renderS7(){
   var s7thead = document.getElementById('s7-thead');
   if(s7thead){
     if(_s7Mlive){
-      s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>주차</th><th>방송일시</th><th>편성코드</th><th>라이브명</th><th>담당MD</th><th>매출</th><th>광고비</th><th>광고수익</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
+      s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>주차</th><th>방송일시</th><th>편성코드</th><th>라이브명</th><th>담당MD</th><th>전체매출</th><th>주문건수</th><th>한계이익</th><th>시청자</th><th>광고비</th><th>광고수익</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
     } else {
       s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
     }
@@ -7205,10 +7205,14 @@ function renderS7(){
     var statusBadge = badge(settleStatus);
 
     if(_s7Mlive){
-      // ── M-live 정산 행: 편성코드, 라이브명, 방송일시, 담당MD, 매출, 광고비, 광고수익, 정산상태
-      var totalRev = camp.totalRevenue||camp.revenue||0;
-      var daFee    = camp.settleDa||0;
-      var adIncome = camp.adIncome||0;
+      // ── M-live 정산 행
+      var totalRev   = camp.totalRevenue||camp.revenue||0;
+      var orderQty   = camp.mliveOrderQty||0;
+      var profitAmt  = camp.mliveProfitAmt||0;
+      var viewers    = camp.mliveViewers||0;
+      var daFee      = camp.settleDa||0;
+      var adIncome   = camp.adIncome||0;
+      var fmtK = function(n){ return n ? (n>=100000000?(n/100000000).toFixed(1)+'억':n>=10000?Math.round(n/10000).toLocaleString()+'만':n.toLocaleString()) : '-'; };
       rows += '<tr style="cursor:pointer" onclick="editProd('+camp.id+')">'
         +'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
         +'<td onclick="event.stopPropagation()"><input type="checkbox" class="row-chk" data-id="'+camp.id+'" data-stage="s7" style="cursor:pointer"></td>'
@@ -7217,9 +7221,12 @@ function renderS7(){
         +'<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+displayCampCode(camp)+'</td>'
         +'<td style="font-weight:600">'+escHtml(camp.name)+'</td>'
         +'<td style="color:var(--text2)">'+escHtml(camp.owner||'-')+'</td>'
-        +'<td style="font-weight:700;color:var(--green)">'+(totalRev?totalRev.toLocaleString()+'원':'-')+'</td>'
-        +'<td style="font-weight:600;color:var(--blue)">'+(daFee?daFee.toLocaleString()+'원':'-')+'</td>'
-        +'<td style="font-weight:600;color:var(--orange)">'+(adIncome?adIncome.toLocaleString()+'원':'-')+'</td>'
+        +'<td style="font-weight:700;color:var(--green)">'+fmtK(totalRev)+'</td>'
+        +'<td style="color:var(--text2)">'+(orderQty?orderQty.toLocaleString()+'건':'-')+'</td>'
+        +'<td style="font-weight:600;color:'+(profitAmt>=0?'var(--blue)':'var(--red)')+'">'+fmtK(profitAmt)+'</td>'
+        +'<td style="color:var(--text2)">'+(viewers?viewers.toLocaleString()+'명':'-')+'</td>'
+        +'<td style="font-weight:600;color:var(--blue)">'+fmtK(daFee)+'</td>'
+        +'<td style="font-weight:600;color:var(--orange)">'+fmtK(adIncome)+'</td>'
         +'<td>'+statusBadge+'</td>'
         +'<td><div class="row-acts">'
         +(canEdit()&&!isExtMcn()?'<button class="btn btn-primary btn-xs" onclick="editProd('+camp.id+')">수정</button>':'<span style="font-size:11px;color:var(--text3)">조회전용</span>')
@@ -9016,6 +9023,7 @@ function syncMliveToCampaignSettle(){
   _mliveData.forEach(function(m){ if(m.code) byCode[String(m.code).trim()] = m; });
   var changed = 0;
   (DB.campaigns||[]).forEach(function(c){
+    if((c.campType||'')!=='모바일라이브') return;
     var liveCode = '';
     if(c.appMkt && c.appMkt.liveCode) liveCode = String(c.appMkt.liveCode).trim();
     if(!liveCode && c._liveCodeInput)  liveCode = String(c._liveCodeInput).trim();
@@ -9025,28 +9033,46 @@ function syncMliveToCampaignSettle(){
     var total = m.orderAmt||0;
     var onair = m.mobOrderAmt||0;
     var offair = total - onair;
-    if(c.totalRevenue !== total || c.onairRevenue !== onair || c.offairRevenue !== offair){
-      c.totalRevenue = total;
-      c.onairRevenue = onair;
-      c.offairRevenue = offair;
-      changed++;
+    var updated = false;
+    // 매출 동기화
+    if(c.totalRevenue !== total){ c.totalRevenue = total; updated=true; }
+    if(c.onairRevenue !== onair){ c.onairRevenue = onair; updated=true; }
+    if(c.offairRevenue !== offair){ c.offairRevenue = offair; updated=true; }
+    // 주문건수
+    if(m.orderQty && c.mliveOrderQty !== m.orderQty){ c.mliveOrderQty = m.orderQty; updated=true; }
+    // 한계이익율/이익액
+    if(m.profitRate && c.mliveProfitRate !== m.profitRate){ c.mliveProfitRate = m.profitRate; updated=true; }
+    if(m.profitAmt && c.mliveProfitAmt !== m.profitAmt){ c.mliveProfitAmt = m.profitAmt; updated=true; }
+    // 시청자수
+    if(m.viewers && c.mliveViewers !== m.viewers){ c.mliveViewers = m.viewers; updated=true; }
+    // 마케팅비 → 정산 DA광고료
+    if(m.marketingFee && c.settleDa !== m.marketingFee){ c.settleDa = m.marketingFee; updated=true; }
+    // 딜코드
+    if(m.dealCode && !c.dealCode){ c.dealCode = m.dealCode; updated=true; }
+    // 방송구분
+    if(m.broadcastType && c.mliveBroadcastType !== m.broadcastType){ c.mliveBroadcastType = m.broadcastType; updated=true; }
+    // 방송일시/MD
+    if(m.date && m.startTime && !c.confirmStart){
+      c.confirmStart = m.date+'T'+m.startTime;
+      if(m.endTime) c.confirmEnd = m.date+'T'+m.endTime;
+      updated=true;
     }
+    if(m.mdName && !c.owner){ c.owner = m.mdName; updated=true; }
+    if(updated) changed++;
     // 광고수익 양방향 동기화: 한쪽만 입력하면 다른쪽에 반영
     var campAdRev = c.adIncome||0;
     var excelAdRev = m.adRevenue||0;
     if(excelAdRev && !campAdRev){
-      // 엑셀에 광고수익이 있고 캠페인에 없으면 → 캠페인에 반영
       c.adIncome = excelAdRev;
       changed++;
     } else if(campAdRev && !excelAdRev){
-      // 캠페인에 광고수익이 있고 엑셀에 없으면 → 엑셀 데이터에 반영
       m.adRevenue = campAdRev;
     }
   });
   if(changed > 0){
-    console.log('[syncMliveToCampaignSettle] '+changed+'개 캠페인 매출/광고수익 자동 기입');
+    console.log('[syncMliveToCampaignSettle] '+changed+'개 캠페인 실적 자동 동기화');
     if(fbReady) pushToFirebase();
-    showToast(changed+'개 캠페인에 매출/광고수익 자동 기입');
+    showToast(changed+'개 캠페인에 엑셀 실적 자동 반영 (매출/이익/시청자/광고수익 등)');
   }
 }
 
