@@ -2232,10 +2232,19 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
 
       <!-- ── 모바일라이브 전용: 상품마진/편성사유/마케팅요청사항/협력사마케팅지원 ── -->
       <div id="p-mlive-extra-wrap" style="display:none;margin-top:14px;border-top:1px dashed var(--border);padding-top:14px">
-        <!-- 상품마진 -->
+        <!-- 담당 MD (모바일라이브 기본정보) -->
         <div class="fr2" style="margin-bottom:12px">
+          <div><label>담당 MD</label>
+            <div class="search-sel-wrap" id="wrap-p-mlive-md">
+              <input class="inp search-sel-input" id="p-mlive-md" placeholder="이름 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-mlive-md','md')"
+                onfocus="searchSelOpen('p-mlive-md','md')"
+                onkeydown="searchSelKey(event,'p-mlive-md')">
+              <button class="search-sel-clear" id="clear-p-mlive-md" onclick="searchSelClear('p-mlive-md')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-mlive-md"></div>
+            </div>
+          </div>
           <div><label>상품마진 (%)</label><input class="inp" id="p-product-margin" placeholder="00" type="number" min="0" max="100" style="width:120px"></div>
-          <div></div>
         </div>
         <!-- 편성사유 -->
         <div style="margin-bottom:12px">
@@ -2267,7 +2276,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           </div>
         </div>
         <!-- 협력사 마케팅지원 -->
-        <div>
+        <div style="margin-bottom:12px">
           <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">협력사 마케팅지원 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
           <div style="display:flex;flex-wrap:wrap;gap:5px">
             <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="구매인증" style="accent-color:var(--green);width:13px;height:13px"> 구매인증</label>
@@ -2275,6 +2284,15 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="사은품" style="accent-color:var(--green);width:13px;height:13px"> 사은품</label>
             <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="무료배송" style="accent-color:var(--green);width:13px;height:13px"> 무료배송</label>
             <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="카톡플친" style="accent-color:var(--green);width:13px;height:13px"> 카톡플친</label>
+          </div>
+        </div>
+        <!-- 외부채널송출 -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">외부채널송출</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:5px 12px"><input type="checkbox" class="mlive-extch-cb" value="지마켓" style="accent-color:var(--blue);width:14px;height:14px"> 지마켓</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:5px 12px"><input type="checkbox" class="mlive-extch-cb" value="카카오" style="accent-color:var(--blue);width:14px;height:14px"> 카카오</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:5px 12px"><input type="checkbox" class="mlive-extch-cb" value="미진행" style="accent-color:var(--blue);width:14px;height:14px"> 미진행</label>
           </div>
         </div>
       </div>
@@ -2296,7 +2314,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
       <div class="mo-sec-body" id="sec-product">
         <div class="fr2"><div><label>브랜드</label><input class="inp" id="p-brand" placeholder="스킨랩"></div><div><label>협력업체</label><input class="inp" id="p-company" placeholder="(주)스킨랩"></div></div>
-        <div class="fr2"><div><label>카테고리</label><input class="inp" id="p-cat" placeholder="예) 뷰티, 식품, 패션"></div><div><label>담당 MD</label>
+        <div class="fr2"><div><label>카테고리</label><input class="inp" id="p-cat" placeholder="예) 뷰티, 식품, 패션"></div><div id="p-owner-product-wrap"><label>담당 MD</label>
 <div class="search-sel-wrap" id="wrap-p-owner">
   <input class="inp search-sel-input" id="p-owner" placeholder="이름 검색..." autocomplete="off"
     oninput="searchSelFilter('p-owner','md')"
@@ -5565,6 +5583,8 @@ function editProd(id){
   var ownerSel = document.getElementById('p-owner');
   if(ownerSel) ownerSel.value = p.owner||'';
   searchSelSetValue('p-owner', p.owner||'');
+  // 모바일라이브 전용 담당MD 복원
+  searchSelSetValue('p-mlive-md', p.owner||'');
     document.getElementById('p-revenue').value = p.revenue ? p.revenue.toLocaleString('ko-KR') : '';
     // datetime-local 호환: 기존 date-only 값(YYYY-MM-DD)은 T00:00 추가
     var _startVal = p.start||p.startDate||'';
@@ -5691,6 +5711,7 @@ function editProd(id){
   document.querySelectorAll('.mlive-reason-cb').forEach(function(cb){ cb.checked=(p.mliveReasons||[]).includes(cb.value); });
   document.querySelectorAll('.mlive-mktreq-cb').forEach(function(cb){ cb.checked=(p.mliveMktReq||[]).includes(cb.value); });
   document.querySelectorAll('.mlive-partner-cb').forEach(function(cb){ cb.checked=(p.mlivePartner||[]).includes(cb.value); });
+  document.querySelectorAll('.mlive-extch-cb').forEach(function(cb){ cb.checked=(p.mliveExtChannel||[]).includes(cb.value); });
   // 모바일라이브 확정일자 복원
   var csEl2=document.getElementById('p-confirm-start'); if(csEl2) csEl2.value=p.confirmStart||'';
   var ceEl2=document.getElementById('p-confirm-end');   if(ceEl2) ceEl2.value=p.confirmEnd||'';
@@ -9863,6 +9884,7 @@ function openNewProd(){
   refreshManagerDropdowns();
   // 검색형 드롭다운 초기화
   searchSelSetValue('p-owner', '');
+  searchSelSetValue('p-mlive-md', '');
   searchSelSetValue('p-pd-single', '');
   searchSelSetValue('p-host-req1',  '');
   searchSelSetValue('p-host-req2',  '');
@@ -10079,7 +10101,7 @@ function saveProd(){
   var _inf0 = _infData[0] || {};
   var newData = {
     name:name, company:v('p-company'), brand:v('p-brand'), cat:v('p-cat'),
-    owner:v('p-owner'), revenue:iv('p-revenue'),
+    owner: campType==='모바일라이브' ? (v('p-mlive-md')||v('p-owner')) : v('p-owner'), revenue:iv('p-revenue'),
     budget:iv('p-budget'), target:iv('p-target'),
     skus: skus, // ← 상품코드+가격 통합 데이터
     infData: _infData,
@@ -10132,6 +10154,7 @@ function saveProd(){
     mliveReasons: (function(){ var r=[]; document.querySelectorAll('.mlive-reason-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
     mliveMktReq: (function(){ var r=[]; document.querySelectorAll('.mlive-mktreq-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
     mlivePartner: (function(){ var r=[]; document.querySelectorAll('.mlive-partner-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
+    mliveExtChannel: (function(){ var r=[]; document.querySelectorAll('.mlive-extch-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
     confirmStart: v('p-confirm-start'), confirmEnd: v('p-confirm-end'),
     pushData: {
       reasons: (function(){ var r=[]; document.querySelectorAll('.push-reason-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
@@ -11199,7 +11222,10 @@ function updateCampTypeUI(){
   if(budgetRow) budgetRow.style.display = isMlive ? 'none' : '';
   var reasonsWrap = document.getElementById('p-reasons-wrap');
   if(reasonsWrap) reasonsWrap.style.display = isMlive ? 'none' : '';
-  // M라이브 전용 필드 (상품마진/편성사유/마케팅요청/협력사마케팅)
+  // M라이브: 상품정보 내 담당MD 숨김 (기본정보로 이동)
+  var ownerProductWrap = document.getElementById('p-owner-product-wrap');
+  if(ownerProductWrap) ownerProductWrap.style.display = isMlive ? 'none' : '';
+  // M라이브 전용 필드 (담당MD/상품마진/편성사유/마케팅요청/협력사마케팅/외부채널송출)
   var mliveExtra = document.getElementById('p-mlive-extra-wrap');
   if(mliveExtra) mliveExtra.style.display = isMlive ? '' : 'none';
   // M라이브: 일자 라벨 변경 + 확정일자 표시
