@@ -7621,7 +7621,13 @@ function updateProdStageBadge(stage){
   var col = stageColor(stage);
   var bg  = stageBg(stage);
   if(badge){
-    badge.textContent = stage;
+    // M-live: 단계명을 M-live 워크플로에 맞게 표시
+    var displayStage = stage;
+    if(getCampType()==='모바일라이브'){
+      var mliveMap = {'1.캠페인요청':'1.편성요청','2.캠페인확정':'2.편성확정','3.상품정보등록':'3.상품정보등록','6.APP마케팅확정':'4.모바일마케팅','7.정산':'5.정산','7.정산완료':'5.정산완료','8.성과분석':'6.성과분석'};
+      displayStage = mliveMap[stage] || stage;
+    }
+    badge.textContent = displayStage;
     badge.style.background = bg;
     badge.style.color = col;
   }
