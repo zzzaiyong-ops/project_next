@@ -2155,7 +2155,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           </div>
         </div>
       </div>
-      <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
+      <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단" oninput="updateAiChatSection()"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
       <div class="fr2"><div><label><span id="p-start-label">시작일</span> <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local" step="60" onchange="autoSetMliveEndTime()"></div><div><label><span id="p-end-label">종료일</span> <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local" step="60"></div></div>
       <!-- 모바일라이브 확정일자 (관리자 입력) -->
       <div class="fr2" id="p-confirm-dates-row" style="display:none">
@@ -2591,6 +2591,27 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">완성된 랜딩링크:</div>
             <div id="p-push-landing-preview" style="font-size:11px;font-family:monospace;color:var(--accent2);word-break:break-all">-</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 섹션 F3: AI챗봇 정보 (재방 전용) ══ -->
+    <div class="mo-section" id="sec-aichat-wrap" style="display:none;border-bottom:none">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-aichat')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <span>🤖 AI챗봇 정보</span>
+        </div>
+        <span class="mo-sec-arr" id="arr-sec-aichat">▼</span>
+      </div>
+      <div class="mo-sec-body" id="sec-aichat">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600">
+            <input type="checkbox" id="p-aichat-use" style="accent-color:var(--accent);width:16px;height:16px"> AI 챗봇 사용
+          </label>
+        </div>
+        <div class="fr">
+          <label>AI챗봇 학습내용 <span style="font-size:10px;color:var(--text3);font-weight:400">(최대 50자)</span></label>
+          <input class="inp" id="p-aichat-learn" placeholder="학습내용 입력..." maxlength="50">
         </div>
       </div>
     </div>
@@ -5722,6 +5743,11 @@ function editProd(id){
   var pcEl=document.getElementById('p-push-content'); if(pcEl) pcEl.value=pushD.content||'';
   var plEl=document.getElementById('p-push-landing-base'); if(plEl) plEl.value=pushD.landingBase||'';
   updatePushLandingPreview();
+  // AI챗봇 복원
+  var aiChat = p.aiChat||{};
+  var acUse=document.getElementById('p-aichat-use'); if(acUse) acUse.checked=!!(aiChat.use);
+  var acLearn=document.getElementById('p-aichat-learn'); if(acLearn) acLearn.value=aiChat.learn||'';
+  updateAiChatSection();
   // APP 마케팅 복원
   var appMkt = p.appMkt||{};
   document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=(appMkt.channels||[]).includes(cb.value); });
@@ -7394,7 +7420,7 @@ function renderCamps(){
   var thead = document.getElementById('camp-thead');
   if(thead){
     if(isMliveTab){
-      thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th>주차</th><th>방송일시</th><th style="width:100px" class="mob-hide">편성코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>담당MD</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플마케팅</th><th style="background:var(--bg)"></th></tr>';
+      thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th>주차</th><th>방송일시</th><th style="width:100px" class="mob-hide">편성코드</th><th>방송구분</th><th style="width:22%;min-width:130px">캠페인명</th><th>담당MD</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플마케팅</th><th style="background:var(--bg)"></th></tr>';
     } else {
       thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:100px" class="mob-hide">캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>기간</th><th>캠페인담당</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플루언서</th><th class="mob-hide">M라이브</th><th style="background:var(--bg)"></th></tr>';
     }
@@ -7416,11 +7442,16 @@ function renderCamps(){
       var liveCode = (c.appMkt&&c.appMkt.liveCode)||'-';
       var infMktBadge = hasInfMkt ? '<span style="background:var(--green-bg);color:var(--green);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">👤 진행</span>' : '-';
       var _weekLabel = getWeekLabel(c);
+      var _isRebroadcast = (c.name||'').indexOf('다시보는')>=0;
+      var _bcTypeBadge = _isRebroadcast
+        ? '<span style="background:var(--orange-bg);color:var(--orange);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">재방</span>'
+        : '<span style="background:var(--blue-bg);color:var(--blue);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">본방</span>';
       rows += '<tr onclick="editProd('+c.id+')">'
         + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
         + '<td style="font-size:11px;color:var(--accent2);font-weight:700;white-space:nowrap">'+_weekLabel+'</td>'
         + '<td style="font-size:12px;color:var(--text3);white-space:nowrap">'+fmtBroadcastDt(c)+'</td>'
         + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+escHtml(liveCode)+'</td>'
+        + '<td style="text-align:center">'+_bcTypeBadge+'</td>'
         + '<td style="color:var(--text2)">'+escHtml(mdNm||'-')+'</td>'
         + '<td style="font-weight:700;color:var(--green)">'+revStr+'</td>'
         + '<td><span style="background:'+stageBg(c.stage)+';color:'+col+';padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">'+c.stage+'</span></td>'
@@ -7451,7 +7482,7 @@ function renderCamps(){
   console.log('[renderCamps] rows length:', rows.length, 'paged:', paged.length);
   var campTbl = document.getElementById('camp-tbl');
   if(campTbl){
-    campTbl.innerHTML=rows||'<tr><td colspan="'+(isMliveTab?10:10)+'" class="empty">캠페인 없음</td></tr>';
+    campTbl.innerHTML=rows||'<tr><td colspan="'+(isMliveTab?11:10)+'" class="empty">캠페인 없음</td></tr>';
   }
   _renderCampPagination(filtered.length);
 }
@@ -8652,11 +8683,32 @@ function copyCampData(campId, rebroadcast){
   searchSelSetValue('p-host-conf1', hosts.conf1||'');
   searchSelSetValue('p-host-conf2', hosts.conf2||'');
 
-  // APP 마케팅 복원
-  var appMkt = p.appMkt||{};
-  document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=(appMkt.channels||[]).includes(cb.value); });
-  var naCk4=document.getElementById('appmkt-na'); if(naCk4) naCk4.checked=!!(appMkt.na);
-  toggleAppMktNa();
+  // APP 마케팅 복원 (재방은 복사하지 않음)
+  if(!rebroadcast){
+    var appMkt = p.appMkt||{};
+    document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=(appMkt.channels||[]).includes(cb.value); });
+    var naCk4=document.getElementById('appmkt-na'); if(naCk4) naCk4.checked=!!(appMkt.na);
+    toggleAppMktNa();
+  } else {
+    // 재방: 모바일마케팅 초기화
+    document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=false; });
+    var naCk4=document.getElementById('appmkt-na'); if(naCk4) naCk4.checked=false;
+    // 재방: 정산 항목 초기화
+    var sdaEl=document.getElementById('p-settle-da'); if(sdaEl) sdaEl.value='';
+    var miEl2=document.getElementById('p-marketing-items'); if(miEl2) miEl2.value='';
+    var prEl2=document.getElementById('p-profit-rate'); if(prEl2) prEl2.value='';
+    var aiEl2=document.getElementById('p-ad-income'); if(aiEl2) aiEl2.value='';
+    var trEl2=document.getElementById('p-total-revenue'); if(trEl2) trEl2.value='';
+    var orEl2=document.getElementById('p-onair-revenue'); if(orEl2) orEl2.value='';
+    var ofEl2=document.getElementById('p-offair-revenue'); if(ofEl2) ofEl2.value='';
+    var sdoneEl2=document.getElementById('p-settle-done'); if(sdoneEl2) sdoneEl2.checked=false;
+    // 재방: APP PUSH 초기화
+    document.querySelectorAll('.push-reason-cb').forEach(function(cb){ cb.checked=false; });
+    var paEl2=document.getElementById('p-push-appeal'); if(paEl2) paEl2.value='';
+    var pcEl2=document.getElementById('p-push-content'); if(pcEl2) pcEl2.value='';
+    var plEl2=document.getElementById('p-push-landing-base'); if(plEl2) plEl2.value='';
+    updatePushLandingPreview();
+  }
   toggleAppMktFields();
   var alc3=document.getElementById('appmkt-live-code'); if(alc3) alc3.value=''; // 편성코드는 비움 (새 방송이므로)
   var ld3=document.getElementById('appmkt-live-dt');    if(ld3)  ld3.value='';
@@ -10163,6 +10215,10 @@ function saveProd(){
       landingBase: (document.getElementById('p-push-landing-base')?.value||'').trim(),
       landingUrl: (function(){ var b=(document.getElementById('p-push-landing-base')?.value||'').trim(); return b ? b+PUSH_LANDING_SUFFIX : ''; })()
     },
+    aiChat: {
+      use: !!(document.getElementById('p-aichat-use')?.checked),
+      learn: (document.getElementById('p-aichat-learn')?.value||'').trim().slice(0,50)
+    },
     appealTotal: (document.getElementById('p-appeal-total')?.value||'').trim(),
     appealPush:  (document.getElementById('p-appeal-push')?.value||'').trim(),
     courier:v('p-courier'), shipCutoff:v('p-ship-cutoff'),
@@ -11271,6 +11327,8 @@ function updateCampTypeUI(){
   // M라이브: APP PUSH 섹션 표시
   var pushWrap = document.getElementById('sec-push-wrap');
   if(pushWrap) pushWrap.style.display = isMlive ? '' : 'none';
+  // AI챗봇 섹션 (재방 전용)
+  updateAiChatSection();
   // M라이브: 업체광고비 → 광고수익 라벨 변경
   var adIncLabel = document.getElementById('p-ad-income-label');
   var adIncDesc = document.querySelector('#p-ad-income-wrap label span[style*="font-size:10px"]');
@@ -11951,6 +12009,15 @@ function displayCampCode(c){
   return c.campCode||'-';
 }
 // M-live 방송일시 포맷: 2026/4/13 20시
+// AI챗봇 섹션 표시/숨김 (재방=다시보는 + 모바일라이브일 때만)
+function updateAiChatSection(){
+  var wrap = document.getElementById('sec-aichat-wrap');
+  if(!wrap) return;
+  var isMlive = getCampType()==='모바일라이브';
+  var name = (document.getElementById('p-name')?.value||'');
+  var isRebroadcast = name.indexOf('다시보는')>=0;
+  wrap.style.display = (isMlive && isRebroadcast) ? '' : 'none';
+}
 // APP PUSH 랜딩링크 미리보기
 var PUSH_LANDING_SUFFIX = '?viewType&broadcastId=lkshinsegaelive-2b088e36671d4747a59c2a80a958750f&fc=apppush';
 function updatePushLandingPreview(){
