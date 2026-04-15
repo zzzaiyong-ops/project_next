@@ -10135,6 +10135,13 @@ function saveProd(){
     var _ce = (document.getElementById('p-confirm-end')?.value||'').trim();
     if(!_cs || !_ce) _mliveNoConfirm = true;
   }
+  // 모바일라이브 재방: 편성코드 미입력 경고
+  var _rebroadcastNoCode = false;
+  if(getCampType()==='모바일라이브'){
+    var _rName = (document.getElementById('p-name')?.value||'');
+    var _rCode = (document.getElementById('appmkt-live-code')?.value||'').trim();
+    if(_rName.indexOf('다시보는')>=0 && !_rCode) _rebroadcastNoCode = true;
+  }
 
   // APP 마케팅 날짜 검증
   var superChecked = document.getElementById('appmkt-super')?.checked;
@@ -10519,6 +10526,7 @@ function saveProd(){
     console.log('[saveProd] 수정 저장 실행, id:', newData.id);
     if(_noMdcat) showToast('⚠️ MDCAT을 선택해주세요 (기본정보 관리에서 추가 가능)');
     if(_mliveNoConfirm) setTimeout(function(){ showToast('⚠️ 확정시작일/종료일이 미입력되어 편성요청 단계로 유지됩니다. 편성 확정을 위해 확정일자를 입력해주세요.'); }, 500);
+    if(_rebroadcastNoCode) setTimeout(function(){ alert('⚠️ 재방 캠페인에 편성코드가 입력되지 않았습니다.\n편성코드를 입력해주세요.'); }, 600);
     showCompleteModal('수정');  // Firebase 응답과 무관하게 즉시 표시
     closeMo('product');
     renderAllPages(); // 즉시 화면 반영
@@ -10562,6 +10570,7 @@ function saveProd(){
     // 저장 완료 팝업 즉시 표시
     if(_noMdcat) showToast('⚠️ MDCAT을 선택해주세요 (기본정보 관리에서 추가 가능)');
     if(_mliveNoConfirm) setTimeout(function(){ showToast('⚠️ 확정시작일/종료일이 미입력되어 편성요청 단계로 유지됩니다. 편성 확정을 위해 확정일자를 입력해주세요.'); }, 500);
+    if(_rebroadcastNoCode) setTimeout(function(){ alert('⚠️ 재방 캠페인에 편성코드가 입력되지 않았습니다.\n편성코드를 입력해주세요.'); }, 600);
     showCompleteModal('등록');
     renderAllPages(); // 뱃지·화면 즉시 반영
     // Firebase 백그라운드 저장
