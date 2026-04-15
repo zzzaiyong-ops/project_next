@@ -11867,8 +11867,8 @@ function updateBadges(){
   // 각 단계 뱃지 = 해당 화면의 "확정 대상(target)" 필터 기준과 동일하게 맞춤
   // S1: 캠페인요청 단계 전체
   var s1cnt = camps.filter(function(c){ return c.stage==='1.캠페인요청'; }).length;
-  // S2: 2단계 확정 대상 = 1단계 캠페인요청
-  var s2cnt = camps.filter(function(c){ return c.stage==='1.캠페인요청'; }).length;
+  // S2: 2단계 캠페인확정 화면 = 1.캠페인요청 + 2.캠페인확정
+  var s2cnt = camps.filter(function(c){ return c.stage==='1.캠페인요청'||c.stage==='2.캠페인확정'; }).length;
   // S3: renderS3 target = 2.캠페인확정 OR 3.상품정보등록
   var s3cnt = camps.filter(function(c){
     return c.stage==='2.캠페인확정' || c.stage==='3.상품정보등록';
@@ -11900,7 +11900,7 @@ function updateBadges(){
   // M-live 사이드바 뱃지
   var mlCamps = allValid.filter(function(c){ return (c.campType||'')==='모바일라이브'; });
   setBadge('b-ml-s1', mlCamps.filter(function(c){ return c.stage==='1.캠페인요청'; }).length);
-  setBadge('b-ml-s2', mlCamps.filter(function(c){ return c.stage==='1.캠페인요청'; }).length);
+  setBadge('b-ml-s2', mlCamps.filter(function(c){ return c.stage==='1.캠페인요청'||c.stage==='2.캠페인확정'; }).length);
   setBadge('b-ml-s3', mlCamps.filter(function(c){ return c.stage==='2.캠페인확정'||c.stage==='3.상품정보등록'; }).length);
   setBadge('b-ml-s6', mlCamps.filter(function(c){ return c.stage==='6.APP마케팅확정'&&(!c.appMkt||!(c.appMkt.channels||[]).length); }).length);
   setBadge('b-ml-s7', mlCamps.filter(function(c){ return c.stage==='6.APP마케팅확정'||(c.stage==='7.정산'&&!c.settleDone); }).length);
@@ -12064,6 +12064,7 @@ function displayDateCol(c){
 function mliveStageRow(stage, c, rowNum){
   var code = displayCampCode(c);
   var dt = fmtBroadcastDt(c);
+  var wk = getWeekLabel(c);
   var md = c.owner||'-';
   var rev = c.revenue?(c.revenue/100000000).toFixed(1)+'억':'-';
   var cat = c.mdcat||(c.skus&&c.skus[0]?c.skus[0].mdcat:'')||c.cat||'-';
@@ -12074,19 +12075,21 @@ function mliveStageRow(stage, c, rowNum){
   var mktBadge = appCh?'<span style="background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:10px;font-size:10px;font-weight:700">'+escHtml(appCh)+'</span>':'-';
   var base = '<tr style="cursor:pointer" onclick="editProd('+c.id+')">'
     +'<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
+    +'<td style="font-size:11px;color:var(--accent2);font-weight:700;white-space:nowrap">'+wk+'</td>'
+    +'<td style="font-size:12px;color:var(--text3);white-space:nowrap">'+dt+'</td>'
     +'<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+escHtml(code)+'</td>'
     +'<td style="font-weight:600">'+escHtml(c.name)+'</td>';
-  if(stage==='s1') return base+'<td>'+escHtml(cat)+'</td><td>'+escHtml(md)+'</td><td style="font-weight:700;color:var(--green)">'+rev+'</td><td style="color:var(--text3);font-size:12px">'+dt+'</td><td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️</button></td></tr>';
-  if(stage==='s2') return base+'<td>'+escHtml(md)+'</td><td style="font-size:11px">'+escHtml(reasons)+'</td><td style="font-weight:700;color:var(--green)">'+rev+'</td><td style="color:var(--text3);font-size:12px">'+dt+'</td><td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️</button></td></tr>';
-  if(stage==='s3') return base+'<td>'+escHtml(md)+'</td><td style="font-family:monospace;font-size:11px">'+escHtml(dealCode)+'</td><td style="color:var(--text3);font-size:12px">'+dt+'</td><td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️</button></td></tr>';
+  if(stage==='s1') return base+'<td>'+escHtml(cat)+'</td><td>'+escHtml(md)+'</td><td style="font-weight:700;color:var(--green)">'+rev+'</td><td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️</button></td></tr>';
+  if(stage==='s2') return base+'<td>'+escHtml(md)+'</td><td style="font-size:11px">'+escHtml(reasons)+'</td><td style="font-weight:700;color:var(--green)">'+rev+'</td><td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️</button></td></tr>';
+  if(stage==='s3') return base+'<td>'+escHtml(md)+'</td><td style="font-family:monospace;font-size:11px">'+escHtml(dealCode)+'</td><td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️</button></td></tr>';
   if(stage==='s6') return base+'<td>'+escHtml(md)+'</td><td>'+escHtml(host)+'</td><td>'+mktBadge+'</td><td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️</button></td></tr>';
   return base+'</tr>';
 }
 var _mliveHeaders = {
-  s1:'<tr><th style="width:36px">#</th><th>편성코드</th><th>라이브명</th><th>카테고리</th><th>담당MD</th><th>예상매출</th><th>방송일</th><th></th></tr>',
-  s2:'<tr><th style="width:36px">#</th><th>편성코드</th><th>라이브명</th><th>담당MD</th><th>확정사유</th><th>예상매출</th><th>방송일</th><th></th></tr>',
-  s3:'<tr><th style="width:36px">#</th><th>편성코드</th><th>라이브명</th><th>담당MD</th><th>딜코드</th><th>방송일</th><th></th></tr>',
-  s6:'<tr><th style="width:36px">#</th><th>편성코드</th><th>라이브명</th><th>담당MD</th><th>쇼호스트</th><th>모바일마케팅요청</th><th></th></tr>',
+  s1:'<tr><th style="width:36px">#</th><th>주차</th><th>방송일시</th><th>편성코드</th><th>라이브명</th><th>카테고리</th><th>담당MD</th><th>예상매출</th><th></th></tr>',
+  s2:'<tr><th style="width:36px">#</th><th>주차</th><th>방송일시</th><th>편성코드</th><th>라이브명</th><th>담당MD</th><th>확정사유</th><th>예상매출</th><th></th></tr>',
+  s3:'<tr><th style="width:36px">#</th><th>주차</th><th>방송일시</th><th>편성코드</th><th>라이브명</th><th>담당MD</th><th>딜코드</th><th></th></tr>',
+  s6:'<tr><th style="width:36px">#</th><th>주차</th><th>방송일시</th><th>편성코드</th><th>라이브명</th><th>담당MD</th><th>쇼호스트</th><th>모바일마케팅요청</th><th></th></tr>',
 };
 function matchesDashMode(c){
   if(_dashMode==='mlive') return (c.campType||'')==='모바일라이브';
