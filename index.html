@@ -2333,7 +2333,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           </div>
         </div>
         <!-- 상세 상품코드 + 가격 통합 테이블 -->
-        <div style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
+        <div id="p-sku-table-wrap" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="display:flex;align-items:center;gap:10px">
               <span style="font-size:11.5px;font-weight:700;color:var(--text2)">📦 상품코드 · 가격 정보</span>
@@ -2588,7 +2588,10 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <input class="inp" id="p-push-landing-base" placeholder="https://example.com/page" style="flex:1;font-size:12px" oninput="updatePushLandingPreview()">
           </div>
           <div style="margin-top:6px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px">
-            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">완성된 랜딩링크:</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <div style="font-size:10px;font-weight:700;color:var(--text3)">완성된 랜딩링크:</div>
+              <button class="btn btn-ghost btn-xs" onclick="copyPushLandingLink()" style="font-size:10px;padding:2px 8px;color:var(--accent2)">📋 복사</button>
+            </div>
             <div id="p-push-landing-preview" style="font-size:11px;font-family:monospace;color:var(--accent2);word-break:break-all">-</div>
           </div>
         </div>
@@ -2632,7 +2635,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <div class="mo-sec-body" id="sec-settle">
         <div class="fr2" style="margin-bottom:12px">
           <div><label>광고수익 (원)</label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
-          <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
+          <div id="p-settle-done-wrap" style="display:flex;align-items:center;gap:10px;padding-top:20px">
             <input type="checkbox" id="p-settle-done" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer">
             <label for="p-settle-done" style="font-size:13px;font-weight:600;cursor:pointer">✅ 정산 완료</label>
           </div>
@@ -10254,6 +10257,9 @@ function saveProd(){
       if(campType==='모바일라이브'){
         var _confirmS = (document.getElementById('p-confirm-start')?.value||'').trim();
         var _confirmE = (document.getElementById('p-confirm-end')?.value||'').trim();
+        var _hasConfirm = !!(_confirmS && _confirmE);
+        // 확정시작/종료일 미입력 시 편성요청 단계 유지
+        if(!_hasConfirm) return '1.캠페인요청';
         var _mlAppChs = [...document.querySelectorAll('.appmkt-cb:checked')];
         var _mlAppNa  = document.getElementById('appmkt-na')?.checked;
         var _mlSettle = iv('p-total-revenue') || iv('p-ad-income');
@@ -10265,8 +10271,7 @@ function saveProd(){
               || (r.querySelector('.sku-brand')?.value||'').trim();
         });
         if(_mlSkuF) return '3.상품정보등록';
-        if(_confirmS && _confirmE) return '2.캠페인확정';
-        return '1.캠페인요청';
+        return '2.캠페인확정';
       }
       // ── 인플루언서 단계 로직 ──
       var appChs = [...document.querySelectorAll('.appmkt-cb:checked')];
@@ -11282,6 +11287,9 @@ function updateCampTypeUI(){
   // M라이브: 상품정보 내 담당MD 숨김 (기본정보로 이동)
   var ownerProductWrap = document.getElementById('p-owner-product-wrap');
   if(ownerProductWrap) ownerProductWrap.style.display = isMlive ? 'none' : '';
+  // M라이브: 상품코드·가격 테이블 숨김
+  var skuTableWrap = document.getElementById('p-sku-table-wrap');
+  if(skuTableWrap) skuTableWrap.style.display = isMlive ? 'none' : '';
   // M라이브 전용 필드 (담당MD/상품마진/편성사유/마케팅요청/협력사마케팅/외부채널송출)
   var mliveExtra = document.getElementById('p-mlive-extra-wrap');
   if(mliveExtra) mliveExtra.style.display = isMlive ? '' : 'none';
@@ -11325,6 +11333,9 @@ function updateCampTypeUI(){
   // M라이브: 마케팅 항목 숨김
   var mktItemsWrap = document.getElementById('p-marketing-items-wrap');
   if(mktItemsWrap) mktItemsWrap.style.display = isMlive ? 'none' : '';
+  // M라이브: 정산완료 체크박스 숨김
+  var settleDoneWrap = document.getElementById('p-settle-done-wrap');
+  if(settleDoneWrap) settleDoneWrap.style.display = isMlive ? 'none' : '';
   // M라이브: APP PUSH 섹션 표시
   var pushWrap = document.getElementById('sec-push-wrap');
   if(pushWrap) pushWrap.style.display = isMlive ? '' : 'none';
@@ -12019,8 +12030,14 @@ function updateAiChatSection(){
   var isRebroadcast = name.indexOf('다시보는')>=0;
   wrap.style.display = (isMlive && isRebroadcast) ? '' : 'none';
 }
-// APP PUSH 랜딩링크 미리보기
+// APP PUSH 랜딩링크 미리보기 + 복사
 var PUSH_LANDING_SUFFIX = '?viewType&broadcastId=lkshinsegaelive-2b088e36671d4747a59c2a80a958750f&fc=apppush';
+function copyPushLandingLink(){
+  var el = document.getElementById('p-push-landing-preview');
+  var txt = el ? el.textContent : '';
+  if(!txt || txt==='-'){ showToast('복사할 링크가 없습니다.'); return; }
+  navigator.clipboard.writeText(txt).then(function(){ showToast('랜딩링크가 복사되었습니다.'); }).catch(function(){ showToast('복사 실패'); });
+}
 function updatePushLandingPreview(){
   var base = (document.getElementById('p-push-landing-base')?.value||'').trim();
   var preview = document.getElementById('p-push-landing-preview');
