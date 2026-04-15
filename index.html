@@ -2291,14 +2291,6 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         </div>
       </div>
       <div class="mo-sec-body" id="sec-product">
-        <div class="fr">
-          <label>상품기본정보 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(자유 기재)</span></label>
-          <textarea class="ta" id="p-product-basic-info" maxlength="2000" style="min-height:120px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/2000'">① 상품명/상품구성 :
-②가격/프로모션 조건 : MD할인가,카드즉시할인5%(5만원이상),신규가입3천원 적립, 최종공구가
-③이벤트 : 사전알림댓글 이벤트, 구매인증 이벤트, 모바일라이브 유무 등
-④참고용상품링크 : </textarea>
-          <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/2000</div>
-        </div>
         <div class="fr2"><div><label>브랜드</label><input class="inp" id="p-brand" placeholder="스킨랩"></div><div><label>협력업체</label><input class="inp" id="p-company" placeholder="(주)스킨랩"></div></div>
         <div class="fr2"><div><label>카테고리</label><input class="inp" id="p-cat" placeholder="예) 뷰티, 식품, 패션"></div><div><label>담당 MD</label>
 <div class="search-sel-wrap" id="wrap-p-owner">
@@ -2310,27 +2302,13 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   <div class="search-sel-list" id="list-p-owner"></div>
 </div>
 </div></div>
-        <div class="fr"><label>캠페인 소구 포인트</label>
-          <textarea class="ta" id="p-appeal" placeholder="핵심 소구 포인트, 차별화 요소, 타겟 메시지..." maxlength="500" style="min-height:80px;resize:vertical" oninput="this.nextElementSibling.textContent=this.value.length+'/500'"></textarea>
-          <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
-        </div>
-        <!-- 모바일라이브 소구포인트 가이드 (삭제 불가 라벨) -->
-        <div id="p-appeal-mlive-guide" style="display:none">
-          <div class="fr" style="margin-bottom:8px">
-            <label style="font-size:11.5px;font-weight:700;color:var(--accent2)">①전체 소구 포인트</label>
-            <textarea class="ta" id="p-appeal-total" placeholder="전체 소구 포인트를 입력하세요..." maxlength="500" style="min-height:60px;resize:vertical" oninput="this.nextElementSibling.textContent=this.value.length+'/500'"></textarea>
-            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
+        <!-- 상품딜코드 + 판매시작/종료일 -->
+        <div id="p-deal-code-row" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div><label>상품 딜코드</label><input class="inp" id="p-deal-code" placeholder="예) D202604001"></div>
+            <div><label>판매시작일</label><input class="inp" id="p-sale-start" type="date"></div>
+            <div><label>판매종료일</label><input class="inp" id="p-sale-end" type="date"></div>
           </div>
-          <div class="fr">
-            <label style="font-size:11.5px;font-weight:700;color:var(--orange)">②PUSH 소구 포인트</label>
-            <textarea class="ta" id="p-appeal-push" placeholder="PUSH 발송용 소구 포인트를 입력하세요..." maxlength="300" style="min-height:60px;resize:vertical" oninput="this.nextElementSibling.textContent=this.value.length+'/300'"></textarea>
-            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/300</div>
-          </div>
-        </div>
-        <!-- 상품딜코드 (모바일라이브용) -->
-        <div class="fr2" id="p-deal-code-row" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
-          <div><label>상품 딜코드</label><input class="inp" id="p-deal-code" placeholder="예) D202604001"></div>
-          <div></div>
         </div>
         <!-- 상세 상품코드 + 가격 통합 테이블 -->
         <div style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
@@ -2368,77 +2346,6 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
               </thead>
               <tbody id="sku-list"></tbody>
             </table>
-          </div>
-        </div>
-        <!-- CS정보 / 배송정보 -->
-        <div style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px;display:flex;flex-direction:column;gap:12px">
-          <div class="fr">
-            <label>CS 정보 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 500자)</span></label>
-            <textarea class="ta" id="p-cs-info" maxlength="500" style="min-height:110px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/500'">1)과세/면세 :
-2)제조사/원산지 :
-3)반품.교환정책 :
-4)반품교환문의 : 1800-0850
-5)출고지/교환반품주소
-6)CS고객센터 협의사항:</textarea>
-            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
-          </div>
-          <div class="fr">
-            <label>배송 정보</label>
-            <!-- 배송 구조화 항목 -->
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div>
-                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">택배사</label>
-                  <input class="inp inp-sm" id="p-courier" placeholder="예) CJ대한통운, 롯데택배" style="width:100%">
-                </div>
-                <div>
-                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">당일출고 마감시간</label>
-                  <input class="inp inp-sm" id="p-ship-cutoff" type="time" style="width:100%">
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div>
-                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">배송비</label>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap">
-                      <input type="checkbox" id="p-ship-free" style="accent-color:var(--accent);cursor:pointer" onchange="document.getElementById('p-ship-fee').disabled=this.checked;if(this.checked)document.getElementById('p-ship-fee').value=''">무료
-                    </label>
-                    <input class="inp inp-sm inp-money" id="p-ship-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
-                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
-                  </div>
-                </div>
-                <div>
-                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:6px">
-                    <span>제주·도서산간 배송료</span>
-                    <input type="checkbox" id="p-island-free" style="accent-color:var(--accent);cursor:pointer" onchange="document.getElementById('p-island-fee').disabled=this.checked;if(this.checked)document.getElementById('p-island-fee').value=''">
-                    <span>배송불가</span>
-                  </label>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <input class="inp inp-sm inp-money" id="p-island-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
-                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
-                  </div>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div>
-                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">교환 배송비</label>
-                  <div style="display:flex;align-items:center;gap:6px">
-                    <input class="inp inp-sm inp-money" id="p-exchange-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
-                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
-                  </div>
-                </div>
-                <div>
-                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">반품비</label>
-                  <div style="display:flex;align-items:center;gap:6px">
-                    <input class="inp inp-sm inp-money" id="p-return-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
-                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">배송정보 및 기타사항 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 300자)</span></label>
-            <textarea class="ta" id="p-delivery-info" placeholder="기타 배송 관련 안내 사항..." maxlength="300" style="min-height:60px;resize:vertical" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/300'"></textarea>
-            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/300</div>
           </div>
         </div>
 
@@ -2602,6 +2509,13 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <label class="promo-label" style="flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
             <label class="promo-label" style="flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
           </div>
+          <!-- ��이럴 + 기타 (한 행) -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-viral" value="바이럴" onchange="toggleAppMktFields()"> 바이럴</label>
+            <span style="width:1px;height:16px;background:var(--border);margin:0 4px"></span>
+            <label class="promo-label" style="flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-etc" value="기타" onchange="toggleAppMktFields()"> 기타</label>
+            <input class="inp inp-sm appmkt-inline-input" id="appmkt-etc-text" placeholder="기타 내용 입력 (50자)" maxlength="50" style="flex:1" disabled>
+          </div>
         </div>
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
           <div class="fr" id="appmkt-landing-row">
@@ -2632,7 +2546,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
       <div class="mo-sec-body" id="sec-settle">
         <div class="fr2" style="margin-bottom:12px">
-          <div><label>DA 광고료 (원)</label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
+          <div><label>광고수익 (원)</label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
           <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
             <input type="checkbox" id="p-settle-done" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer">
             <label for="p-settle-done" style="font-size:13px;font-weight:600;cursor:pointer">✅ 정산 완료</label>
@@ -3604,10 +3518,10 @@ var PF_SECTIONS = {
   },
   settle: {
     title: '💰 정산정보 붙여넣기',
-    hint: ['정산매출: 120,000,000','DA광고료: 3,000,000','주문건수: 850','정산처리일: 2026-07-29','비용지불일: 2026-08-15'],
+    hint: ['정산매출: 120,000,000','광고수익: 3,000,000','주문건수: 850','정산처리일: 2026-07-29','비용지불일: 2026-08-15'],
     fields: [
       { keys:['정산매출','매출'], id:'p-settle-revenue', label:'정산매출', type:'money' },
-      { keys:['da광고료','da','광고료'], id:'p-settle-da', label:'DA광고료', type:'money' },
+      { keys:['da광고료','da','광고료'], id:'p-settle-da', label:'광고수익', type:'money' },
       { keys:['주문건수','주문'], id:'p-settle-orders', label:'주문건수', type:'text' },
       { keys:['정산처리일','정산일'], id:'p-settle-process-date', label:'정산처리일', type:'date' },
       { keys:['비용지불일','지불일','결제일'], id:'p-settle-payment-date', label:'비용지불일', type:'date' },
@@ -3680,7 +3594,7 @@ function copySectionFormat(sec){
   } else if(sec === 'settle'){
     lines.push('=== 정산 정보 ===');
     lines.push('정산매출: ');
-    lines.push('DA광고료: ');
+    lines.push('광고수익: ');
     lines.push('주문건수: ');
   }
 
@@ -4014,7 +3928,7 @@ function _buildShareText(c){
   if(checked['settle']&&(c.settleRevenue||c.settleDa||c.settleProcessDate||c.settlePaymentDate)){
     lines.push('─ 정산 정보');
     if(c.settleRevenue) lines.push('정산매출: '+(c.settleRevenue/100000000).toFixed(1)+'억원');
-    if(c.settleDa)      lines.push('DA광고료: '+c.settleDa.toLocaleString()+'원');
+    if(c.settleDa)      lines.push('광고수익: '+c.settleDa.toLocaleString()+'원');
     if(c.settleProcessDate) lines.push('정산처리일: '+c.settleProcessDate);
     if(c.settlePaymentDate) lines.push('비용지불일: '+c.settlePaymentDate);
     lines.push('');
@@ -5597,6 +5511,8 @@ function editProd(id){
     document.getElementById('p-brand').value   = p.brand||'';
     document.getElementById('p-cat').value     = p.cat||'';
     var dcEl=document.getElementById('p-deal-code'); if(dcEl) dcEl.value=p.dealCode||'';
+    var ssEl=document.getElementById('p-sale-start'); if(ssEl) ssEl.value=p.saleStart||'';
+    var seEl=document.getElementById('p-sale-end'); if(seEl) seEl.value=p.saleEnd||'';
     var atEl=document.getElementById('p-appeal-total'); if(atEl) atEl.value=p.appealTotal||'';
     var apEl=document.getElementById('p-appeal-push');  if(apEl) apEl.value=p.appealPush||'';
     // p-owner(담당MD) - 검색형 드롭다운에 값 설정
@@ -5754,6 +5670,7 @@ function editProd(id){
   toggleAppMktFields();
   var lu=document.getElementById('appmkt-landing-url'); if(lu) lu.value=appMkt.landingUrl||'';
   var du=document.getElementById('appmkt-deal-url');    if(du) du.value=appMkt.dealUrl||'';
+  var etcT=document.getElementById('appmkt-etc-text');  if(etcT) etcT.value=appMkt.etcText||'';
   initSections(false); // 수정 시에도 기본 닫힘
   applyModalPermissions();
   // 인플루언서 전체매출 라벨/연동 갱신
@@ -7070,6 +6987,7 @@ function toggleAppMktFields(){
     ['appmkt-kakao',     ['appmkt-kakao-send']],
     ['appmkt-ssg',       ['appmkt-ssg-amount','appmkt-ssg-count']],
     ['appmkt-starbucks', ['appmkt-starbucks-count']],
+    ['appmkt-etc',       ['appmkt-etc-text']],
   ];
   pairs.forEach(function(p){
     var cb = document.getElementById(p[0]);
@@ -9707,7 +9625,7 @@ function openS7Detail(campId){
     + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">인플루언서 매출수수료 ('+feeRate+'%)</span><span style="font-weight:600">'+fmt(infFee)+'</span></div>'
     + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">원고료</span><span style="font-weight:600">'+fmt(feeAmt)+'</span></div>'
     + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">에이전시 수수료 cafe24 ('+agRate+'%)</span><span style="font-weight:600">'+fmt(agFee)+'</span></div>'
-    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">DA 광고료</span><span style="font-weight:600">'+fmt(daFee)+'</span></div>'
+    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">광고수익</span><span style="font-weight:600">'+fmt(daFee)+'</span></div>'
     + '<div style="border-top:1px solid var(--border2);padding-top:8px;margin-top:4px;display:flex;justify-content:space-between"><span style="font-weight:800">비용 합계</span><span style="font-weight:800;color:var(--orange);font-size:15px">'+fmt(totalCost)+'</span></div>'
     + '</div></div>'
 
@@ -9825,7 +9743,7 @@ function exportExcel(type){
     ws=XLSX.utils.json_to_sheet((DB.mcnRequests||[]).map(r=>({캠페인:getCamp(r.campaign).name,MCN업체:r.agency,인플루언서:getInf(r.inf).name,카테고리:r.category,수수료:r.fee+'%',상태:r.status})));
     name='MCN요청';
   } else if(type==='settlement'){
-    ws=XLSX.utils.json_to_sheet((DB.settlements||[]).map(s=>({캠페인:getCamp(s.campaign).name,인플루언서:getInf(s.inf).name,전체매출:s.revenue,인플루언서수수료:s.infFee,에이전시수수료:s.agencyFee,DA광고비:s.daFee,정산상태:s.status})));
+    ws=XLSX.utils.json_to_sheet((DB.settlements||[]).map(s=>({캠페인:getCamp(s.campaign).name,인플루언서:getInf(s.inf).name,전체매출:s.revenue,인플루언서수수료:s.infFee,에이전시수수료:s.agencyFee,광고수익:s.daFee,정산상태:s.status})));
     name='정산';
   } else if(type==='report'){
     var selectedIds = {};
@@ -9839,7 +9757,7 @@ function exportExcel(type){
       var infFee=Math.round(revenue*feeRate/100), agFee=Math.round(revenue*agRate/100);
       return {캠페인명:c.name,규모:c.infSize||c.role||'',MDCAT:c.mdcat||'',카테고리:c.cat||'',
         MCN업체:c.mcn||'',인플루언서:c.infName||'',매출:revenue,건수:orders,
-        인플루언서수수료:infFee,원고료:feeAmt,에이전시수수료:agFee,DA광고료:daFee,
+        인플루언서수수료:infFee,원고료:feeAmt,에이전시수수료:agFee,광고수익:daFee,
         비용합계:infFee+feeAmt+agFee+daFee,
         시작일:(c.start||c.startDate||'').slice(0,10),종료일:(c.end||c.endDate||'').slice(0,10)};
     }));
@@ -10136,7 +10054,7 @@ function saveProd(){
     appeal:v('p-appeal'), productBasicInfo:v('p-product-basic-info'), csInfo:v('p-cs-info'), deliveryInfo:v('p-delivery-info'), infRequest:v('p-inf-request'),
     settleProcessDate:v('p-settle-process-date'), settlePaymentDate:v('p-settle-payment-date'),
     promos:promos,
-    dealCode:v('p-deal-code'),
+    dealCode:v('p-deal-code'), saleStart:v('p-sale-start'), saleEnd:v('p-sale-end'),
     // 모바일라이브 전용 필드
     productMargin: parseFloat(document.getElementById('p-product-margin')?.value)||0,
     mliveReasons: (function(){ var r=[]; document.querySelectorAll('.mlive-reason-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
@@ -10276,7 +10194,8 @@ function saveProd(){
         ssgCount:     parseInt((document.getElementById('appmkt-ssg-count')?.value||'').replace(/,/g,''))||0,
         starbucksCount:parseInt((document.getElementById('appmkt-starbucks-count')?.value||'').replace(/,/g,''))||0,
         landingUrl:document.getElementById('appmkt-landing-url')?.value||'',
-        dealUrl:   document.getElementById('appmkt-deal-url')?.value||''
+        dealUrl:   document.getElementById('appmkt-deal-url')?.value||'',
+        etcText:   (document.getElementById('appmkt-etc-text')?.value||'').trim().slice(0,50)
       };
     })()
   };
@@ -10768,7 +10687,7 @@ function addInfBlock(data){
     +'<input class="inp inp-money inf-famt-'+n+'" placeholder="500,000" value="'+(d.feeAmount?d.feeAmount.toLocaleString('ko-KR'):'')+'"></div>'
     +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">에이전시수수료 cafe24 (%)</label>'
     +'<input class="inp inf-arate-'+n+'" type="number" placeholder="5" step="0.1" value="'+(d.agencyRate||'')+'"></div>'
-    +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">DA 광고료 (원)</label>'
+    +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">광고수익 (원)</label>'
     +'<input class="inp inp-money inf-da-'+n+'" placeholder="0" value="'+(d.daFee?d.daFee.toLocaleString('ko-KR'):'')+'"></div>'
     +'</div></div>'
     // 샘플발송
@@ -10905,7 +10824,7 @@ function addSettleBlock(n, data){
     +'<div style="color:var(--text3)">+ 에이전시 수수료 (cafe24) <span class="settle-arate-disp-'+n+'" style="color:var(--accent);font-size:10.5px;font-weight:600"></span></div>'
     +'<div style="text-align:right;font-weight:600" class="settle-calc-ar-'+n+'">-</div>'
     // DA
-    +'<div style="color:var(--text3)">+ DA 광고료</div>'
+    +'<div style="color:var(--text3)">+ 광고수익</div>'
     +'<div style="text-align:right;font-weight:600" class="settle-calc-da-'+n+'">-</div>'
     // 소계
     +'<div style="font-weight:800;color:var(--text);padding-top:6px;border-top:1px solid var(--border2);margin-top:4px">비용 소계</div>'
