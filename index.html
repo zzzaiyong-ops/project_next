@@ -784,6 +784,19 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <span class="online-dot"></span>
     <span id="online-text">나 혼자 접속 중</span>
   </div>
+  <!-- 업무 모드 전환 라디오 -->
+  <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;gap:6px">
+      <label id="sidebar-mode-inf" onclick="switchDashMode('inf');goPage('dashboard')" style="flex:1;display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 10px;border:2px solid var(--accent);border-radius:var(--r-sm);background:var(--accent-bg);transition:all .15s">
+        <input type="radio" name="sidebar-mode" value="inf" checked style="accent-color:var(--accent);width:15px;height:15px">
+        <div><div style="font-size:12px;font-weight:800;color:var(--text)">👤 인플루언서</div></div>
+      </label>
+      <label id="sidebar-mode-mlive" onclick="switchDashMode('mlive');goPage('dashboard')" style="flex:1;display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 10px;border:2px solid var(--border);border-radius:var(--r-sm);background:var(--bg);transition:all .15s">
+        <input type="radio" name="sidebar-mode" value="mlive" style="accent-color:var(--accent);width:15px;height:15px">
+        <div><div style="font-size:12px;font-weight:800;color:var(--text)">📺 M라이브</div></div>
+      </label>
+    </div>
+  </div>
   <nav>
     <div class="nav-sec">메인</div>
     <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard',this)"><span class="ico">▦</span> 대시보드</div>
@@ -4788,6 +4801,19 @@ function switchDashMode(mode){
   if(mlArea)  mlArea.style.display  = mode==='mlive'?'':'none';
   // 사이드바 전환
   switchSidebarMode(mode);
+  // 사이드바 라디오 동기화
+  var sbInf = document.getElementById('sidebar-mode-inf');
+  var sbMl  = document.getElementById('sidebar-mode-mlive');
+  if(sbInf){
+    sbInf.style.borderColor = mode==='inf'?'var(--accent)':'var(--border)';
+    sbInf.style.background  = mode==='inf'?'var(--accent-bg)':'var(--bg)';
+    var ri = sbInf.querySelector('input'); if(ri) ri.checked = mode==='inf';
+  }
+  if(sbMl){
+    sbMl.style.borderColor = mode==='mlive'?'var(--accent)':'var(--border)';
+    sbMl.style.background  = mode==='mlive'?'var(--accent-bg)':'var(--bg)';
+    var rm = sbMl.querySelector('input'); if(rm) rm.checked = mode==='mlive';
+  }
   // M-live 대시보드 렌더
   if(mode==='mlive'){
     renderMliveDash();
