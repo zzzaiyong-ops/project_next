@@ -10421,8 +10421,12 @@ function saveProd(){
     var newStageNum = stageOrder[newData.stage] || 0;
     // 해당없음 체크 시 7.정산으로 이동 허용
     var appNaChecked = !!(document.getElementById('appmkt-na')?.checked);
+    // 모바일라이브: 확정일자 미입력 시 1단계로 강제 다운그레이드 허용
+    var mliveForceDown = (newData.campType==='모바일라이브' && newData.stage==='1.캠페인요청' && !newData.confirmStart);
     if(appNaChecked && newData.stage === '7.정산'){
       // 그대로 유지
+    } else if(mliveForceDown){
+      // 확정일자 없으면 무조건 편성요청 유지
     } else if(newStageNum < oldStageNum){
       // 하위 단계로 다운그레이드 방지: 기존 단계 유지
       newData.stage = oldData.stage;
@@ -12077,7 +12081,7 @@ function updatePushLandingPreview(){
 }
 // 주차 계산: 월~일 기준, 4월 17일 → "4월 3주차"
 function getWeekLabel(c){
-  var dt = (c.appMkt&&c.appMkt.liveDt)||c.start||'';
+  var dt = c.confirmStart||(c.appMkt&&c.appMkt.liveDt)||c.start||'';
   if(!dt||dt.length<10) return '-';
   var d = new Date(dt);
   if(isNaN(d.getTime())) return '-';
@@ -12098,7 +12102,7 @@ function getWeekLabel(c){
   return month+'월 '+week+'주차';
 }
 function fmtBroadcastDt(c){
-  var dt = (c.appMkt&&c.appMkt.liveDt)||c.start||'';
+  var dt = c.confirmStart||(c.appMkt&&c.appMkt.liveDt)||c.start||'';
   if(!dt||dt.length<10) return '-';
   var d = new Date(dt);
   if(isNaN(d.getTime())) return dt.slice(0,10);
