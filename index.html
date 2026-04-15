@@ -2125,6 +2125,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <span style="font-size:13px;font-weight:800;color:var(--accent2);letter-spacing:.3px">⚡ 캠페인 유형 선택</span>
           <span style="color:var(--red);font-weight:800">*</span>
           <span style="font-size:10.5px;color:var(--text3);font-weight:500;margin-left:4px">유형에 따라 입력 항목이 달라집니다</span>
+          <span id="p-camptype-lock-msg" style="display:none;font-size:10.5px;color:var(--red);font-weight:600;margin-left:6px">🔒 데이터 등록된 캠페인은 유형 변경 불가</span>
         </div>
         <div style="display:flex;gap:10px">
           <div style="flex:1;display:flex;flex-direction:column;gap:6px">
@@ -2151,8 +2152,13 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
         </div>
       </div>
       <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
-      <div class="fr2"><div><label>시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local" step="60" onchange="autoSetMliveEndTime()"></div><div><label>종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local" step="60"></div></div>
-      <div class="fr2"><div><label>예산 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-budget" placeholder="3,000,000"></div><div><label>MDCAT <span style="color:var(--red)">*</span></label>
+      <div class="fr2"><div><label><span id="p-start-label">시작일</span> <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local" step="60" onchange="autoSetMliveEndTime()"></div><div><label><span id="p-end-label">종료일</span> <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local" step="60"></div></div>
+      <!-- 모바일라이브 확정일자 (관리자 입력) -->
+      <div class="fr2" id="p-confirm-dates-row" style="display:none">
+        <div><label>확정시작일 <span style="font-size:10px;color:var(--text3);font-weight:400">관리자</span></label><input class="inp" id="p-confirm-start" type="datetime-local" step="60" onchange="onConfirmDateChange()"></div>
+        <div><label>확정종료일 <span style="font-size:10px;color:var(--text3);font-weight:400">관리자</span></label><input class="inp" id="p-confirm-end" type="datetime-local" step="60"></div>
+      </div>
+      <div class="fr2" id="p-budget-row"><div><label>예산 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-budget" placeholder="3,000,000"></div><div><label>MDCAT <span style="color:var(--red)">*</span></label>
         <div class="fdd-wrap" id="fdd-wrap-p-mdcat">
           <input class="inp fdd-input" id="p-mdcat" placeholder="MDCAT 선택..." readonly style="cursor:pointer" onclick="mdcatDdOpen()" onkeydown="if(event.key==='Escape')mdcatDdClose()">
           <div class="fdd-list" id="fdd-list-p-mdcat">
@@ -2196,7 +2202,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
 </div>
 </div><div></div></div>
 
-      <div style="margin:14px 0 8px">
+      <div style="margin:14px 0 8px" id="p-reasons-wrap">
         <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">캠페인 선정 사유 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
         <div style="margin-bottom:6px">
           <div style="font-size:10.5px;font-weight:700;color:var(--blue);margin-bottom:5px">📦 상품</div>
@@ -2219,6 +2225,56 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           </div>
         </div>
       </div>
+
+      <!-- ── 모바일라이브 전용: 상품마진/편성사유/마케팅요청사항/협력사마케팅지원 ── -->
+      <div id="p-mlive-extra-wrap" style="display:none;margin-top:14px;border-top:1px dashed var(--border);padding-top:14px">
+        <!-- 상품마진 -->
+        <div class="fr2" style="margin-bottom:12px">
+          <div><label>상품마진 (%)</label><input class="inp" id="p-product-margin" placeholder="00" type="number" min="0" max="100" style="width:120px"></div>
+          <div></div>
+        </div>
+        <!-- 편성사유 -->
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">편성사유 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="메가브랜드" style="accent-color:var(--accent);width:13px;height:13px"> 메가브랜드</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="광고비" style="accent-color:var(--accent);width:13px;height:13px"> 광고비</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="고효율" style="accent-color:var(--accent);width:13px;height:13px"> 고효율</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="신규브랜드" style="accent-color:var(--accent);width:13px;height:13px"> 신규브랜드</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="슈퍼브랜드" style="accent-color:var(--accent);width:13px;height:13px"> 슈퍼브랜드</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="단독판매" style="accent-color:var(--accent);width:13px;height:13px"> 단독판매</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="인플루언서" style="accent-color:var(--accent);width:13px;height:13px"> 인플루언서</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="시즌아이템" style="accent-color:var(--accent);width:13px;height:13px"> 시즌아이템</label>
+          </div>
+        </div>
+        <!-- 마케팅 요청사항 -->
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">마케팅 요청사항 <span style="font-weight:400;font-size:10px">(복수 선택 / 확정 시 모바일마케팅에 반영)</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="슈퍼브랜드" style="accent-color:var(--orange);width:13px;height:13px"> 슈퍼브랜드</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="모바일라이브" style="accent-color:var(--orange);width:13px;height:13px"> 모바일라이브</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="DMP광고" style="accent-color:var(--orange);width:13px;height:13px"> DMP광고</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="PUSH" style="accent-color:var(--orange);width:13px;height:13px"> PUSH</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="카톡플친" style="accent-color:var(--orange);width:13px;height:13px"> 카톡플친</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="신세계상품권" style="accent-color:var(--orange);width:13px;height:13px"> 신세계상품권</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="스타벅스" style="accent-color:var(--orange);width:13px;height:13px"> 스타벅스</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="팝업" style="accent-color:var(--orange);width:13px;height:13px"> 팝업</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="최상단배너" style="accent-color:var(--orange);width:13px;height:13px"> 최상단배너</label>
+          </div>
+        </div>
+        <!-- 협력사 마케팅지원 -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">협력사 마케팅지원 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="구매인증" style="accent-color:var(--green);width:13px;height:13px"> 구매인증</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="바이럴" style="accent-color:var(--green);width:13px;height:13px"> 바이럴</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="사은품" style="accent-color:var(--green);width:13px;height:13px"> 사은품</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="무료배송" style="accent-color:var(--green);width:13px;height:13px"> 무료배송</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="카톡플친" style="accent-color:var(--green);width:13px;height:13px"> 카톡플친</label>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ══ 섹션 B: 상품 정보 (접기/펼치기) ══ -->
@@ -5562,6 +5618,18 @@ function editProd(id){
   var _ctMl  = document.getElementById('p-camptype-mlive');
   if(_ctInf) _ctInf.checked = (_campType !== '모바일라이브');
   if(_ctMl)  _ctMl.checked  = (_campType === '모바일라이브');
+  // 데이터가 등록된 캠페인이면 유형 변경 불가
+  var _hasData = !!(p.infName || (p.infData && p.infData.length && p.infData[0].infName) ||
+    (p.skus && p.skus.length && p.skus.some(function(s){ return s.code||s.productName; })) ||
+    (p.settleData && p.settleData.length && p.settleData.some(function(d){ return d.revenue||d.orders; })) ||
+    p.settleRevenue || p.totalRevenue || p.adIncome ||
+    (p.appMkt && p.appMkt.channels && p.appMkt.channels.length) ||
+    (p.showhosts && (p.showhosts.req1||p.showhosts.conf1)) ||
+    (p.stage && p.stage !== '1.캠페인요청'));
+  if(_ctInf) _ctInf.disabled = _hasData;
+  if(_ctMl)  _ctMl.disabled  = _hasData;
+  var _ctLockMsg = document.getElementById('p-camptype-lock-msg');
+  if(_ctLockMsg) _ctLockMsg.style.display = _hasData ? '' : 'none';
   updateCampTypeUI();
     var _endVal = p.end||p.endDate||'';
     if(_endVal && _endVal.length === 10) _endVal += 'T00:00';
@@ -5656,6 +5724,14 @@ function editProd(id){
   // 확정 사유 복원
   // bas-reason만 복원 (mo-product 모달 전용)
   document.querySelectorAll('.bas-reason-cb').forEach(function(cb){ cb.checked=(p.reasons||[]).includes(cb.value); });
+  // 모바일라이브 전용 필드 복원
+  var pmEl=document.getElementById('p-product-margin'); if(pmEl) pmEl.value=p.productMargin||'';
+  document.querySelectorAll('.mlive-reason-cb').forEach(function(cb){ cb.checked=(p.mliveReasons||[]).includes(cb.value); });
+  document.querySelectorAll('.mlive-mktreq-cb').forEach(function(cb){ cb.checked=(p.mliveMktReq||[]).includes(cb.value); });
+  document.querySelectorAll('.mlive-partner-cb').forEach(function(cb){ cb.checked=(p.mlivePartner||[]).includes(cb.value); });
+  // 모바일라이브 확정일자 복원
+  var csEl2=document.getElementById('p-confirm-start'); if(csEl2) csEl2.value=p.confirmStart||'';
+  var ceEl2=document.getElementById('p-confirm-end');   if(ceEl2) ceEl2.value=p.confirmEnd||'';
   // APP 마케팅 복원
   var appMkt = p.appMkt||{};
   document.querySelectorAll('.appmkt-cb').forEach(function(cb){ cb.checked=(appMkt.channels||[]).includes(cb.value); });
@@ -9788,6 +9864,10 @@ function openNewProd(){
   var sa=document.getElementById('prod-stage-area'); if(sa) sa.style.display='none';
   var ccEl=document.getElementById('p-campcode'); if(ccEl) ccEl.style.display='none';
   var lcBdg=document.getElementById('p-livecode-badge'); if(lcBdg) lcBdg.style.display='none';
+  // 신규 등록 시 캠페인 유형 라디오 활성화
+  var _ctInf2=document.getElementById('p-camptype-inf'); if(_ctInf2) _ctInf2.disabled=false;
+  var _ctMl2=document.getElementById('p-camptype-mlive'); if(_ctMl2) _ctMl2.disabled=false;
+  var _ctLock2=document.getElementById('p-camptype-lock-msg'); if(_ctLock2) _ctLock2.style.display='none';
   showKakaoShareBtn(null);
   // 담당자 드롭다운 갱신
   refreshManagerDropdowns();
@@ -9941,7 +10021,7 @@ function saveProd(){
   if(!pStart)            missing.push('시작일');
   if(!pEnd)              missing.push('종료일');
   if(!revenue.trim())    missing.push('예상 매출');
-  if(!budget.trim())     missing.push('예산');
+  if(!budget.trim() && getCampType()!=='모바일라이브') missing.push('예산');
   if(!role && getCampType()!=='모바일라이브') missing.push('캠페인 역할');
   var _noMdcat = !(v('p-mdcat')); // MDCAT 없으면 저장 후 경고 표시
 
@@ -10057,6 +10137,12 @@ function saveProd(){
     settleProcessDate:v('p-settle-process-date'), settlePaymentDate:v('p-settle-payment-date'),
     promos:promos,
     dealCode:v('p-deal-code'),
+    // 모바일라이브 전용 필드
+    productMargin: parseFloat(document.getElementById('p-product-margin')?.value)||0,
+    mliveReasons: (function(){ var r=[]; document.querySelectorAll('.mlive-reason-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
+    mliveMktReq: (function(){ var r=[]; document.querySelectorAll('.mlive-mktreq-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
+    mlivePartner: (function(){ var r=[]; document.querySelectorAll('.mlive-partner-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
+    confirmStart: v('p-confirm-start'), confirmEnd: v('p-confirm-end'),
     appealTotal: (document.getElementById('p-appeal-total')?.value||'').trim(),
     appealPush:  (document.getElementById('p-appeal-push')?.value||'').trim(),
     courier:v('p-courier'), shipCutoff:v('p-ship-cutoff'),
@@ -10087,6 +10173,25 @@ function saveProd(){
       return false;
     })(),
     stage: (function(){
+      // ── 모바일라이브 전용 단계 로직 ──
+      if(campType==='모바일라이브'){
+        var _confirmS = (document.getElementById('p-confirm-start')?.value||'').trim();
+        var _confirmE = (document.getElementById('p-confirm-end')?.value||'').trim();
+        var _mlAppChs = [...document.querySelectorAll('.appmkt-cb:checked')];
+        var _mlAppNa  = document.getElementById('appmkt-na')?.checked;
+        var _mlSettle = iv('p-total-revenue') || iv('p-ad-income');
+        if(_mlAppNa || _mlSettle) return '7.정산';
+        if(_mlAppChs.length>0) return '6.APP마케팅확정';
+        var _mlSkuF = Array.from(document.querySelectorAll('#sku-list .sku-row')).some(function(r){
+          return (r.querySelector('.sku-code')?.value||'').trim()
+              || (r.querySelector('.sku-pname')?.value||'').trim()
+              || (r.querySelector('.sku-brand')?.value||'').trim();
+        });
+        if(_mlSkuF) return '3.상품정보등록';
+        if(_confirmS && _confirmE) return '2.캠페인확정';
+        return '1.캠페인요청';
+      }
+      // ── 인플루언서 단계 로직 ──
       var appChs = [...document.querySelectorAll('.appmkt-cb:checked')];
       var appNa = document.getElementById('appmkt-na')?.checked;
       var firstInf = _inf0;
@@ -10175,6 +10280,12 @@ function saveProd(){
       };
     })()
   };
+  // 모바일라이브 캠페인 확정 시: 마케팅 요청사항을 모바일마케팅 채널에 디폴트 반영
+  if(newData.campType==='모바일라이브' && newData.mliveMktReq && newData.mliveMktReq.length && newData.appMkt){
+    newData.mliveMktReq.forEach(function(ch){
+      if(newData.appMkt.channels.indexOf(ch)===-1) newData.appMkt.channels.push(ch);
+    });
+  }
   if(editId){
     var idx = DB.campaigns.findIndex(function(p){return String(p.id)===String(editId) || p.id===parseInt(editId);});
     if(idx===-1){ alert('수정할 캠페인을 찾을 수 없습니다.'); return; }
@@ -11085,6 +11196,21 @@ function updateCampTypeUI(){
     lMl.style.background   =  isMlive?'var(--accent-bg)':'var(--bg)';
     lMl.style.boxShadow    =  isMlive?'0 0 0 3px rgba(108,92,231,0.18)':'none';
   }
+  // M라이브: 예산 / 캠페인 선정 사유 숨김
+  var budgetRow = document.getElementById('p-budget-row');
+  if(budgetRow) budgetRow.style.display = isMlive ? 'none' : '';
+  var reasonsWrap = document.getElementById('p-reasons-wrap');
+  if(reasonsWrap) reasonsWrap.style.display = isMlive ? 'none' : '';
+  // M라이브 전용 필드 (상품마진/편성사유/마케팅요청/협력사마케팅)
+  var mliveExtra = document.getElementById('p-mlive-extra-wrap');
+  if(mliveExtra) mliveExtra.style.display = isMlive ? '' : 'none';
+  // M라이브: 일자 라벨 변경 + 확정일자 표시
+  var startLabel = document.getElementById('p-start-label');
+  var endLabel = document.getElementById('p-end-label');
+  if(startLabel) startLabel.textContent = isMlive ? '요청시작일' : '시작일';
+  if(endLabel) endLabel.textContent = isMlive ? '요청종료일' : '종료일';
+  var confirmDatesRow = document.getElementById('p-confirm-dates-row');
+  if(confirmDatesRow) confirmDatesRow.style.display = isMlive ? '' : 'none';
   // M라이브: 캠페인 역할 / 캠페인담당 / 인플루언서 정보 섹션 숨김
   var roleWrap = document.getElementById('p-role-wrap');
   if(roleWrap) roleWrap.style.display = isMlive ? 'none' : '';
@@ -11120,8 +11246,41 @@ function updateCampTypeUI(){
   var adIncDesc = document.querySelector('#p-ad-income-wrap label span[style*="font-size:10px"]');
   if(adIncLabel) adIncLabel.textContent = isMlive ? '광고수익' : '업체광고비';
   if(adIncDesc) adIncDesc.textContent = isMlive ? '업체에서 수취한 광고수익' : '업체에서 수취한 광고비';
+  // M라이브/인플루언서: 단계 select 옵션 전환
+  var stageSelect = document.getElementById('prod-stage-select');
+  if(stageSelect){
+    var curVal = stageSelect.value;
+    stageSelect.innerHTML = isMlive
+      ? '<option value="1.캠페인요청">1단계 · 편성요청</option>'
+       +'<option value="2.캠페인확정">2단계 · 편성확정</option>'
+       +'<option value="3.상품정보등록">3단계 · 상품정보등록</option>'
+       +'<option value="6.APP마케팅확정">4단계 · 모바일마케팅</option>'
+       +'<option value="7.정산">5단계 · 정산</option>'
+       +'<option value="8.성과분석">6단계 · 성과분석</option>'
+      : '<option value="1.캠페인요청">1단계 · 캠페인요청</option>'
+       +'<option value="2.캠페인확정">2단계 · 캠페인확정</option>'
+       +'<option value="4.MCN요청">4단계 · MCN요청</option>'
+       +'<option value="5.인플루언서확정">5단계 · 인플루언서확정</option>'
+       +'<option value="6.APP마케팅확정">6단계 · 모바일마케팅확정</option>'
+       +'<option value="7.정산">7단계 · 정산</option>'
+       +'<option value="8.성과분석">8단계 · 성과분석</option>';
+    // 기존 값 복원 시도
+    if(curVal){ var opt=stageSelect.querySelector('option[value="'+curVal+'"]'); if(opt) stageSelect.value=curVal; }
+  }
   // 인플루언서: 전체매출 라벨/DIM 상태 (편성코드 연동)
   updateTotalRevLabel();
+}
+
+// ── 모바일라이브 확정일 변경 시 단계 배지 갱신 ──
+function onConfirmDateChange(){
+  var cs = (document.getElementById('p-confirm-start')?.value||'').trim();
+  var ce = (document.getElementById('p-confirm-end')?.value||'').trim();
+  if(cs && ce){
+    var badge = document.getElementById('prod-stage-badge');
+    var sel   = document.getElementById('prod-stage-select');
+    if(badge){ badge.textContent='2.캠페인확정'; badge.style.background='var(--green-bg)'; badge.style.color='var(--green)'; }
+    if(sel) sel.value='2.캠페인확정';
+  }
 }
 
 // ── M라이브 편성 달력 ──
