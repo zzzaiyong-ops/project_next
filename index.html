@@ -4982,6 +4982,7 @@ function renderCalendar(){
   var monthStart = y+'-'+String(m+1).padStart(2,'0')+'-01';
   var monthEnd   = y+'-'+String(m+1).padStart(2,'0')+'-'+String(daysInMonth).padStart(2,'0');
   var monthCamps = DB.campaigns.filter(function(c){
+    if((c.campType||'')==='모바일라이브') return false;
     var cs=(c.start||c.startDate||'').slice(0,10), ce=(c.end||c.endDate||'').slice(0,10);
     if(!cs||!ce) return false;
     if(isExtMcn() && !campHasMcn(c, ME_MCN_COMPANY)) return false;
