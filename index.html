@@ -9626,11 +9626,22 @@ function renderWeeklyView(){
   rows.forEach(function(row){
     if(row.type==='inf'){
       var c=row.camp, sr=c.settleRevenue||0;
+      // 인플 실적만 (모바일라이브 포함 체크된 경우 방송중 실적 차감)
+      var ml2=c._matchedMlive||{};
+      if(c.infRevIncludeMlive && (ml2.mobOrderAmt||0)){
+        sr = sr - (ml2.mobOrderAmt||0);
+        if(sr<0) sr=0;
+      }
+      var infOrd = c.settleOrders||0;
+      if(c.infRevIncludeMlive && (ml2.mobOrderQty||0)){
+        infOrd = infOrd - (ml2.mobOrderQty||0);
+        if(infOrd<0) infOrd=0;
+      }
       var _i0=(c.infData&&c.infData[0])||{};
       var fr2=parseFloat(_i0.feeRate||c.feeRate)||0,fa2=parseInt(_i0.feeAmount||c.feeAmount)||0,ar2=parseFloat(_i0.agencyRate||c.agencyRate)||0,da2=parseInt(_i0.daFee||c.settleDa)||0;
       var cost2=Math.round(sr*fr2/100)+fa2+Math.round(sr*ar2/100)+da2; // 비용소계 (DA 포함)
       gt.infCost+=cost2;
-      gt.infRev+=sr; gt.infOrd+=c.settleOrders||0;
+      gt.infRev+=sr; gt.infOrd+=infOrd;
       (c.settleData||[]).forEach(function(s){ gt.views+=s.views||0; gt.inflow+=s.inflow||0; gt.newMem+=s.newMembers||0; });
       // AR: 인플이익
       var _pr2=c.profitRateInput||0, _ai2=c.adIncome||0;
@@ -9644,7 +9655,7 @@ function renderWeeklyView(){
       gt.mlProfit+=ml2.profitAmt||0;
       gt.adRev+=(ml2.adRevenue||0)||_ai2; // 광고수익: 엑셀 또는 캠페인 입력값 중 유효한 값
       // 전체매출 = 인플 + 매칭M라이브
-      gt.rev+=sr+(ml2.orderAmt||0); gt.ord+=(c.settleOrders||0)+(ml2.orderQty||0);
+      gt.rev+=sr+(ml2.orderAmt||0); gt.ord+=infOrd+(ml2.orderQty||0);
     } else if(row.type==='mlive'){
       var wk2=row.week;
       gt.mktFee+=wk2.totMktFee||0;
@@ -9693,6 +9704,11 @@ function renderWeeklyView(){
       var c = row.camp;
       var sd0 = (c.settleData||[])[0]||{};
       var sr = c.settleRevenue||0;
+      var ml = c._matchedMlive||{};
+      // 인플 실적만 (모바일라이브 포함 체크된 경우 방송중 실적 차감)
+      if(c.infRevIncludeMlive && (ml.mobOrderAmt||0)){ sr = Math.max(0, sr - (ml.mobOrderAmt||0)); }
+      var infOrd = c.settleOrders||0;
+      if(c.infRevIncludeMlive && (ml.mobOrderQty||0)){ infOrd = Math.max(0, infOrd - (ml.mobOrderQty||0)); }
       // infData에서 비용 정보 가져오기 (캠페인 레벨 폴백)
       var inf0 = (c.infData&&c.infData[0])||{};
       var fr=parseFloat(inf0.feeRate||c.feeRate)||0;
@@ -9701,7 +9717,6 @@ function renderWeeklyView(){
       var daFee=parseInt(inf0.daFee||c.settleDa)||0;
       // 비용소계 = 수수료 + 원고료 + 에이전시 + DA (정산 비용소계와 동일)
       var cost = Math.round(sr*fr/100)+fa+Math.round(sr*ar/100)+daFee;
-      var ml = c._matchedMlive||{};
       var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
 
       // 인플루언서 한계이익 계산
@@ -9729,9 +9744,9 @@ function renderWeeklyView(){
         +'<td>'+(c.infSize||'-')+'</td>'
         +'<td style="font-weight:600;cursor:pointer" onclick="editProd('+c.id+')">'+escHtml(c.name||'-')+'</td>'
         +'<td style="text-align:right;'+dl+'">'+(totalRev?fmtEok(totalRev):'-')+'</td>'
-        +'<td style="text-align:right">'+fmtNum(c.settleOrders)+'</td>'
+        +'<td style="text-align:right">'+fmtNum((c.settleOrders||0)+(ml.orderQty||0))+'</td>'
         +'<td style="text-align:right;'+dl+'">'+(sr?fmtEok(sr):'-')+'</td>'
-        +'<td style="text-align:right">'+fmtNum(c.settleOrders)+'</td>'
+        +'<td style="text-align:right">'+fmtNum(infOrd)+'</td>'
         +'<td style="text-align:right">'+(cost?fmtCost(cost):'-')+'</td>'
         +'<td style="text-align:right;'+cx+'">'+(sd0.views||'-')+'</td>'
         +'<td style="text-align:right;'+cx+'">'+(sd0.inflow||'-')+'</td>'
@@ -9739,7 +9754,7 @@ function renderWeeklyView(){
         +'<td style="text-align:right;'+dl+'">'+(ml.mobOrderAmt?fmtCost(ml.mobOrderAmt):'-')+'</td>'
         +'<td style="text-align:right">'+fmtNum(ml.mobOrderQty)+'</td>'
         +'<td style="text-align:right;'+dl+'">'+(totalRev?fmtCost(totalRev-sr-(ml.mobOrderAmt||0)):'-')+'</td>'
-        +'<td style="text-align:right">'+(function(){ var totalOrd=(c.settleOrders||0)+(ml.orderQty||0); var infOrd=c.settleOrders||0; var brdOrd=ml.mobOrderQty||0; return fmtNum(Math.max(0,totalOrd-infOrd-brdOrd)); })()+'</td>'
+        +'<td style="text-align:right">'+fmtNum(Math.max(0,(ml.orderQty||0)-(ml.mobOrderQty||0)))+'</td>'
         +'<td style="text-align:right">'+(ml.marketingFee?fmtCost(ml.marketingFee):'-')+'</td>'
         +'<td style="text-align:right;'+dl+'">'+fmtCost(totalProfit)+'</td>'
         +'<td style="text-align:right">'+totalProfitRate+'</td>'
