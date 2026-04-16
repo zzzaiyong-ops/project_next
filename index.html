@@ -9427,6 +9427,15 @@ function renderWeeklyView(){
           rb.programName = '(재방) '+(rb._origName||'')+ ' ('+rb.count+'건)';
           sorted.push(rb);
         });
+        // 본방+재방 합산 금액 계산 (색상 판단용)
+        var dealTotalAmt = {};
+        sorted.forEach(function(m){
+          var dc = m.dealCode||'';
+          if(!dc) return;
+          if(!dealTotalAmt[dc]) dealTotalAmt[dc] = 0;
+          dealTotalAmt[dc] += m.orderAmt||0;
+        });
+        sorted.forEach(function(m){ m._dealTotalAmt = dealTotalAmt[m.dealCode||'']||m.orderAmt||0; });
         r.week.items = sorted;
       }
     });
@@ -9526,7 +9535,7 @@ function renderWeeklyView(){
     +'<div id="s8-kpi-progress"></div>'
     +'<button class="btn btn-ghost btn-xs" style="font-size:11px;margin-left:auto" onclick="window._s8ColExpanded=!window._s8ColExpanded;renderWeeklyView()">'+(colExpanded?'◀ 열 접기':'▶ 열 펼치기')+'</button></div>';
   html += '<div style="overflow:auto;max-height:calc(100vh - 200px)"><table style="width:100%;font-size:12px;border-collapse:separate;border-spacing:0">';
-  var ths='background:var(--bg);border-bottom:1px solid var(--border);';
+  var ths='background:var(--bg);border-bottom:1px solid var(--border);font-size:13px;';
   var thd=ths+'border-left:2px dashed var(--border);'; // 구분선
   html += '<thead style="position:sticky;top:0;z-index:10"><tr>'
     +'<th style="'+ths+'padding:6px 8px;width:28px"></th>'
@@ -9712,11 +9721,12 @@ function renderWeeklyView(){
         var isReplaySum = m._isReplaySum;
         var isOrphan = m._isOrphanReplay;
         var replayBg = isReplaySum ? 'background:rgba(0,0,0,.04);' : '';
-        // 카테고리별 매출 색상: 가구/인테리어·가전 5천만 기준, 그 외 1천6백만 기준
+        // 카테고리별 매출 색상: 본방+재방 합산 기준 (가구/인테리어·가전 5천만, 그 외 1천6백만)
         var _mCat = (m.cat||m.mdCat||'').trim();
         var _isHighCat = _mCat.indexOf('가구')>=0 || _mCat.indexOf('인테리어')>=0 || _mCat.indexOf('가전')>=0;
         var _threshold = _isHighCat ? 50000000 : 16000000;
-        var _rowColor = (m.orderAmt||0) >= _threshold ? 'color:var(--blue);' : 'color:var(--red);';
+        var _colorBase = m._dealTotalAmt||m.orderAmt||0;
+        var _rowColor = _colorBase >= _threshold ? 'color:var(--blue);' : 'color:var(--red);';
         var nameHtml = escHtml(m.programName||'-');
         if(isReplaySum && !isOrphan){
           nameHtml = '<span style="padding-left:16px;color:inherit"><span style="margin-right:4px">ㄴ</span>'+escHtml(m.programName)+'</span>';
