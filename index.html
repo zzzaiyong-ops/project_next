@@ -9683,7 +9683,7 @@ function renderWeeklyView(){
         +'<td style="text-align:right;'+dl+'">'+(ml.mobOrderAmt?fmtCost(ml.mobOrderAmt):'-')+'</td>'
         +'<td style="text-align:right">'+fmtNum(ml.mobOrderQty)+'</td>'
         +'<td style="text-align:right;'+dl+'">'+(totalRev?fmtCost(totalRev-sr-(ml.mobOrderAmt||0)):'-')+'</td>'
-        +'<td style="text-align:right">'+fmtNum(totalRev?((ml.orderQty||0)-(ml.mobOrderQty||0)):0)+'</td>'
+        +'<td style="text-align:right">'+(function(){ var totalOrd=(c.settleOrders||0)+(ml.orderQty||0); var infOrd=c.settleOrders||0; var brdOrd=ml.mobOrderQty||0; return fmtNum(Math.max(0,totalOrd-infOrd-brdOrd)); })()+'</td>'
         +'<td style="text-align:right">'+(ml.marketingFee?fmtCost(ml.marketingFee):'-')+'</td>'
         +'<td style="text-align:right;'+dl+'">'+fmtCost(totalProfit)+'</td>'
         +'<td style="text-align:right">'+totalProfitRate+'</td>'
