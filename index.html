@@ -9067,7 +9067,6 @@ function syncMliveToCampaignSettle(){
   _mliveData.forEach(function(m){ if(m.code) byCode[String(m.code).trim()] = m; });
   var changed = 0;
   (DB.campaigns||[]).forEach(function(c){
-    if((c.campType||'')!=='모바일라이브') return;
     // 복수 편성코드 지원
     var codes = [];
     if(c.appMkt && c.appMkt.liveCodes && c.appMkt.liveCodes.length){
@@ -9078,7 +9077,34 @@ function syncMliveToCampaignSettle(){
       codes = [String(c._liveCodeInput).trim()];
     }
     if(!codes.length) return;
-    // 첫 번째 매칭 코드 기준으로 동기화 (모바일라이브 캠페인은 보통 1:1)
+    var isMlive = (c.campType||'')==='모바일라이브';
+    // 인플루언서: 복수 편성코드 합산
+    if(!isMlive && codes.length > 0){
+      var mlTotal=0, mlOnair=0;
+      codes.forEach(function(lc){
+        var lc2=String(lc).trim();
+        var mm = byCode[lc2] || byCode[lc2.replace(/\D/g,'')];
+        if(mm){ mlTotal+=mm.orderAmt||0; mlOnair+=mm.mobOrderAmt||0; }
+      });
+      if(mlTotal){
+        var mlOffair = mlTotal - mlOnair;
+        var updated2 = false;
+        if(c.onairRevenue !== mlOnair){ c.onairRevenue = mlOnair; updated2=true; }
+        if(c.offairRevenue !== mlOffair){ c.offairRevenue = mlOffair; updated2=true; }
+        if(c.totalRevenue !== (c.settleRevenue||0)+mlTotal){ c.totalRevenue = (c.settleRevenue||0)+mlTotal; updated2=true; }
+        if(updated2) changed++;
+      }
+      // 광고수익 양방향 동기화 (인플루언서)
+      codes.forEach(function(lc){
+        var lc2=String(lc).trim();
+        var mm = byCode[lc2] || byCode[lc2.replace(/\D/g,'')];
+        if(!mm) return;
+        if((mm.adRevenue||0) && !(c.adIncome||0)){ c.adIncome = mm.adRevenue; changed++; }
+        else if((c.adIncome||0) && !(mm.adRevenue||0)){ mm.adRevenue = c.adIncome; }
+      });
+      return;
+    }
+    // 모바일라이브: 첫 번째 매칭 코드 기준으로 동기화
     var m = null;
     for(var ci=0;ci<codes.length;ci++){
       var lc=String(codes[ci]).trim();
