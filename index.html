@@ -9712,11 +9712,16 @@ function renderWeeklyView(){
         var isReplaySum = m._isReplaySum;
         var isOrphan = m._isOrphanReplay;
         var replayBg = isReplaySum ? 'background:rgba(0,0,0,.04);' : '';
+        // 카테고리별 매출 색상: 가구/인테리어·가전 5천만 기준, 그 외 1천6백만 기준
+        var _mCat = (m.cat||m.mdCat||'').trim();
+        var _isHighCat = _mCat.indexOf('가구')>=0 || _mCat.indexOf('인테리어')>=0 || _mCat.indexOf('가전')>=0;
+        var _threshold = _isHighCat ? 50000000 : 16000000;
+        var _rowColor = (m.orderAmt||0) >= _threshold ? 'color:var(--blue);' : 'color:var(--red);';
         var nameHtml = escHtml(m.programName||'-');
         if(isReplaySum && !isOrphan){
-          nameHtml = '<span style="padding-left:16px;color:var(--text3)"><span style="margin-right:4px">ㄴ</span>'+escHtml(m.programName)+'</span>';
+          nameHtml = '<span style="padding-left:16px;color:inherit"><span style="margin-right:4px">ㄴ</span>'+escHtml(m.programName)+'</span>';
         }
-        html += '<tr class="'+mlId+'" style="display:none;font-size:11px;'+replayBg+'">'
+        html += '<tr class="'+mlId+'" style="display:none;font-size:11px;'+replayBg+_rowColor+'">'
           +'<td></td>'
           +'<td style="padding:4px 8px;color:var(--text3)">'+escHtml(m.date||'')+'</td>'
           +'<td style="font-size:10px">'+(m.mdCat||'-')+'</td>'
