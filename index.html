@@ -2718,6 +2718,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <button onclick="copyShareText()" class="btn btn-ghost btn-sm" style="font-size:12px">📋 텍스트복사</button>
       <button onclick="shareToKakao()" style="background:#FEE500;border:none;border-radius:8px;padding:7px 12px;color:#3A1D1D;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:5px">💬 카카오톡</button>
     </div>
+    <button class="btn btn-danger btn-sm" id="prod-del-btn" style="display:none" onclick="delCampFromModal()">삭제</button>
     <button class="btn btn-ghost btn-sm" onclick="closeMo('product')">취소</button>
     <button class="btn btn-primary btn-sm" id="prod-save-btn" onclick="saveProd()">캠페인 등록</button>
   </div>
@@ -5635,6 +5636,7 @@ function editProd(id){
   document.getElementById('p-edit-id').value = id;
   document.getElementById('prod-mo-title').textContent = '캠페인 수정';
   document.getElementById('prod-save-btn').textContent = '수정 저장';
+  var delBtn=document.getElementById('prod-del-btn'); if(delBtn) delBtn.style.display=isAdmin()?'':'none';
   initSections(false); // 모든 섹션 닫힌 상태로 초기화
   openMo('product');
   // 상태 배지 표시
@@ -7552,13 +7554,13 @@ function renderCamps(){
         + '<td class="mob-hide" style="text-align:center">'+(hasMlive ? '<span style="background:var(--accent-bg);color:var(--accent2);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">📺</span>' : '-')+'</td>'
         + '<td><div class="row-acts">'
     }
-      + '<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️ 수정</button>'
+    rows += '<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+c.id+')">✏️ 수정</button>'
       + (canEdit() && !isExtMcn() ? '<select class="sel inp-sm" style="width:150px" onchange="changeCampStage('+c.id+',this.value)" onclick="event.stopPropagation()">'
           + STAGES.map(function(s){ return '<option'+(c.stage===s.name?' selected':'')+'>'+s.name+'</option>'; }).join('')
           + '</select>' : '')
       + (isAdmin() ? '<button class="btn btn-danger btn-xs" onclick="event.stopPropagation();delCamp('+c.id+')">삭제</button>' : '')
       + '</div></td>'
-      + '</tr>'
+      + '</tr>';
   });
   console.log('[renderCamps] rows length:', rows.length, 'paged:', paged.length);
   var campTbl = document.getElementById('camp-tbl');
@@ -7753,6 +7755,15 @@ function changeCampStage(id,stage){
 function delCamp(id){
   if(!isAdmin()){ showToast('관리자만 삭제할 수 있습니다.'); return; }
   showConfirm('캠페인을 삭제하시겠습니까?', function(){
+    _delCampConfirmed(id);
+  });
+}
+function delCampFromModal(){
+  var id = parseInt(document.getElementById('p-edit-id')?.value);
+  if(!id){ showToast('저장된 캠페인만 삭제할 수 있습니다.'); return; }
+  if(!isAdmin()){ showToast('관리자만 삭제할 수 있습니다.'); return; }
+  showConfirm('이 캠페인을 삭제하시겠습니까?', function(){
+    closeMo('product');
     _delCampConfirmed(id);
   });
 }
@@ -10160,6 +10171,7 @@ function openNewProd(){
   document.getElementById('p-edit-id').value='';
   document.getElementById('prod-mo-title').textContent='캠페인 등록';
   document.getElementById('prod-save-btn').textContent='캠페인 등록';
+  var delBtn2=document.getElementById('prod-del-btn'); if(delBtn2) delBtn2.style.display='none';
   // 신규 등록 시 상태 배지 + 공유 버튼 숨김
   var sa=document.getElementById('prod-stage-area'); if(sa) sa.style.display='none';
   var ccEl=document.getElementById('p-campcode'); if(ccEl) ccEl.style.display='none';
