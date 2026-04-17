@@ -4757,8 +4757,10 @@ function _goPageInternal(page, el, scrollTop){
   var navEl = el || document.querySelector('[data-page="'+page+'"]');
   if(navEl) navEl.classList.add('active');
   var _pageTtl = PAGE_TITLES[page]||page;
-  // 단계 화면(s1~s8)에 대시보드 모드 표시
+  // M라이브 모드일 때 단계 화면 제목을 M라이브 워크플로 명칭으로 치환
+  var MLIVE_TITLES = {s1:'1단계 · 편성요청', s2:'2단계 · 편성확정', s3:'3단계 · 상품정보등록', s6:'4단계 · 모바일마케팅', s7:'5단계 · 정산', s8:'6단계 · 성과분석'};
   if(/^s\d$/.test(page)){
+    if(_dashMode==='mlive' && MLIVE_TITLES[page]) _pageTtl = MLIVE_TITLES[page];
     var _modeLabel = _dashMode==='mlive' ? '📺 모바일라이브' : '👤 인플루언서 마케팅';
     _pageTtl = _modeLabel + ' · ' + _pageTtl;
   }
@@ -4855,6 +4857,8 @@ function switchDashMode(mode){
   } else {
     renderDash();
   }
+  // 모드 전환 시 전체캠페인 뱃지 수량도 갱신
+  if(typeof updateBadges==='function') updateBadges();
 }
 
 function switchSidebarMode(mode){
@@ -11785,6 +11789,14 @@ function renderMliveSchedCal(){
     if(!byDay[d]) byDay[d]=[];
     byDay[d].push(c);
   });
+  // 각 날짜별로 시간 순 정렬
+  Object.keys(byDay).forEach(function(k){
+    byDay[k].sort(function(a,b){
+      var da = a.confirmStart||(a.appMkt&&a.appMkt.liveDt)||a.start||'';
+      var db = b.confirmStart||(b.appMkt&&b.appMkt.liveDt)||b.start||'';
+      return da < db ? -1 : da > db ? 1 : 0;
+    });
+  });
   var cntEl = document.getElementById('mlive-cal-count');
   if(cntEl) cntEl.textContent = camps.length+'건 편성';
   var today = new Date(); today.setHours(0,0,0,0);
@@ -11800,12 +11812,22 @@ function renderMliveSchedCal(){
     var dayColor = dow===0?'var(--red)':(dow===6?'var(--blue)':'var(--text2)');
     var dayCamps = byDay[dStr]||[];
     var itemsHtml = dayCamps.slice(0,3).map(function(c){
-      var nm = (c.name||'-').length>10 ? (c.name.slice(0,10)+'…') : (c.name||'-');
-      var isConfirmed = c.stage && !/^1\./.test(c.stage);
-      var bg = isConfirmed ? 'rgba(108,92,231,0.18)' : 'rgba(136,136,136,0.12)';
-      var col = isConfirmed ? 'var(--accent2)' : 'var(--text3)';
-      var bd = isConfirmed ? 'var(--accent)' : 'var(--border)';
-      return '<div title="'+escHtml(c.name||'')+' · '+escHtml(c.stage||'')+'" style="font-size:10px;padding:2px 4px;background:'+bg+';border:1px solid '+bd+';color:'+col+';border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600">'+escHtml(nm)+'</div>';
+      // 방송 시간 추출 (확정시작일 > liveDt > start 순)
+      var dt = c.confirmStart||(c.appMkt&&c.appMkt.liveDt)||c.start||'';
+      var hh = '';
+      if(dt && dt.length>=13){
+        var h = parseInt(dt.slice(11,13))||0;
+        hh = h+'시';
+      }
+      // 본방/재방 구분 (캠페인명에 "다시보는" 포함 여부)
+      var isReplay = (c.name||'').indexOf('다시보는')>=0;
+      var nm = (c.name||'-').length>8 ? (c.name.slice(0,8)+'…') : (c.name||'-');
+      var label = (hh ? '['+hh+'] ' : '') + nm;
+      // 본방: 파랑 / 재방: 주황
+      var bg = isReplay ? 'rgba(255,159,67,0.18)' : 'rgba(8,116,212,0.18)';
+      var col = isReplay ? 'var(--orange)' : 'var(--blue)';
+      var bd = isReplay ? 'var(--orange)' : 'var(--blue)';
+      return '<div title="'+escHtml(c.name||'')+' · '+escHtml(c.stage||'')+'" style="font-size:10px;padding:2px 4px;background:'+bg+';border:1px solid '+bd+';color:'+col+';border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600">'+escHtml(label)+'</div>';
     }).join('');
     if(dayCamps.length>3) itemsHtml += '<div style="font-size:9px;color:var(--text3);text-align:center">+'+(dayCamps.length-3)+'</div>';
     html += '<div style="min-height:80px;background:'+(isToday?'var(--accent-bg)':'var(--bg2)')+';border:1px solid '+(isToday?'var(--accent)':'var(--border)')+';border-radius:4px;padding:4px"><div style="font-size:11px;font-weight:700;color:'+dayColor+';margin-bottom:3px">'+d+'</div>'+itemsHtml+'</div>';
@@ -12268,10 +12290,14 @@ function updateBadges(){
   }).length;
   // S7: 정산 처리 필요 = 6.APP마케팅확정 + 7.정산(미완료)
   var s7cnt = camps.filter(function(c){ return c.stage==='6.APP마케팅확정' || (c.stage==='7.정산' && !c.settleDone && c.stage!=='7.정산완료'); }).length;
-  var campTotal = camps.length;
+  // 전체캠페인 뱃지: 모드에 따라 필터 (M라이브 모드면 M라이브만, 인플모드면 인플만)
+  var campTotalFiltered = camps.filter(function(c){
+    var ct = c.campType||'인플루언서';
+    return _dashMode==='mlive' ? ct==='모바일라이브' : ct!=='모바일라이브';
+  }).length;
 
   function setBadge(id, n){ var el=document.getElementById(id); if(el) el.textContent=n||0; }
-  setBadge('b-camp', campTotal);
+  setBadge('b-camp', campTotalFiltered);
   setBadge('b-s2', s2cnt);
   setBadge('b-s3', s3cnt);
   setBadge('b-s4', s4cnt);
