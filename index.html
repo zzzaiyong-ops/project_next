@@ -2383,6 +2383,11 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             </table>
           </div>
         </div>
+        <!-- 최저가 링크 -->
+        <div class="fr" style="margin-top:12px" id="p-lowest-price-link-wrap">
+          <label>최저가 링크 <span style="font-size:10px;color:var(--text3);font-weight:400">온라인 최저가 비교 URL</span></label>
+          <input class="inp" id="p-lowest-price-link" placeholder="https://" style="font-size:12px">
+        </div>
 
       </div>
     </div>
@@ -4787,6 +4792,14 @@ function _goPageInternal(page, el, scrollTop){
   }
 
   // 페이지별 렌더
+  // 전체캠페인 진입 시 사이드바 모드와 탭 동기화
+  if(page==='campaigns'){
+    _campTypeFilter = _dashMode==='mlive' ? '모바일라이브' : '인플루언서';
+    var tInf=document.getElementById('camp-type-tab-inf');
+    var tMl=document.getElementById('camp-type-tab-mlive');
+    if(tInf){ tInf.classList.toggle('active', _dashMode!=='mlive'); }
+    if(tMl){ tMl.classList.toggle('active', _dashMode==='mlive'); }
+  }
   if(page==='usermgmt') renderUserTable();
   else if(page==='mcnmgmt') renderMcnTable();
   else renderPage(page);
@@ -5668,6 +5681,7 @@ function editProd(id){
     var dcEl=document.getElementById('p-deal-code'); if(dcEl) dcEl.value=p.dealCode||'';
     var ssEl=document.getElementById('p-sale-start'); if(ssEl) ssEl.value=p.saleStart||'';
     var seEl=document.getElementById('p-sale-end'); if(seEl) seEl.value=p.saleEnd||'';
+    var lpEl=document.getElementById('p-lowest-price-link'); if(lpEl) lpEl.value=p.lowestPriceLink||'';
     var atEl=document.getElementById('p-appeal-total'); if(atEl) atEl.value=p.appealTotal||'';
     var apEl=document.getElementById('p-appeal-push');  if(apEl) apEl.value=p.appealPush||'';
     // p-owner(담당MD) - 검색형 드롭다운에 값 설정
@@ -10470,7 +10484,7 @@ function saveProd(){
     appeal:v('p-appeal'), productBasicInfo:v('p-product-basic-info'), csInfo:v('p-cs-info'), deliveryInfo:v('p-delivery-info'), infRequest:v('p-inf-request'),
     settleProcessDate:v('p-settle-process-date'), settlePaymentDate:v('p-settle-payment-date'),
     promos:promos,
-    dealCode:v('p-deal-code'), saleStart:v('p-sale-start'), saleEnd:v('p-sale-end'),
+    dealCode:v('p-deal-code'), saleStart:v('p-sale-start'), saleEnd:v('p-sale-end'), lowestPriceLink:v('p-lowest-price-link'),
     // 모바일라이브 전용 필드
     productMargin: parseFloat(document.getElementById('p-product-margin')?.value)||0,
     mliveReasons: (function(){ var r=[]; document.querySelectorAll('.mlive-reason-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
