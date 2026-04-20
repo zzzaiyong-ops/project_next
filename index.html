@@ -2507,18 +2507,16 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
             <input class="inp inp-sm" id="appmkt-super-end" type="date" placeholder="종료일" style="flex:1" disabled>
           </div>
           <!-- 모바일라이브: 체크 + 편성코드(복수) + 검색 + 바로가기 + 방송일시 -->
-          <div style="display:flex;align-items:flex-start;gap:8px">
-            <label class="promo-label" style="min-width:110px;flex-shrink:0;margin-top:6px"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
-            <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-              <div id="appmkt-live-codes-tags" style="display:flex;flex-wrap:wrap;gap:4px;min-height:28px"></div>
-              <div style="display:flex;gap:4px;align-items:center">
-                <input class="inp inp-sm" id="appmkt-live-code" placeholder="편성코드 입력 후 Enter" style="flex:1" disabled onchange="updateTotalRevLabel()" onkeydown="if(event.key==='Enter'){event.preventDefault();addMliveCodeTag();}">
-                <button class="btn btn-ghost btn-xs" id="appmkt-live-code-add-btn" type="button" onclick="addMliveCodeTag()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none">+ 추가</button>
-                <button class="btn btn-ghost btn-xs" id="appmkt-live-code-search-btn" type="button" onclick="openMliveCodePicker()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none" title="편성코드 검색">🔍</button>
-                <button class="btn btn-ghost btn-xs" id="appmkt-live-goto-inf-btn" type="button" onclick="gotoInfCampFromMlive()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none;color:var(--green);border-color:var(--green)" title="인플루언서 마케팅 캠페인 등록">👤+</button>
-              </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
+              <input class="inp inp-sm" id="appmkt-live-code" placeholder="편성코드 입력 후 Enter" style="flex:1" disabled onchange="updateTotalRevLabel()" onkeydown="if(event.key==='Enter'){event.preventDefault();addMliveCodeTag();}">
+              <button class="btn btn-ghost btn-xs" id="appmkt-live-code-add-btn" type="button" onclick="addMliveCodeTag()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none">+ 추가</button>
+              <button class="btn btn-ghost btn-xs" id="appmkt-live-code-search-btn" type="button" onclick="openMliveCodePicker()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none" title="편성코드 검색">🔍</button>
+              <button class="btn btn-ghost btn-xs" id="appmkt-live-goto-inf-btn" type="button" onclick="gotoInfCampFromMlive()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none;color:var(--green);border-color:var(--green)" title="인플루언서 마케팅 캠페인 등록">👤+</button>
+              <input class="inp inp-sm" id="appmkt-live-dt" type="datetime-local" onchange="checkMliveScheduleDup()" style="width:180px;flex-shrink:0" disabled>
             </div>
-            <input class="inp inp-sm" id="appmkt-live-dt" type="datetime-local" onchange="checkMliveScheduleDup()" style="width:180px" disabled>
+            <div id="appmkt-live-codes-tags" style="display:flex;flex-wrap:wrap;gap:4px;min-height:0;margin:4px 0 0 118px"></div>
           </div>
           <!-- DMP광고: 체크 + 발송모수 -->
           <div style="display:flex;align-items:center;gap:8px">
