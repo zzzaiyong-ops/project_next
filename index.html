@@ -2594,9 +2594,9 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <label>소구포인트 <span style="font-size:10px;color:var(--text3);font-weight:400">MD 입력</span></label>
           <textarea class="ta" id="p-push-appeal" placeholder="PUSH 발송용 핵심 소구 포인트를 입력하세요..." maxlength="300" style="min-height:60px;resize:vertical"></textarea>
         </div>
-        <!-- 내용기입 -->
+        <!-- 발송 메시지 내용 -->
         <div class="fr" style="margin-bottom:12px">
-          <label>내용기입</label>
+          <label>발송 메시지 내용</label>
           <textarea class="ta" id="p-push-content" placeholder="PUSH 메시지 내용을 입력하세요..." maxlength="500" style="min-height:80px;resize:vertical"></textarea>
         </div>
         <!-- 랜딩링크 -->
@@ -2652,7 +2652,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
       <div class="mo-sec-body" id="sec-settle">
         <div class="fr2" style="margin-bottom:12px">
-          <div><label>광고수익 (원)</label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
+          <div><label><span id="p-settle-da-label">광고수익</span> (원) <span id="p-settle-da-desc" style="font-size:10px;color:var(--text3)"></span></label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
           <div id="p-settle-done-wrap" style="display:flex;align-items:center;gap:10px;padding-top:20px">
             <input type="checkbox" id="p-settle-done" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer">
             <label for="p-settle-done" style="font-size:13px;font-weight:600;cursor:pointer">✅ 정산 완료</label>
@@ -7197,8 +7197,17 @@ function toggleAppMktFields(){
   if(liveAddBtn)    liveAddBtn.style.display    = liveChecked ? '' : 'none';
   if(liveGotoBtn)   liveGotoBtn.style.display   = liveChecked ? '' : 'none';
   if(!liveChecked){ _mliveCodes=[]; renderMliveCodeTags(); }
+  // PUSH 체크 → APP PUSH 섹션 표시
+  updatePushSectionVisibility();
   // 편성코드 변경 시 전체매출 라벨 갱신
   updateTotalRevLabel();
+}
+// APP PUSH 섹션 표시: M라이브 + PUSH 체크 둘 다일 때만
+function updatePushSectionVisibility(){
+  var isMlive = getCampType()==='모바일라이브';
+  var pushChecked = document.getElementById('appmkt-push')?.checked;
+  var pushWrap = document.getElementById('sec-push-wrap');
+  if(pushWrap) pushWrap.style.display = (isMlive && pushChecked) ? '' : 'none';
 }
 
 function delApp(id){ var nid2=parseInt(id); DB.appMarketing=DB.appMarketing.filter(function(a){return parseInt(a.id)!==nid2;}); broadcastData(); renderS6(); showToast('삭제됨'); }
@@ -11724,9 +11733,8 @@ function updateCampTypeUI(){
   // M라이브: 정산완료 체크박스 숨김
   var settleDoneWrap = document.getElementById('p-settle-done-wrap');
   if(settleDoneWrap) settleDoneWrap.style.display = isMlive ? 'none' : '';
-  // M라이브: APP PUSH 섹션 표시
-  var pushWrap = document.getElementById('sec-push-wrap');
-  if(pushWrap) pushWrap.style.display = isMlive ? '' : 'none';
+  // M라이브 + PUSH 체크 시에만 APP PUSH 섹션 표시
+  updatePushSectionVisibility();
   // AI챗봇 섹션 (재방 전용)
   updateAiChatSection();
   // M라이브: 업체광고비 → 광고수익 라벨 변경
@@ -11734,6 +11742,11 @@ function updateCampTypeUI(){
   var adIncDesc = document.querySelector('#p-ad-income-wrap label span[style*="font-size:10px"]');
   if(adIncLabel) adIncLabel.textContent = isMlive ? '광고수익' : '업체광고비';
   if(adIncDesc) adIncDesc.textContent = isMlive ? '업체에서 수취한 광고수익' : '업체에서 수취한 광고비';
+  // p-settle-da: M라이브일 때 '광고비'(사용한 비용), 인플은 '광고수익' 유지
+  var sdLabel = document.getElementById('p-settle-da-label');
+  var sdDesc  = document.getElementById('p-settle-da-desc');
+  if(sdLabel) sdLabel.textContent = isMlive ? '광고비' : '광고수익';
+  if(sdDesc)  sdDesc.textContent  = isMlive ? '우리가 사용한 광고비' : '';
   // M라이브/인플루언서: 단계 select 옵션 전환
   var stageSelect = document.getElementById('prod-stage-select');
   if(stageSelect){
