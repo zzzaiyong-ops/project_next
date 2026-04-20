@@ -11742,11 +11742,11 @@ function updateCampTypeUI(){
   var adIncDesc = document.querySelector('#p-ad-income-wrap label span[style*="font-size:10px"]');
   if(adIncLabel) adIncLabel.textContent = isMlive ? '광고수익' : '업체광고비';
   if(adIncDesc) adIncDesc.textContent = isMlive ? '업체에서 수취한 광고수익' : '업체에서 수취한 광고비';
-  // p-settle-da: M라이브일 때 '광고비'(사용한 비용), 인플은 '광고수익' 유지
+  // p-settle-da: M라이브일 때 '마케팅비'(한계이익 계산용, 엑셀 CJ열), 인플은 '광고수익' 유지
   var sdLabel = document.getElementById('p-settle-da-label');
   var sdDesc  = document.getElementById('p-settle-da-desc');
-  if(sdLabel) sdLabel.textContent = isMlive ? '광고비' : '광고수익';
-  if(sdDesc)  sdDesc.textContent  = isMlive ? '우리가 사용한 광고비' : '';
+  if(sdLabel) sdLabel.textContent = isMlive ? '마케팅비' : '광고수익';
+  if(sdDesc)  sdDesc.textContent  = isMlive ? 'M라이브마케팅비 (한계이익 계산용)' : '';
   // M라이브/인플루언서: 단계 select 옵션 전환
   var stageSelect = document.getElementById('prod-stage-select');
   if(stageSelect){
