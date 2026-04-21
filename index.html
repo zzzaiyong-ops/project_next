@@ -5004,6 +5004,7 @@ function infSizeColor(size){
   if(!size) return {color:'#888', bg:'rgba(136,136,136,0.15)', label:'미지정'};
   var s = String(size);
   if(s.includes('메가')) return {color:'#6c5ce7', bg:'rgba(108,92,231,0.25)', label:'메가'};
+  if(s.includes('앵콜')) return {color:'#e17055', bg:'rgba(225,112,85,0.25)', label:'앵콜'};
   if(s.includes('미들')) return {color:'#00b894', bg:'rgba(0,184,148,0.25)',  label:'미들'};
   if(s.includes('시딩')) return {color:'#e17055', bg:'rgba(225,112,85,0.25)', label:'시딩'};
   // 구버전 호환
@@ -5020,6 +5021,7 @@ function renderCalendar(){
   if(leg){
     var legendItems=[
       {color:'#6c5ce7',label:'메가'},
+      {color:'#e17055',label:'앵콜'},
       {color:'#00b894',label:'미들'},
       {color:'#e17055',label:'시딩'},
       {color:'#888',   label:'미지정'},
@@ -5060,7 +5062,7 @@ function renderCalendar(){
       listHtml = monthCamps.map(function(c){
         var cs = (c.start||c.startDate||'').slice(0,10);
         var ce = (c.end||c.endDate||'').slice(0,10);
-        var ic = infSizeColor(c.infSize||'');
+        var ic = infSizeColor(c.role||c.infSize||'');
         var stageColor = '#888';
         var stages = [{id:'1.캠페인요청',color:'#a29bfe'},{id:'2.캠페인확정',color:'#74b9ff'},{id:'3.상품정보등록',color:'#55efc4'},{id:'4.MCN요청',color:'#ffeaa7'},{id:'5.인플루언서확정',color:'#fd79a8'},{id:'6.APP마케팅확정',color:'#fdcb6e'},{id:'7.정산',color:'#e17055'}];
         stages.forEach(function(s){ if(c.stage===s.id) stageColor=s.color; });
@@ -5138,7 +5140,7 @@ function renderCalendar(){
       var row = campSlot[c.id];
       if(row===undefined) return;
       var prod = DB.products.find(function(p){return p.id===c.product;});
-      var infSize = prod ? prod.infSize : (c.infSize||'');
+      var infSize = c.role || (prod ? prod.infSize : (c.infSize||''));
       var ic = infSizeColor(infSize);
       var isStart = cs===dateStr;
       var isEnd   = ce===dateStr;
