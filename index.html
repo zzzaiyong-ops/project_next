@@ -1131,7 +1131,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     </div>
     <div class="card">
       <div class="card-hd">
-        <span class="card-ttl">1단계 · 캠페인 요청</span>
+        <span class="card-ttl" id="s1-card-title">1단계 · 캠페인 요청</span>
         <div class="card-acts">
           <input class="search-inp" placeholder="캠페인명 검색..." oninput="filterProds(this.value)">
           <button class="btn btn-ghost btn-xs" onclick="toggleS1Sort()" id="s1-sort-btn" style="font-size:11px;padding:4px 8px">등록일 ▼</button>
@@ -1180,7 +1180,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     </div>
     <div class="card" style="margin-bottom:18px">
       <div class="card-hd">
-        <span class="card-ttl">2단계 · 캠페인 확정</span>
+        <span class="card-ttl" id="s2-card-title">2단계 · 캠페인 확정</span>
         <div class="card-acts"><button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s2')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button></div>
       </div>
       <div class="stage-table-wrap"><table class="stage-table">
@@ -1231,7 +1231,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     </div>
     <div class="card">
       <div class="card-hd">
-        <span class="card-ttl">3단계 · 상품정보등록 <span style="font-size:12px;font-weight:400;color:var(--text3)">(2단계 확정 후 상품/가격 정보 입력 대기)</span></span>
+        <span class="card-ttl" id="s3-card-title">3단계 · 상품정보등록</span>
         <div class="card-acts">
           <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s3')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
         </div>
@@ -1366,7 +1366,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     </div>
     <div class="card">
       <div class="card-hd">
-        <span class="card-ttl">6단계 · 모바일마케팅 <span style="font-size:11px;color:var(--text3);font-weight:400">(5단계 인플루언서 확정된 캠페인)</span></span>
+        <span class="card-ttl" id="s6-card-title">6단계 · 모바일마케팅</span>
       </div>
       <div class="stage-table-wrap"><table class="stage-table">
         <thead><tr>
@@ -1409,7 +1409,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     </div>
     <div class="card">
       <div class="card-hd">
-        <span class="card-ttl">7단계 · 정산 관리</span>
+        <span class="card-ttl" id="s7-card-title">7단계 · 정산 관리</span>
         <div style="display:flex;gap:7px">
           <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s7')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
         </div>
@@ -4812,6 +4812,11 @@ function renderPage(p){
   if(p==='usermgmt')    renderUserTable();
   if(p==='mcnmgmt')     renderMcnTable();
   if(p==='basemgmt')    renderBasemgmt();
+  // 카드 제목을 M라이브/인플 모드에 맞게 갱신
+  var MLIVE_CARD = {s1:'1단계 · 편성요청',s2:'2단계 · 편성확정',s3:'3단계 · 상품정보등록',s6:'4단계 · 모바일마케팅',s7:'5단계 · 정산'};
+  var INF_CARD = {s1:'1단계 · 캠페인 요청',s2:'2단계 · 캠페인 확정',s3:'3단계 · 상품정보등록',s6:'6단계 · 모바일마케팅',s7:'7단계 · 정산 관리'};
+  var _ct = _dashMode==='mlive' ? MLIVE_CARD : INF_CARD;
+  if(_ct[p]){ var _ce=document.getElementById(p+'-card-title'); if(_ce) _ce.textContent=_ct[p]; }
 }
 
 // ═══════════════════════════════════════
