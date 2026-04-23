@@ -8067,10 +8067,10 @@ function exportCampaignProposal(){
   var headerStyle = {fill:{fgColor:{rgb:'D9E1F2'}},font:{bold:true,sz:11},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
   var subHeaderStyle = {fill:{fgColor:{rgb:'FFE699'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
   var labelStyle = {fill:{fgColor:{rgb:'F2F2F2'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
-  var dataStyle = {font:{sz:10},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:border};
-  var dataCenterStyle = {font:{sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
-  var dataRightStyle = {font:{sz:10},alignment:{horizontal:'right',vertical:'center',wrapText:true},border:border};
-  var noteStyle = {font:{sz:9,color:{rgb:'C00000'}},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:border};
+  var dataStyle = {fill:{fgColor:{rgb:'FFFFFF'}},font:{sz:10},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:border};
+  var dataCenterStyle = {fill:{fgColor:{rgb:'FFFFFF'}},font:{sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
+  var dataRightStyle = {fill:{fgColor:{rgb:'FFFFFF'}},font:{sz:10},alignment:{horizontal:'right',vertical:'center',wrapText:true},border:border};
+  var noteStyle = {fill:{fgColor:{rgb:'FFFFFF'}},font:{sz:9,color:{rgb:'C00000'}},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:border};
   var sectionHdrStyle = {fill:{fgColor:{rgb:'8EA9DB'}},font:{bold:true,sz:12,color:{rgb:'FFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:border};
 
   var setStyle = function(addr, st){ if(ws[addr]) ws[addr].s = st; };
@@ -8137,6 +8137,22 @@ function exportCampaignProposal(){
   ws['!rows'][8] = {hpt:30}; // 기타사항
   ws['!rows'][14] = {hpt:24}; // 상품 헤더
   ws['!rows'][15] = {hpt:36}; // 보조 헤더
+
+  // 전체 사용 영역 빈 셀에 흰색 배경 + 테두리 적용
+  var emptyStyle = {fill:{fgColor:{rgb:'FFFFFF'}},border:border};
+  var totalRows = deliveryStartIdx + 14;
+  var totalCols = 14;
+  var colLetters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N'];
+  for(var ri=0; ri<totalRows; ri++){
+    for(var ci=0; ci<totalCols; ci++){
+      var addr = colLetters[ci]+(ri+1);
+      if(!ws[addr]){
+        ws[addr] = {v:'', t:'s', s:emptyStyle};
+      } else if(!ws[addr].s){
+        ws[addr].s = emptyStyle;
+      }
+    }
+  }
 
   XLSX.utils.book_append_sheet(wb, ws, '제안서');
   var fileName = '신세계라이브쇼핑_제안서_'+(name||'캠페인').replace(/[\\/:*?"<>|]/g,'_')+'.xlsx';
