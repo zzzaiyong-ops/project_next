@@ -2385,6 +2385,70 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
           <label>최저가 링크 <span style="font-size:10px;color:var(--text3);font-weight:400">온라인 최저가 비교 URL</span></label>
           <input class="inp" id="p-lowest-price-link" placeholder="https://" style="font-size:12px">
         </div>
+        <!-- CS정보 / 배송정보 (인플루언서 전용, 모바일라이브 숨김) -->
+        <div id="p-cs-delivery-wrap" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px;display:flex;flex-direction:column;gap:12px">
+          <div class="fr">
+            <label>CS 정보 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 500자)</span></label>
+            <textarea class="ta" id="p-cs-info" maxlength="500" style="min-height:110px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/500'"></textarea>
+            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
+          </div>
+          <div class="fr">
+            <label>배송 정보</label>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">택배사</label>
+                  <input class="inp inp-sm" id="p-courier" placeholder="예) CJ대한통운, 롯데택배" style="width:100%">
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">당일출고 마감시간</label>
+                  <input class="inp inp-sm" id="p-ship-cutoff" type="time" style="width:100%">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">배송비</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap">
+                      <input type="checkbox" id="p-ship-free" style="accent-color:var(--accent);cursor:pointer" onchange="document.getElementById('p-ship-fee').disabled=this.checked;if(this.checked)document.getElementById('p-ship-fee').value=''">무료
+                    </label>
+                    <input class="inp inp-sm inp-money" id="p-ship-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
+                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
+                  </div>
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">제주·도서산간 배송료</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap">
+                      <input type="checkbox" id="p-island-free" style="accent-color:var(--accent);cursor:pointer" onchange="document.getElementById('p-island-fee').disabled=this.checked;if(this.checked)document.getElementById('p-island-fee').value=''">배송불가
+                    </label>
+                    <input class="inp inp-sm inp-money" id="p-island-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
+                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">교환 배송비</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input class="inp inp-sm inp-money" id="p-exchange-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
+                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
+                  </div>
+                </div>
+                <div>
+                  <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">반품비</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input class="inp inp-sm inp-money" id="p-return-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
+                    <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">배송정보 및 기타사항 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 300자)</span></label>
+            <textarea class="ta" id="p-delivery-info" placeholder="기타 배송 관련 안내 사항..." maxlength="300" style="min-height:60px;resize:vertical" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/300'"></textarea>
+            <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/300</div>
+          </div>
+        </div>
 
       </div>
     </div>
@@ -11692,6 +11756,9 @@ function updateCampTypeUI(){
   // M라이브: 상품코드·가격 테이블 숨김
   var skuTableWrap = document.getElementById('p-sku-table-wrap');
   if(skuTableWrap) skuTableWrap.style.display = isMlive ? 'none' : '';
+  // M라이브: CS/배송정보 숨김 (인플루언서만 표시)
+  var csDeliveryWrap = document.getElementById('p-cs-delivery-wrap');
+  if(csDeliveryWrap) csDeliveryWrap.style.display = isMlive ? 'none' : '';
   // M라이브 전용 필드 (담당MD/상품마진/편성사유/마케팅요청/협력사마케팅/외부채널송출)
   var mliveExtra = document.getElementById('p-mlive-extra-wrap');
   if(mliveExtra) mliveExtra.style.display = isMlive ? '' : 'none';
