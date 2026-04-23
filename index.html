@@ -8016,8 +8016,8 @@ function exportCampaignProposal(){
     aoa[rowIdx][11] = s.promoText||'';
   });
 
-  // [배송정책] (A20~ 또는 상품 행 다음)
-  var deliveryStartIdx = Math.max(20, prodStartIdx + skus.length + 1);
+  // [배송정책] (상품 행 다음 +2행 여백)
+  var deliveryStartIdx = Math.max(20, prodStartIdx + skus.length + 2);
   aoa[deliveryStartIdx]   = ['배송정책','','','','','','상품 USP','','','','','','',''];
   aoa[deliveryStartIdx+1] = ['과세/면세', taxStatus,'','','','','상품 이미지','','','','','','',''];
   aoa[deliveryStartIdx+2] = ['제조사/원산지', maker,'','','','','','','','','','','',''];
@@ -8036,80 +8036,79 @@ function exportCampaignProposal(){
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(aoa);
 
-  // 컬럼 너비 설정
+  // 컬럼 너비 설정 (원본 제안서 참고)
   ws['!cols'] = [
-    {wch:18},{wch:25},{wch:14},{wch:18},{wch:14},{wch:14},{wch:14},
-    {wch:16},{wch:14},{wch:18},{wch:18},{wch:22},{wch:8},{wch:8}
+    {wch:16},{wch:35},{wch:12},{wch:16},{wch:14},{wch:16},{wch:16},
+    {wch:16},{wch:16},{wch:20},{wch:16},{wch:22},{wch:12},{wch:8}
   ];
 
   // 셀 병합 (Merges)
   var merges = [];
-  // 제안서 타이틀 (A2:F2)
-  merges.push({s:{r:1,c:0},e:{r:1,c:5}});
-  // 업로드일정 타이틀 (G2:I2)
-  merges.push({s:{r:1,c:6},e:{r:1,c:8}});
-  // 구매 랜딩 URL 값 병합 (B8:F8)
-  merges.push({s:{r:7,c:1},e:{r:7,c:5}});
-  // 기타사항 값 병합 (B9:F9)
-  merges.push({s:{r:8,c:1},e:{r:8,c:5}});
-  // 상품정보 타이틀 (A11:F11)
-  merges.push({s:{r:10,c:0},e:{r:10,c:5}});
-  // 이슈사항 값 (H12:M12)
-  merges.push({s:{r:11,c:7},e:{r:11,c:12}});
-  // 상품테이블 헤더 행 병합 (rows 14~15 같은 컬럼)
-  for(var ci=0; ci<13; ci++){
-    if(headerRow[ci]) merges.push({s:{r:14,c:ci},e:{r:15,c:ci}});
+  merges.push({s:{r:1,c:0},e:{r:1,c:5}});  // 제안서 타이틀
+  merges.push({s:{r:1,c:6},e:{r:1,c:8}});  // 업로드일정 타이틀
+  merges.push({s:{r:7,c:1},e:{r:7,c:5}});  // 구매랜딩 URL 값
+  merges.push({s:{r:8,c:1},e:{r:8,c:5}});  // 기타사항 값
+  merges.push({s:{r:10,c:0},e:{r:10,c:5}});  // 상품정보 타이틀
+  merges.push({s:{r:11,c:1},e:{r:11,c:5}});  // 딜코드 값
+  merges.push({s:{r:11,c:7},e:{r:11,c:12}}); // 이슈사항 값
+  // 배송정책 라벨 값 병합 (B열 넓게)
+  for(var di=1;di<=12;di++){
+    merges.push({s:{r:deliveryStartIdx+di,c:1},e:{r:deliveryStartIdx+di,c:5}});
   }
-  // 배송정책/상품USP 헤더
-  merges.push({s:{r:deliveryStartIdx,c:0},e:{r:deliveryStartIdx,c:1}});
-  merges.push({s:{r:deliveryStartIdx,c:6},e:{r:deliveryStartIdx,c:13}});
-  // MD 소구포인트 값
-  merges.push({s:{r:deliveryStartIdx+4,c:7},e:{r:deliveryStartIdx+11,c:13}});
+  // 배송정책/상품USP 섹션 헤더
+  merges.push({s:{r:deliveryStartIdx,c:0},e:{r:deliveryStartIdx,c:5}});
+  merges.push({s:{r:deliveryStartIdx,c:6},e:{r:deliveryStartIdx,c:12}});
+  // 상품이미지
+  merges.push({s:{r:deliveryStartIdx+1,c:6},e:{r:deliveryStartIdx+3,c:8}});
+  // MD 소구포인트 라벨+값
+  merges.push({s:{r:deliveryStartIdx+4,c:6},e:{r:deliveryStartIdx+4,c:8}});
+  merges.push({s:{r:deliveryStartIdx+5,c:6},e:{r:deliveryStartIdx+12,c:12}});
   ws['!merges'] = merges;
 
   // ─── 셀 스타일 (xlsx-js-style) ───
   var border = {top:{style:'thin',color:{rgb:'AAAAAA'}},bottom:{style:'thin',color:{rgb:'AAAAAA'}},left:{style:'thin',color:{rgb:'AAAAAA'}},right:{style:'thin',color:{rgb:'AAAAAA'}}};
   var titleStyle = {fill:{fgColor:{rgb:'C6E0B4'}},font:{bold:true,sz:13},alignment:{horizontal:'left',vertical:'center'},border:border};
   var headerStyle = {fill:{fgColor:{rgb:'D9E1F2'}},font:{bold:true,sz:11},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
-  var subHeaderStyle = {fill:{fgColor:{rgb:'FFE699'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
+  var subHeaderStyle = {fill:{fgColor:{rgb:'FFE699'}},font:{bold:true,sz:9},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
   var labelStyle = {fill:{fgColor:{rgb:'F2F2F2'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
   var dataStyle = {fill:{fgColor:{rgb:'FFFFFF'}},font:{sz:10},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:border};
   var dataCenterStyle = {fill:{fgColor:{rgb:'FFFFFF'}},font:{sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
   var dataRightStyle = {fill:{fgColor:{rgb:'FFFFFF'}},font:{sz:10},alignment:{horizontal:'right',vertical:'center',wrapText:true},border:border};
-  var noteStyle = {fill:{fgColor:{rgb:'FFFFFF'}},font:{sz:9,color:{rgb:'C00000'}},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:border};
   var sectionHdrStyle = {fill:{fgColor:{rgb:'8EA9DB'}},font:{bold:true,sz:12,color:{rgb:'FFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:border};
+  var noBorder = {};
 
-  var setStyle = function(addr, st){ if(ws[addr]) ws[addr].s = st; };
-  // 섹션 타이틀
-  setStyle('A2', titleStyle);
-  setStyle('G2', titleStyle);
-  setStyle('A11', titleStyle);
+  var setStyle = function(addr, st){ if(ws[addr]) ws[addr].s = st; else { ws[addr]={v:'',t:'s',s:st}; } };
 
-  // 캠페인 기본정보 영역 (rows 3~9)
+  // ── 제안서 영역 스타일 (A2~I9) ──
+  setStyle('A2', titleStyle); // 제안서 타이틀
+  for(var ci2=1;ci2<=5;ci2++) setStyle(colChar[ci2]+'2', titleStyle);
+  setStyle('G2', titleStyle); setStyle('H2', titleStyle); setStyle('I2', titleStyle);
   for(var r=2; r<=8; r++){
     setStyle('A'+(r+1), labelStyle);
     setStyle('B'+(r+1), dataStyle);
-    if(r<=6){ setStyle('C'+(r+1), labelStyle); setStyle('D'+(r+1), dataStyle); }
+    if(r<=6){ setStyle('C'+(r+1), labelStyle); setStyle('D'+(r+1), dataStyle); setStyle('E'+(r+1), dataStyle); }
   }
-  // 업로드일정 헤더 (row 3)
+  // 업로드일정 헤더+데이터
   setStyle('G3', headerStyle); setStyle('H3', headerStyle); setStyle('I3', headerStyle);
-  // 업로드일정 라벨 (rows 4~9)
   for(var r2=3; r2<=8; r2++){
     setStyle('G'+(r2+1), labelStyle);
     setStyle('H'+(r2+1), dataStyle);
     setStyle('I'+(r2+1), dataStyle);
   }
 
-  // 상품정보 라벨/값
+  // ── 상품정보 영역 스타일 ──
+  setStyle('A11', titleStyle);
+  for(var ci3=1;ci3<=5;ci3++) setStyle(colChar[ci3]+'11', titleStyle);
   setStyle('A12', labelStyle); setStyle('B12', dataStyle);
+  for(var ci4=2;ci4<=5;ci4++) setStyle(colChar[ci4]+'12', dataStyle);
   setStyle('D13', labelStyle); setStyle('E13', dataStyle);
-  setStyle('G12', labelStyle); setStyle('H12', dataStyle);
+  setStyle('G12', labelStyle);
+  for(var ci5=7;ci5<=12;ci5++) setStyle(colChar[ci5]+'12', dataStyle);
 
   // 상품 테이블 헤더
   var colChar = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
   colChar.forEach(function(ch,i){ if(headerRow[i]) setStyle(ch+'15', headerStyle); });
-  // 보조 헤더 (row 16)
-  ['E','F','G','H','I','J','K','L'].forEach(function(ch){ setStyle(ch+'16', subHeaderStyle); });
+  colChar.forEach(function(ch){ setStyle(ch+'16', subHeaderStyle); });
 
   // 상품 데이터
   skus.forEach(function(s,si){
@@ -8117,48 +8116,38 @@ function exportCampaignProposal(){
     setStyle('A'+rn, dataCenterStyle);
     setStyle('B'+rn, dataStyle);
     ['C','D','E','F','G','H','I'].forEach(function(ch){ setStyle(ch+rn, dataRightStyle); });
-    setStyle('J'+rn, dataStyle); setStyle('K'+rn, dataStyle); setStyle('L'+rn, dataStyle); setStyle('M'+rn, dataCenterStyle);
+    ['J','K','L'].forEach(function(ch){ setStyle(ch+rn, dataStyle); });
+    setStyle('M'+rn, dataCenterStyle);
   });
 
-  // 배송정책 섹션 헤더
+  // ── 배송정책 영역 스타일 ──
   var dHdrRow = deliveryStartIdx+1;
-  setStyle('A'+dHdrRow, sectionHdrStyle);
-  setStyle('G'+dHdrRow, sectionHdrStyle);
-
-  // 배송정책 데이터 (12행)
-  for(var dr=1; dr<=13; dr++){
+  // 섹션 헤더
+  for(var ci6=0;ci6<=5;ci6++) setStyle(colChar[ci6]+dHdrRow, sectionHdrStyle);
+  for(var ci7=6;ci7<=12;ci7++) setStyle(colChar[ci7]+dHdrRow, sectionHdrStyle);
+  // 배송정책 데이터
+  for(var dr=1; dr<=12; dr++){
     var rn2 = deliveryStartIdx+dr+1;
     setStyle('A'+rn2, labelStyle);
-    setStyle('B'+rn2, dataStyle);
+    for(var ci8=1;ci8<=5;ci8++) setStyle(colChar[ci8]+rn2, dataStyle);
   }
-  // MD 소구포인트
-  setStyle('G'+(deliveryStartIdx+5), labelStyle);
-  setStyle('H'+(deliveryStartIdx+5), dataStyle);
+  // 상품이미지/소구포인트
   setStyle('G'+(deliveryStartIdx+2), labelStyle);
+  setStyle('H'+(deliveryStartIdx+2), dataStyle); setStyle('I'+(deliveryStartIdx+2), dataStyle);
+  setStyle('G'+(deliveryStartIdx+5), labelStyle);
+  setStyle('H'+(deliveryStartIdx+5), dataStyle); setStyle('I'+(deliveryStartIdx+5), dataStyle);
+  // MD 소구포인트 값 영역
+  for(var dr2=5;dr2<=12;dr2++){
+    for(var ci9=6;ci9<=12;ci9++) setStyle(colChar[ci9]+(deliveryStartIdx+dr2+1), dataStyle);
+  }
 
   // 행 높이
   ws['!rows'] = [];
-  ws['!rows'][1] = {hpt:24}; // 타이틀
-  ws['!rows'][7] = {hpt:30}; // 구매랜딩 URL
-  ws['!rows'][8] = {hpt:30}; // 기타사항
-  ws['!rows'][14] = {hpt:24}; // 상품 헤더
-  ws['!rows'][15] = {hpt:36}; // 보조 헤더
-
-  // 전체 사용 영역 빈 셀에 흰색 배경 + 테두리 적용
-  var emptyStyle = {fill:{fgColor:{rgb:'FFFFFF'}},border:border};
-  var totalRows = deliveryStartIdx + 14;
-  var totalCols = 14;
-  var colLetters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N'];
-  for(var ri=0; ri<totalRows; ri++){
-    for(var ci=0; ci<totalCols; ci++){
-      var addr = colLetters[ci]+(ri+1);
-      if(!ws[addr]){
-        ws[addr] = {v:'', t:'s', s:emptyStyle};
-      } else if(!ws[addr].s){
-        ws[addr].s = emptyStyle;
-      }
-    }
-  }
+  ws['!rows'][1] = {hpt:26};
+  ws['!rows'][7] = {hpt:30};
+  ws['!rows'][8] = {hpt:30};
+  ws['!rows'][14] = {hpt:26};
+  ws['!rows'][15] = {hpt:40};
 
   XLSX.utils.book_append_sheet(wb, ws, '제안서');
   var fileName = '신세계라이브쇼핑_제안서_'+(name||'캠페인').replace(/[\\/:*?"<>|]/g,'_')+'.xlsx';
