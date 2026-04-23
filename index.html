@@ -7934,7 +7934,8 @@ function exportCampaignProposal(){
     }
     return c.skus || [];
   })();
-  var mainSkuCode = (skus[0] && skus[0].code) || '';
+  var mainSku = skus.find(function(s){ return s.isMain; }) || skus[0] || {};
+  var mainSkuCode = mainSku.code || '';
   var csInfo = v('p-cs-info') || c.csInfo || '';
   // CS 정보 파싱 (1)~6) 라인별)
   var csLines = csInfo.split(/\r?\n/);
