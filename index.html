@@ -2374,17 +2374,25 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap;border-left:2px solid var(--border2)">정가</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap">MD할인가</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap">카드할인</th>
-                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">신규적립금</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">웰컴고객</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap">신규쿠폰</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">웰컴방송쿠폰</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">사후적립금</th>
                   <th style="padding:6px 8px;text-align:left;white-space:nowrap">기타프로모션</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap;color:var(--accent)">최종공구가</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap;color:var(--orange)">온라인최저가</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">재고</th>
                   <th style="padding:6px 4px;width:28px"></th>
                 </tr>
               </thead>
               <tbody id="sku-list"></tbody>
             </table>
           </div>
+        </div>
+        <!-- 이벤트 -->
+        <div class="fr" style="margin-top:12px" id="p-event-text-wrap">
+          <label>이벤트 <span style="font-size:10px;color:var(--text3);font-weight:400">사전알림 이벤트, 구매인증 이벤트 등</span></label>
+          <textarea class="ta" id="p-event-text" placeholder="이벤트 내용 입력..." maxlength="500" style="min-height:60px;resize:vertical"></textarea>
         </div>
         <!-- 최저가 링크 -->
         <div class="fr" style="margin-top:12px" id="p-lowest-price-link-wrap">
@@ -5757,6 +5765,7 @@ function editProd(id){
     var dcEl=document.getElementById('p-deal-code'); if(dcEl) dcEl.value=p.dealCode||'';
     var ssEl=document.getElementById('p-sale-start'); if(ssEl) ssEl.value=p.saleStart||'';
     var seEl=document.getElementById('p-sale-end'); if(seEl) seEl.value=p.saleEnd||'';
+    var evEl=document.getElementById('p-event-text'); if(evEl) evEl.value=p.eventText||'';
     var lpEl=document.getElementById('p-lowest-price-link'); if(lpEl) lpEl.value=p.lowestPriceLink||'';
     var atEl=document.getElementById('p-appeal-total'); if(atEl) atEl.value=p.appealTotal||'';
     var apEl=document.getElementById('p-appeal-push');  if(apEl) apEl.value=p.appealPush||'';
@@ -7915,8 +7924,9 @@ function exportCampaignProposal(){
           code: pStr('.sku-code'), productName: pStr('.sku-pname'),
           price: pInt('.pg-price'), mdPrice: pInt('.pg-md'),
           cardDiscount: pInt('.pg-card'), mileage: pInt('.pg-mileage'),
-          coupon: pInt('.pg-coupon'),
-          finalPrice: (function(){var md=pInt('.pg-md');return md>0?Math.max(0,md-pInt('.pg-card')-pInt('.pg-mileage')-pInt('.pg-coupon')):0;})(),
+          coupon: pInt('.pg-coupon'), broadcastCoupon: pInt('.pg-broadcast-coupon'),
+          postMileage: pInt('.pg-post-mileage'), stock: pInt('.pg-stock'),
+          finalPrice: (function(){var md=pInt('.pg-md');return md>0?Math.max(0,md-pInt('.pg-card')-pInt('.pg-mileage')-pInt('.pg-coupon')-pInt('.pg-broadcast-coupon')-pInt('.pg-post-mileage')):0;})(),
           onlineLowestPrice: pInt('.pg-online-lowest'),
           promoText: pStr('.pg-promo')
         };
@@ -7953,6 +7963,8 @@ function exportCampaignProposal(){
   var shipCutoff  = v('p-ship-cutoff') || c.shipCutoff || '';
   var deliveryEtc = v('p-delivery-info') || c.deliveryInfo || '';
   var appeal = v('p-appeal') || c.appeal || '';
+  var eventText2 = v('p-event-text') || c.eventText || '';
+  var lowestLink = v('p-lowest-price-link') || c.lowestPriceLink || '';
 
   // 헬퍼: 통화 포맷
   var fmtKRW = function(n){ return n ? n.toLocaleString('ko-KR')+'원' : ''; };
@@ -8008,12 +8020,15 @@ function exportCampaignProposal(){
     aoa[rowIdx][1] = s.productName||'';
     aoa[rowIdx][2] = s.price ? fmtNum(s.price) : '';
     aoa[rowIdx][3] = s.mdPrice ? fmtNum(s.mdPrice) : '';
-    aoa[rowIdx][4] = s.cardDiscount ? fmtNum(s.cardDiscount) : '';
-    aoa[rowIdx][5] = s.coupon ? fmtNum(s.coupon) : '';
-    aoa[rowIdx][6] = s.mileage ? fmtNum(s.mileage) : '';
-    aoa[rowIdx][7] = s.finalPrice ? fmtNum(s.finalPrice) : '';
-    aoa[rowIdx][8] = s.onlineLowestPrice ? fmtNum(s.onlineLowestPrice) : '';
-    aoa[rowIdx][11] = s.promoText||'';
+    aoa[rowIdx][4] = s.mileage ? fmtNum(s.mileage) : '';       // 웰컴고객 = 신규적립금
+    aoa[rowIdx][5] = s.cardDiscount ? fmtNum(s.cardDiscount) : ''; // 카드5%
+    aoa[rowIdx][6] = s.postMileage ? fmtNum(s.postMileage) : '';   // 사후적립금
+    aoa[rowIdx][7] = s.finalPrice ? fmtNum(s.finalPrice) : '';  // 최종공구혜택가
+    aoa[rowIdx][8] = lowestLink||'';                            // 온라인최저가 → 최저가 링크
+    aoa[rowIdx][9] = s.promoText||'';                           // 사은품 등 기타혜택
+    aoa[rowIdx][10] = s.promoText||'';                          // 기타혜택
+    aoa[rowIdx][11] = eventText2||'';                           // 이벤트
+    aoa[rowIdx][12] = s.stock ? fmtNum(s.stock) : '';           // 재고수
   });
 
   // [배송정책] (상품 행 다음 +2행 여백)
@@ -10777,6 +10792,7 @@ function saveProd(){
   var skus = [...skuRows2].map(function(row, i){
     var parse = function(cls){ return parseInt((row.querySelector(cls)?.value||'').replace(/,/g,''))||0; };
     var md=parse('.pg-md'), card=parse('.pg-card'), mile=parse('.pg-mileage'), cpn=parse('.pg-coupon');
+    var bcpn2=parse('.pg-broadcast-coupon'), postM2=parse('.pg-post-mileage');
     return {
       num: i+1,
       isMain: !!(row.querySelector('.sku-main') && row.querySelector('.sku-main').checked),
@@ -10790,9 +10806,12 @@ function saveProd(){
       cardDiscount: card,
       mileage: mile,
       coupon: cpn,
+      broadcastCoupon: bcpn2,
+      postMileage: postM2,
       promoText: (row.querySelector('.pg-promo')?.value||'').trim(),
       onlineLowestPrice: parseInt((row.querySelector('.pg-online-lowest')?.value||'').replace(/,/g,''))||0,
-      finalPrice: md>0 ? Math.max(0,md-card-mile-cpn) : 0,
+      stock: parseInt((row.querySelector('.pg-stock')?.value||'').replace(/,/g,''))||0,
+      finalPrice: md>0 ? Math.max(0,md-card-mile-cpn-bcpn2-postM2) : 0,
     };
   }).filter(function(s){
     // 상품코드 없어도 저장 — 어떤 값이든 하나라도 입력됐으면 저장
@@ -10854,7 +10873,7 @@ function saveProd(){
     appeal:v('p-appeal'), productBasicInfo:v('p-product-basic-info'), csInfo:v('p-cs-info'), deliveryInfo:v('p-delivery-info'), infRequest:v('p-inf-request'),
     settleProcessDate:v('p-settle-process-date'), settlePaymentDate:v('p-settle-payment-date'),
     promos:promos,
-    dealCode:v('p-deal-code'), saleStart:v('p-sale-start'), saleEnd:v('p-sale-end'), lowestPriceLink:v('p-lowest-price-link'),
+    dealCode:v('p-deal-code'), saleStart:v('p-sale-start'), saleEnd:v('p-sale-end'), eventText:v('p-event-text'), lowestPriceLink:v('p-lowest-price-link'),
     // 모바일라이브 전용 필드
     productMargin: parseFloat(document.getElementById('p-product-margin')?.value)||0,
     mliveReasons: (function(){ var r=[]; document.querySelectorAll('.mlive-reason-cb:checked').forEach(function(cb){ r.push(cb.value); }); return r; })(),
@@ -12318,9 +12337,12 @@ function addSkuRow(data){
     +'<td style="padding:3px 4px"><input class="inp inp-sm inp-money pg-card" placeholder="0" value="'+(d.cardDiscount?(+d.cardDiscount).toLocaleString('ko-KR'):'')+'" style="width:70px;text-align:right" oninput="formatMoney(this);calcSkuPriceRow(this)"></td>'
     +'<td style="padding:3px 4px"><input class="inp inp-sm inp-money pg-mileage" placeholder="0" value="'+(d.mileage?(+d.mileage).toLocaleString('ko-KR'):'')+'" style="width:70px;text-align:right" oninput="formatMoney(this);calcSkuPriceRow(this)"></td>'
     +'<td style="padding:3px 4px"><input class="inp inp-sm inp-money pg-coupon" placeholder="0" value="'+(d.coupon?(+d.coupon).toLocaleString('ko-KR'):'')+'" style="width:70px;text-align:right" oninput="formatMoney(this);calcSkuPriceRow(this)"></td>'
+    +'<td style="padding:3px 4px"><input class="inp inp-sm inp-money pg-broadcast-coupon" placeholder="0" value="'+(d.broadcastCoupon?(+d.broadcastCoupon).toLocaleString('ko-KR'):'')+'" style="width:70px;text-align:right" oninput="formatMoney(this);calcSkuPriceRow(this)"></td>'
+    +'<td style="padding:3px 4px"><input class="inp inp-sm inp-money pg-post-mileage" placeholder="0" value="'+(d.postMileage?(+d.postMileage).toLocaleString('ko-KR'):'')+'" style="width:70px;text-align:right" oninput="formatMoney(this);calcSkuPriceRow(this)"></td>'
     +'<td style="padding:3px 4px"><input class="inp inp-sm pg-promo" placeholder="기타" value="'+(d.promoText||'')+'" style="width:80px"></td>'
     +'<td style="padding:3px 4px;text-align:right;font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap" class="pg-final">'+(d.finalPrice?(+d.finalPrice).toLocaleString('ko-KR'):'-')+'</td>'
     +'<td style="padding:3px 4px"><input class="inp inp-sm inp-money pg-online-lowest" placeholder="0" value="'+(d.onlineLowestPrice?(+d.onlineLowestPrice).toLocaleString('ko-KR'):'')+'" style="width:80px;text-align:right" oninput="formatMoney(this)"></td>'
+    +'<td style="padding:3px 4px"><input class="inp inp-sm inp-money pg-stock" placeholder="0" value="'+(d.stock?(+d.stock).toLocaleString('ko-KR'):'')+'" style="width:60px;text-align:right" oninput="formatMoney(this)"></td>'
     +'<td style="padding:3px 4px"><button class="btn btn-danger btn-xs" onclick="this.closest(\'tr\').remove();updateSkuNumbers()" type="button">✕</button></td>';
   container.appendChild(row);
   row.querySelectorAll('.inp-money').forEach(function(el){
@@ -12336,7 +12358,9 @@ function calcSkuPriceRow(inp){
   var card = parse('.pg-card');
   var mile = parse('.pg-mileage');
   var cpn  = parse('.pg-coupon');
-  var final = md > 0 ? Math.max(0, md - card - mile - cpn) : 0;
+  var bcpn = parse('.pg-broadcast-coupon');
+  var postM = parse('.pg-post-mileage');
+  var final = md > 0 ? Math.max(0, md - card - mile - cpn - bcpn - postM) : 0;
   var cel = row.querySelector('.pg-final');
   if(cel) cel.textContent = final > 0 ? final.toLocaleString('ko-KR') : '-';
 }
