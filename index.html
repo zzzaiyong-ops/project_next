@@ -8078,6 +8078,7 @@ function exportCampaignProposal(){
   var noBorder = {};
 
   var setStyle = function(addr, st){ if(ws[addr]) ws[addr].s = st; else { ws[addr]={v:'',t:'s',s:st}; } };
+  var colChar = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
 
   // ── 제안서 영역 스타일 (A2~I9) ──
   setStyle('A2', titleStyle); // 제안서 타이틀
@@ -8106,7 +8107,6 @@ function exportCampaignProposal(){
   for(var ci5=7;ci5<=12;ci5++) setStyle(colChar[ci5]+'12', dataStyle);
 
   // 상품 테이블 헤더
-  var colChar = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
   colChar.forEach(function(ch,i){ if(headerRow[i]) setStyle(ch+'15', headerStyle); });
   colChar.forEach(function(ch){ setStyle(ch+'16', subHeaderStyle); });
 
