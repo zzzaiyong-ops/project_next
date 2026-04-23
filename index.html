@@ -2780,6 +2780,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       <button onclick="shareToKakao()" style="background:#FEE500;border:none;border-radius:8px;padding:7px 12px;color:#3A1D1D;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:5px">💬 카카오톡</button>
     </div>
     <button class="btn btn-danger btn-sm" id="prod-del-btn" style="display:none" onclick="delCampFromModal()">삭제</button>
+    <button class="btn btn-ghost btn-sm" id="prod-export-btn" style="display:none;color:var(--green);border-color:var(--green)" onclick="exportCampaignProposal()">📊 엑셀 다운로드</button>
     <button class="btn btn-ghost btn-sm" onclick="closeMo('product')">취소</button>
     <button class="btn btn-primary btn-sm" id="prod-save-btn" onclick="saveProd()">캠페인 등록</button>
   </div>
@@ -5722,6 +5723,7 @@ function editProd(id){
   document.getElementById('prod-mo-title').textContent = '캠페인 수정';
   document.getElementById('prod-save-btn').textContent = '수정 저장';
   var delBtn=document.getElementById('prod-del-btn'); if(delBtn) delBtn.style.display=isAdmin()?'':'none';
+  var expBtn=document.getElementById('prod-export-btn'); if(expBtn) expBtn.style.display='';
   initSections(false); // 모든 섹션 닫힌 상태로 초기화
   openMo('product');
   // 상태 배지 표시
@@ -7861,6 +7863,285 @@ function delCampFromModal(){
     closeMo('product');
     _delCampConfirmed(id);
   });
+}
+
+// ── 신세계라이브쇼핑 제안서 엑셀 다운로드 ──
+function exportCampaignProposal(){
+  if(typeof XLSX==='undefined'){ showToast('엑셀 라이브러리 로드 실패'); return; }
+  // 현재 모달의 데이터를 우선 사용, 저장된 캠페인이면 DB 데이터 보완
+  var editId = parseInt(document.getElementById('p-edit-id')?.value)||0;
+  var c = editId ? (DB.campaigns.find(function(x){return x.id===editId;})||{}) : {};
+  // 폼 값으로 덮어쓰기 (입력 중인 값 반영)
+  var v=function(id){return (document.getElementById(id)?.value||'').trim();};
+  var iv=function(id){return parseInt((document.getElementById(id)?.value||'').replace(/,/g,''))||0;};
+  var name = v('p-name') || c.name || '캠페인명';
+  var revenue = iv('p-revenue') || c.revenue || 0;
+  var startD = (v('p-start')||c.start||c.startDate||'').replace('T',' ');
+  var endD   = (v('p-end')||c.end||c.endDate||'').replace('T',' ');
+  var owner  = v('p-owner') || c.owner || '';
+  var infData = (typeof getInfBlocksData==='function' ? getInfBlocksData() : null) || c.infData || [];
+  var inf0 = infData[0] || {};
+  var infName = inf0.infName || c.infName || '';
+  var mcn = inf0.mcn || c.mcn || '';
+  var feeRate = inf0.feeRate || c.feeRate || 0;
+  var feeAmount = inf0.feeAmount || c.feeAmount || 0;
+  var channelLink = (function(){
+    if(inf0.youtube) return 'https://www.youtube.com/@'+inf0.youtube;
+    if(inf0.insta)   return 'https://www.instagram.com/'+inf0.insta+'/';
+    if(inf0.twitter) return 'https://x.com/'+inf0.twitter;
+    if(c.channels){
+      if(c.channels.youtube) return 'https://www.youtube.com/@'+c.channels.youtube;
+      if(c.channels.insta)   return 'https://www.instagram.com/'+c.channels.insta+'/';
+      if(c.channels.twitter) return 'https://x.com/'+c.channels.twitter;
+    }
+    return '';
+  })();
+  var dealUrl = v('appmkt-deal-url') || (c.appMkt&&c.appMkt.dealUrl) || '';
+  var etcText = v('appmkt-etc-text') || (c.appMkt&&c.appMkt.etcText) || '';
+  var dealCode = v('p-deal-code') || c.dealCode || '';
+  var skus = (function(){
+    var rows = document.querySelectorAll('#sku-list .sku-row');
+    if(rows.length){
+      return Array.from(rows).map(function(r){
+        var pInt=function(cls){ return parseInt((r.querySelector(cls)?.value||'').replace(/,/g,''))||0; };
+        var pStr=function(cls){ return (r.querySelector(cls)?.value||'').trim(); };
+        return {
+          code: pStr('.sku-code'), productName: pStr('.sku-pname'),
+          price: pInt('.pg-price'), mdPrice: pInt('.pg-md'),
+          cardDiscount: pInt('.pg-card'), mileage: pInt('.pg-mileage'),
+          coupon: pInt('.pg-coupon'),
+          finalPrice: (function(){var md=pInt('.pg-md');return md>0?Math.max(0,md-pInt('.pg-card')-pInt('.pg-mileage')-pInt('.pg-coupon')):0;})(),
+          onlineLowestPrice: pInt('.pg-online-lowest'),
+          promoText: pStr('.pg-promo')
+        };
+      }).filter(function(s){ return s.code||s.productName; });
+    }
+    return c.skus || [];
+  })();
+  var mainSkuCode = (skus[0] && skus[0].code) || '';
+  var csInfo = v('p-cs-info') || c.csInfo || '';
+  // CS 정보 파싱 (1)~6) 라인별)
+  var csLines = csInfo.split(/\r?\n/);
+  var getCsField = function(prefix){
+    for(var i=0;i<csLines.length;i++){
+      if(csLines[i].indexOf(prefix)>=0){
+        var idx = csLines[i].indexOf(':');
+        return idx>=0 ? csLines[i].slice(idx+1).trim() : '';
+      }
+    }
+    return '';
+  };
+  var taxStatus = getCsField('과세') || '과세';
+  var maker = getCsField('제조사') || '';
+  var returnContact = getCsField('반품교환문의') || '';
+  var pickupAddr = getCsField('출고지') || '';
+  var returnAddr = '';
+  // 배송정보
+  var courier = v('p-courier') || c.courier || 'CJ대한통운';
+  var shipFree = !!(document.getElementById('p-ship-free')?.checked) || c.shipFree;
+  var shipFee  = iv('p-ship-fee') || c.shipFee || 0;
+  var islandFree = !!(document.getElementById('p-island-free')?.checked) || c.islandFree;
+  var islandFee  = iv('p-island-fee') || c.islandFee || 0;
+  var exchangeFee = iv('p-exchange-fee') || c.exchangeFee || 0;
+  var returnFee   = iv('p-return-fee') || c.returnFee || 0;
+  var shipCutoff  = v('p-ship-cutoff') || c.shipCutoff || '';
+  var deliveryEtc = v('p-delivery-info') || c.deliveryInfo || '';
+  var appeal = v('p-appeal') || c.appeal || '';
+
+  // 헬퍼: 통화 포맷
+  var fmtKRW = function(n){ return n ? n.toLocaleString('ko-KR')+'원' : ''; };
+  var fmtNum = function(n){ return n ? n.toLocaleString('ko-KR') : ''; };
+
+  // ─── 워크시트 데이터 (2D 배열, A1=row[0][0]) ───
+  // 33행 × 14열(A~N) 구조
+  var aoa = [];
+  for(var i=0;i<35;i++){ aoa.push(new Array(14).fill('')); }
+
+  // [신세계라이브쇼핑 제안서] 영역 (A2~G9)
+  aoa[1][0]='[신세계라이브쇼핑 제안서]';
+  // 컨텐츠 업로드일정 헤더 (G2~)
+  aoa[1][6]='[인플루언서 공구 컨텐츠 업로드일정]';
+  aoa[2][6]='내용'; aoa[2][7]='업로드 일시'; aoa[2][8]='결과';
+  aoa[3][6]='사전 공유 일정';
+  aoa[4][6]='사전 빌드업 릴스';
+  aoa[5][6]='예고 피드';
+  aoa[6][6]='스토리 컨텐츠';
+  aoa[7][6]='오픈 메인 피드';
+  aoa[8][6]='클로징 피드';
+  // 캠페인 기본정보 매핑 (B,D 컬럼: idx 1, idx 3)
+  aoa[2][0]='캠페인명';        aoa[2][1]=name;          aoa[2][2]='예상 매출';   aoa[2][3]=fmtKRW(revenue);
+  aoa[3][0]='캠페인 시작일';   aoa[3][1]=startD;        aoa[3][2]='캠페인 종료일'; aoa[3][3]=endD;
+  aoa[4][0]='캠페인 담당';     aoa[4][1]=owner;         aoa[4][2]='MCN업체';     aoa[4][3]=mcn;
+  aoa[5][0]='인플루언서명';    aoa[5][1]=infName;       aoa[5][2]='채널 링크';   aoa[5][3]=channelLink;
+  aoa[6][0]='정율 수수료';     aoa[6][1]=feeRate?(feeRate+'%(VAT포함)'):'';   aoa[6][2]='정액 원고료'; aoa[6][3]=feeAmount?(Math.round(feeAmount/10000)+'만원(VAT별도)'):'';
+  aoa[7][0]='구매 랜딩 URL';   aoa[7][1]=dealUrl;
+  aoa[8][0]='기타 사항';       aoa[8][1]=etcText;
+
+  // [상품정보] (A11~)
+  aoa[10][0]='[상품정보]';
+  aoa[11][0]='상품 딜코드';    aoa[11][1]=dealCode;      aoa[11][6]='이슈 사항';   aoa[11][7]=appeal;
+  aoa[12][3]='메인 상품코드';  aoa[12][4]=mainSkuCode;
+  // 상품 테이블 헤더 (row 14, idx 13)
+  var headerRow = ['상품코드','상품명','정상가','기본 혜택가','웰컴고객','카드 5%','사후 적립금','최종 공구 혜택가','[온라인최저가]','사은품 등 기타 혜택','[기타 혜택]','[이벤트]','재고수'];
+  for(var hi=0; hi<headerRow.length; hi++) aoa[14][hi]=headerRow[hi];
+  // 헤더 보조설명 (row 15, idx 14)
+  aoa[15][4]='1. 쿠폰 5,000원\n2. 적립금 3,000원';
+  aoa[15][5]='(5만원이상, 적용카드 결제시)';
+  aoa[15][6]='원, 14000원 지급(조건)';
+  aoa[15][7]='최종 공구 혜택가';
+  aoa[15][8]='채널 온라인 비교(다나와)';
+  aoa[15][9]='장기무이자, 기획전 행사 등';
+  aoa[15][10]='장기무이자 행사기간 공동 혜택';
+  aoa[15][11]='(당사 업체 비용 또는 인플루언서 비용)';
+  // 상품 데이터 (row 16부터, idx 15)
+  var prodStartIdx = 16; // 0-indexed → 17행
+  skus.forEach(function(s, si){
+    var rowIdx = prodStartIdx + si;
+    if(!aoa[rowIdx]) aoa[rowIdx] = new Array(14).fill('');
+    aoa[rowIdx][0] = s.code||'';
+    aoa[rowIdx][1] = s.productName||'';
+    aoa[rowIdx][2] = s.price ? fmtNum(s.price) : '';
+    aoa[rowIdx][3] = s.mdPrice ? fmtNum(s.mdPrice) : '';
+    aoa[rowIdx][4] = s.cardDiscount ? fmtNum(s.cardDiscount) : '';
+    aoa[rowIdx][5] = s.coupon ? fmtNum(s.coupon) : '';
+    aoa[rowIdx][6] = s.mileage ? fmtNum(s.mileage) : '';
+    aoa[rowIdx][7] = s.finalPrice ? fmtNum(s.finalPrice) : '';
+    aoa[rowIdx][8] = s.onlineLowestPrice ? fmtNum(s.onlineLowestPrice) : '';
+    aoa[rowIdx][11] = s.promoText||'';
+  });
+
+  // [배송정책] (A20~ 또는 상품 행 다음)
+  var deliveryStartIdx = Math.max(20, prodStartIdx + skus.length + 1);
+  aoa[deliveryStartIdx]   = ['배송정책','','','','','','상품 USP','','','','','','',''];
+  aoa[deliveryStartIdx+1] = ['과세/면세', taxStatus,'','','','','상품 이미지','','','','','','',''];
+  aoa[deliveryStartIdx+2] = ['제조사/원산지', maker,'','','','','','','','','','','',''];
+  aoa[deliveryStartIdx+3] = ['택배사', courier,'','','','','','','','','','','',''];
+  aoa[deliveryStartIdx+4] = ['무료배송 조건', shipFree?'무료배송':(shipFee?fmtKRW(shipFee)+' 이상':''),'','','','','MD 작성 소구포인트',appeal,'','','','','',''];
+  aoa[deliveryStartIdx+5] = ['배송비', shipFree?'무료배송':fmtKRW(shipFee),'','','','','','','','','','','',''];
+  aoa[deliveryStartIdx+6] = ['제주/도서산간 추가배송비', islandFree?'배송불가':fmtKRW(islandFee),'','','','','','','','','','','',''];
+  aoa[deliveryStartIdx+7] = ['반품/교환비', exchangeFee && returnFee ? (fmtNum(exchangeFee)+' / '+fmtNum(returnFee)) : '','','','','','','','','','','','',''];
+  aoa[deliveryStartIdx+8] = ['출고지 주소', pickupAddr,'','','','','','','','','','','',''];
+  aoa[deliveryStartIdx+9] = ['교환·반품 주소', returnAddr,'','','','','','','','','','','',''];
+  aoa[deliveryStartIdx+10] = ['당일출고 마감시간', shipCutoff,'','','','','','','','','','','',''];
+  aoa[deliveryStartIdx+11] = ['당일 출고 가능 수량', '','','','','','','','','','','','',''];
+  aoa[deliveryStartIdx+12] = ['본사 cs 가이드/안내멘트', returnContact || deliveryEtc,'','','','','','','','','','','',''];
+
+  // ─── 워크북 생성 ───
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // 컬럼 너비 설정
+  ws['!cols'] = [
+    {wch:18},{wch:25},{wch:14},{wch:18},{wch:14},{wch:14},{wch:14},
+    {wch:16},{wch:14},{wch:18},{wch:18},{wch:22},{wch:8},{wch:8}
+  ];
+
+  // 셀 병합 (Merges)
+  var merges = [];
+  // 제안서 타이틀 (A2:F2)
+  merges.push({s:{r:1,c:0},e:{r:1,c:5}});
+  // 업로드일정 타이틀 (G2:I2)
+  merges.push({s:{r:1,c:6},e:{r:1,c:8}});
+  // 구매 랜딩 URL 값 병합 (B8:F8)
+  merges.push({s:{r:7,c:1},e:{r:7,c:5}});
+  // 기타사항 값 병합 (B9:F9)
+  merges.push({s:{r:8,c:1},e:{r:8,c:5}});
+  // 상품정보 타이틀 (A11:F11)
+  merges.push({s:{r:10,c:0},e:{r:10,c:5}});
+  // 이슈사항 값 (H12:M12)
+  merges.push({s:{r:11,c:7},e:{r:11,c:12}});
+  // 상품테이블 헤더 행 병합 (rows 14~15 같은 컬럼)
+  for(var ci=0; ci<13; ci++){
+    if(headerRow[ci]) merges.push({s:{r:14,c:ci},e:{r:15,c:ci}});
+  }
+  // 배송정책/상품USP 헤더
+  merges.push({s:{r:deliveryStartIdx,c:0},e:{r:deliveryStartIdx,c:1}});
+  merges.push({s:{r:deliveryStartIdx,c:6},e:{r:deliveryStartIdx,c:13}});
+  // MD 소구포인트 값
+  merges.push({s:{r:deliveryStartIdx+4,c:7},e:{r:deliveryStartIdx+11,c:13}});
+  ws['!merges'] = merges;
+
+  // ─── 셀 스타일 (xlsx-js-style) ───
+  var border = {top:{style:'thin',color:{rgb:'888888'}},bottom:{style:'thin',color:{rgb:'888888'}},left:{style:'thin',color:{rgb:'888888'}},right:{style:'thin',color:{rgb:'888888'}}};
+  var titleStyle = {fill:{fgColor:{rgb:'C6E0B4'}},font:{bold:true,sz:13},alignment:{horizontal:'left',vertical:'center'},border:border};
+  var headerStyle = {fill:{fgColor:{rgb:'D9E1F2'}},font:{bold:true,sz:11},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
+  var subHeaderStyle = {fill:{fgColor:{rgb:'FFE699'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
+  var labelStyle = {fill:{fgColor:{rgb:'F2F2F2'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
+  var dataStyle = {font:{sz:10},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:border};
+  var dataCenterStyle = {font:{sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
+  var dataRightStyle = {font:{sz:10},alignment:{horizontal:'right',vertical:'center',wrapText:true},border:border};
+  var noteStyle = {font:{sz:9,color:{rgb:'C00000'}},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:border};
+  var sectionHdrStyle = {fill:{fgColor:{rgb:'8EA9DB'}},font:{bold:true,sz:12,color:{rgb:'FFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:border};
+
+  var setStyle = function(addr, st){ if(ws[addr]) ws[addr].s = st; };
+  // 섹션 타이틀
+  setStyle('A2', titleStyle);
+  setStyle('G2', titleStyle);
+  setStyle('A11', titleStyle);
+
+  // 캠페인 기본정보 영역 (rows 3~9)
+  for(var r=2; r<=8; r++){
+    setStyle('A'+(r+1), labelStyle);
+    setStyle('B'+(r+1), dataStyle);
+    if(r<=6){ setStyle('C'+(r+1), labelStyle); setStyle('D'+(r+1), dataStyle); }
+  }
+  // 업로드일정 헤더 (row 3)
+  setStyle('G3', headerStyle); setStyle('H3', headerStyle); setStyle('I3', headerStyle);
+  // 업로드일정 라벨 (rows 4~9)
+  for(var r2=3; r2<=8; r2++){
+    setStyle('G'+(r2+1), labelStyle);
+    setStyle('H'+(r2+1), dataStyle);
+    setStyle('I'+(r2+1), dataStyle);
+  }
+
+  // 상품정보 라벨/값
+  setStyle('A12', labelStyle); setStyle('B12', dataStyle);
+  setStyle('D13', labelStyle); setStyle('E13', dataStyle);
+  setStyle('G12', labelStyle); setStyle('H12', dataStyle);
+
+  // 상품 테이블 헤더
+  var colChar = ['A','B','C','D','E','F','G','H','I','J','K','L','M'];
+  colChar.forEach(function(ch,i){ if(headerRow[i]) setStyle(ch+'15', headerStyle); });
+  // 보조 헤더 (row 16)
+  ['E','F','G','H','I','J','K','L'].forEach(function(ch){ setStyle(ch+'16', subHeaderStyle); });
+
+  // 상품 데이터
+  skus.forEach(function(s,si){
+    var rn = 17+si;
+    setStyle('A'+rn, dataCenterStyle);
+    setStyle('B'+rn, dataStyle);
+    ['C','D','E','F','G','H','I'].forEach(function(ch){ setStyle(ch+rn, dataRightStyle); });
+    setStyle('J'+rn, dataStyle); setStyle('K'+rn, dataStyle); setStyle('L'+rn, dataStyle); setStyle('M'+rn, dataCenterStyle);
+  });
+
+  // 배송정책 섹션 헤더
+  var dHdrRow = deliveryStartIdx+1;
+  setStyle('A'+dHdrRow, sectionHdrStyle);
+  setStyle('G'+dHdrRow, sectionHdrStyle);
+
+  // 배송정책 데이터 (12행)
+  for(var dr=1; dr<=13; dr++){
+    var rn2 = deliveryStartIdx+dr+1;
+    setStyle('A'+rn2, labelStyle);
+    setStyle('B'+rn2, dataStyle);
+  }
+  // MD 소구포인트
+  setStyle('G'+(deliveryStartIdx+5), labelStyle);
+  setStyle('H'+(deliveryStartIdx+5), dataStyle);
+  setStyle('G'+(deliveryStartIdx+2), labelStyle);
+
+  // 행 높이
+  ws['!rows'] = [];
+  ws['!rows'][1] = {hpt:24}; // 타이틀
+  ws['!rows'][7] = {hpt:30}; // 구매랜딩 URL
+  ws['!rows'][8] = {hpt:30}; // 기타사항
+  ws['!rows'][14] = {hpt:24}; // 상품 헤더
+  ws['!rows'][15] = {hpt:36}; // 보조 헤더
+
+  XLSX.utils.book_append_sheet(wb, ws, '제안서');
+  var fileName = '신세계라이브쇼핑_제안서_'+(name||'캠페인').replace(/[\\/:*?"<>|]/g,'_')+'.xlsx';
+  XLSX.writeFile(wb, fileName);
+  showToast('제안서 엑셀 다운로드 완료');
 }
 function _delCampConfirmed(id){
   var sid = String(id);
@@ -10267,6 +10548,7 @@ function openNewProd(){
   document.getElementById('prod-mo-title').textContent='캠페인 등록';
   document.getElementById('prod-save-btn').textContent='캠페인 등록';
   var delBtn2=document.getElementById('prod-del-btn'); if(delBtn2) delBtn2.style.display='none';
+  var expBtn2=document.getElementById('prod-export-btn'); if(expBtn2) expBtn2.style.display='none';
   // 신규 등록 시 상태 배지 + 공유 버튼 숨김
   var sa=document.getElementById('prod-stage-area'); if(sa) sa.style.display='none';
   var ccEl=document.getElementById('p-campcode'); if(ccEl) ccEl.style.display='none';
