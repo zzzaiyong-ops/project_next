@@ -1,0 +1,198 @@
+# ssg-m-hub GitLab CI/CD Pipeline (Static)
+
+stages:
+  - build
+  - push
+  - deploy
+
+variables:
+  AWS_REGION: "ap-northeast-2"
+  ECR_REGISTRY: "544687672890.dkr.ecr.ap-northeast-2.amazonaws.com"
+  ECR_REPOSITORY: "ssgtv-ai-repo"
+  IMAGE_NAME: "ssg-m-hub"
+
+# ─── Docker Build ───
+docker-build:
+  stage: build
+  image: docker:latest
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
+  script:
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHORT_SHA .
+    - docker tag $IMAGE_NAME:$CI_COMMIT_SHORT_SHA $IMAGE_NAME:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# ─── ECR Push ───
+push-to-ecr:
+  stage: push
+  image: docker:latest
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
+  before_script:
+    - apk add --no-cache aws-cli
+  script:
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+    - docker tag $IMAGE_NAME:$CI_COMMIT_SHORT_SHA $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_NAME-$CI_COMMIT_SHORT_SHA
+    - docker tag $IMAGE_NAME:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_NAME-latest
+    - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_NAME-$CI_COMMIT_SHORT_SHA
+    - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_NAME-latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  needs:
+    - docker-build
+
+# ─── Deploy Production (60 서버) ───
+deploy-prod:
+  stage: deploy
+  image: alpine:latest
+  variables:
+    PROD_EXTERNAL_PORT: "8098"
+  before_script:
+    - apk add --no-cache bash openssh-client
+    - |
+      if [ -z "$PROD_SERVER" ] || [ -z "$PROD_USER" ]; then
+        echo "================================================================"
+        echo "  [Vibe Portal] PROD 배포 중단 — 서버 정보 미설정"
+        echo "  PROD_SERVER / PROD_USER 변수가 설정되지 않았습니다."
+        echo "  Vibe Portal Admin에서 프로덕션 배포를 먼저 설정하세요."
+        echo "================================================================"
+        exit 1
+      fi
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - |
+      ssh-keyscan -T 3 -H "$PROD_SERVER" >> ~/.ssh/known_hosts 2>/dev/null
+      if [ ! -s ~/.ssh/known_hosts ]; then
+        echo "================================================================"
+        echo "  [Vibe Portal] PROD 배포 중단 — 서버 연결 불가"
+        echo "  $PROD_SERVER 에 SSH 접속할 수 없습니다 (타임아웃)."
+        echo "  서버 상태 / 방화벽 / SSH 서비스를 확인하세요."
+        echo "================================================================"
+        exit 1
+      fi
+  script:
+    - echo "Deploying ssg-m-hub to production ($PROD_SERVER)..."
+
+    # ── Vibe Portal 배포 가드: 필수 파일/포트/설정 검증 ──
+    - bash scripts/vibe-deploy-guard.sh prod
+
+    # ENV_FILE_PROD: whole .env file injected from Vibe Portal
+    - echo "$ENV_FILE_PROD" > .env.generated
+
+    # 서버에 소스 clone/pull (권한 문제 시 자동 복구)
+    - ssh $PROD_USER@$PROD_SERVER "mkdir -p $PROD_PATH"
+    - ssh $PROD_USER@$PROD_SERVER "if test -d ${PROD_PATH}/.git && ! test -w ${PROD_PATH}/.git; then echo '[deploy] .git 권한 오류 — 디렉토리 이동 후 재클론'; mv ${PROD_PATH} ${PROD_PATH}.broken.\$(date +%s); mkdir -p ${PROD_PATH}; fi"
+    - ssh $PROD_USER@$PROD_SERVER "test -d ${PROD_PATH}/.git && (cd ${PROD_PATH} && git fetch http://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git main && git reset --hard FETCH_HEAD) || git clone http://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git ${PROD_PATH}"
+
+    # .env 및 compose 파일 전송
+    - scp -o StrictHostKeyChecking=no .env.generated $PROD_USER@$PROD_SERVER:$PROD_PATH/.env
+    - scp -o StrictHostKeyChecking=no docker-compose.production.yml $PROD_USER@$PROD_SERVER:$PROD_PATH/docker-compose.production.yml
+
+    # ECR pull & tag
+    - ssh $PROD_USER@$PROD_SERVER "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY"
+    - ssh $PROD_USER@$PROD_SERVER "docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_NAME-latest && docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_NAME-latest $IMAGE_NAME:latest"
+
+    # 기존 컨테이너 정리
+    - ssh $PROD_USER@$PROD_SERVER "cd $PROD_PATH && docker compose -f docker-compose.production.yml down --remove-orphans 2>/dev/null || true"
+    - ssh $PROD_USER@$PROD_SERVER "docker rm -f $IMAGE_NAME 2>/dev/null || true"
+    - |
+      BLOCKING=$(ssh $PROD_USER@$PROD_SERVER "docker ps --filter publish=$PROD_EXTERNAL_PORT --format '{{.Names}}'")
+      if [ -n "$BLOCKING" ]; then
+        echo "================================================================"
+        echo "  [Vibe Portal] DEPLOY BLOCKED — PORT CONFLICT"
+        echo "  Port $PROD_EXTERNAL_PORT is occupied by container: $BLOCKING"
+        echo "  Fix: Vibe Portal Admin > 포트 관리에서 충돌 해결 필요"
+        echo "================================================================"
+        exit 1
+      fi
+
+    # docker compose up
+    - ssh $PROD_USER@$PROD_SERVER "cd $PROD_PATH && docker compose -f docker-compose.production.yml up -d"
+
+    # Analytics 추적 스크립트 주입 (nginx sub_filter, 누락 시에만)
+    - |
+      if [ -n "$ANALYTICS_TAG" ]; then
+        HAS=$(ssh $PROD_USER@$PROD_SERVER "curl -sf --max-time 3 http://localhost:$PROD_EXTERNAL_PORT/ 2>/dev/null | grep -c '_vp_id'" || echo "0")
+        if [ "$HAS" = "0" ]; then
+          ssh $PROD_USER@$PROD_SERVER "docker exec $IMAGE_NAME sh -c \"which nginx >/dev/null 2>&1 && { CONF=\\\$(find /etc/nginx -name '*.conf' -exec grep -l 'location' {} \\; | head -1); [ -n \\\"\\\$CONF\\\" ] && sed -i 's|</head>|${ANALYTICS_TAG}</head>|' \\\"\\\$CONF\\\" && nginx -s reload && echo '[analytics] injected'; } || echo '[analytics] not nginx'\"" || true
+        else
+          echo "[analytics] already present"
+        fi
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+      allow_failure: true
+  needs:
+    - push-to-ecr
+
+# ─── Develop Branch: Step 1 - Docker Image Build ───
+dev-docker-build:
+  stage: build
+  image: docker:latest
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
+  script:
+    - docker build -t $IMAGE_NAME:dev-$CI_COMMIT_SHORT_SHA .
+    - docker tag $IMAGE_NAME:dev-$CI_COMMIT_SHORT_SHA $IMAGE_NAME:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+# ─── Develop Branch: Step 2 - Deploy to Dev Server ───
+dev-deploy:
+  stage: deploy
+  image: docker:latest
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
+    DEV_SERVER: "10.222.252.147"
+    DEV_USER: "dev-068605-bjy"
+    DEV_PATH: "/home/dev-068605-bjy/projects/ssg-m-hub"
+    DEV_EXTERNAL_PORT: "7021"
+  before_script:
+    - apk add --no-cache bash openssh-client
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $DEV_SERVER >> ~/.ssh/known_hosts
+  script:
+    - echo "Deploying ssg-m-hub (develop) to $DEV_SERVER..."
+
+    # ── Vibe Portal 배포 가드: 필수 파일/포트/설정 검증 ──
+    - bash scripts/vibe-deploy-guard.sh dev
+
+    # ENV_FILE_DEV: whole .env file injected from Vibe Portal
+    - echo "$ENV_FILE_DEV" > .env.generated
+
+    # 서버에 소스 clone/pull (develop 브랜치, 권한 문제 시 자동 복구)
+    - ssh $DEV_USER@$DEV_SERVER "mkdir -p $DEV_PATH"
+    - ssh $DEV_USER@$DEV_SERVER "if test -d ${DEV_PATH}/.git && ! test -w ${DEV_PATH}/.git; then echo '[deploy] .git 권한 오류 — 디렉토리 이동 후 재클론'; mv ${DEV_PATH} ${DEV_PATH}.broken.\$(date +%s); mkdir -p ${DEV_PATH}; fi"
+    - ssh $DEV_USER@$DEV_SERVER "test -d ${DEV_PATH}/.git && (cd ${DEV_PATH} && git fetch http://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git develop && git reset --hard FETCH_HEAD) || git clone -b develop http://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git ${DEV_PATH}"
+
+    # .env 및 compose 파일 전송
+    - scp -o StrictHostKeyChecking=no .env.generated $DEV_USER@$DEV_SERVER:$DEV_PATH/.env
+    - scp -o StrictHostKeyChecking=no docker-compose.dev.yml $DEV_USER@$DEV_SERVER:$DEV_PATH/docker-compose.dev.yml
+
+    # 기존 컨테이너 정리 (docker-compose.dev.yml에 restart: unless-stopped 포함)
+    - ssh $DEV_USER@$DEV_SERVER "cd $DEV_PATH && docker compose -f docker-compose.dev.yml down --remove-orphans 2>/dev/null || true"
+    - ssh $DEV_USER@$DEV_SERVER "docker rm -f $IMAGE_NAME 2>/dev/null || true"
+    - |
+      BLOCKING=$(ssh $DEV_USER@$DEV_SERVER "docker ps --filter publish=$DEV_EXTERNAL_PORT --format '{{.Names}}'")
+      if [ -n "$BLOCKING" ]; then
+        echo "================================================================"
+        echo "  [Vibe Portal] DEPLOY BLOCKED — PORT CONFLICT"
+        echo "  Port $DEV_EXTERNAL_PORT is occupied by container: $BLOCKING"
+        echo "  Fix: Vibe Portal Admin > 포트 관리에서 충돌 해결 필요"
+        echo "================================================================"
+        exit 1
+      fi
+
+    # docker compose up
+    - ssh $DEV_USER@$DEV_SERVER "cd $DEV_PATH && docker compose -f docker-compose.dev.yml up -d --build"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+  needs:
+    - dev-docker-build
+

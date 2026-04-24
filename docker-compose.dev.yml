@@ -1,0 +1,19 @@
+# ssg-m-hub - Dev Server (10.222.252.147)
+services:
+  app:
+    build: .
+    image: "ssg-m-hub:latest"
+    container_name: "ssg-m-hub"
+    ports:
+      - "7021:80"
+    env_file:
+      - .env
+    environment:
+      - PORT=80
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
