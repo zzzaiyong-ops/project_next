@@ -2254,7 +2254,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
               <div class="search-sel-list" id="list-p-mlive-md"></div>
             </div>
           </div>
-          <div><label>상품마진 (%)</label><input class="inp" id="p-product-margin" placeholder="00" type="number" min="0" max="100" style="width:120px"></div>
+          <div><label>상품마진 (%)</label><input class="inp" id="p-product-margin" placeholder="00" type="number" min="0" max="100" style="width:120px" oninput="syncMarginToProfit()"></div>
         </div>
         <!-- 편성사유 -->
         <div style="margin-bottom:12px">
@@ -5900,6 +5900,7 @@ function editProd(id){
   document.querySelectorAll('.bas-reason-cb').forEach(function(cb){ cb.checked=(p.reasons||[]).includes(cb.value); });
   // 모바일라이브 전용 필드 복원
   var pmEl=document.getElementById('p-product-margin'); if(pmEl) pmEl.value=p.productMargin||'';
+  syncMarginToProfit();
   document.querySelectorAll('.mlive-reason-cb').forEach(function(cb){ cb.checked=(p.mliveReasons||[]).includes(cb.value); });
   document.querySelectorAll('.mlive-mktreq-cb').forEach(function(cb){ cb.checked=(p.mliveMktReq||[]).includes(cb.value); });
   document.querySelectorAll('.mlive-partner-cb').forEach(function(cb){ cb.checked=(p.mlivePartner||[]).includes(cb.value); });
@@ -7289,6 +7290,13 @@ function toggleAppMktFields(){
   updateTotalRevLabel();
 }
 // APP PUSH 섹션 표시: M라이브 + PUSH 체크 둘 다일 때만
+// 모바일라이브: 상품마진 → 정산 실질마진이익율 동기화
+function syncMarginToProfit(){
+  if(getCampType()!=='모바일라이브') return;
+  var margin = document.getElementById('p-product-margin')?.value||'';
+  var profitEl = document.getElementById('p-profit-rate');
+  if(profitEl){ profitEl.value = margin; calcSettleCost(); }
+}
 function updatePushSectionVisibility(){
   var isMlive = getCampType()==='모바일라이브';
   var pushChecked = document.getElementById('appmkt-push')?.checked;
@@ -12121,6 +12129,20 @@ function updateCampTypeUI(){
   // M라이브: 정산완료 체크박스 숨김
   var settleDoneWrap = document.getElementById('p-settle-done-wrap');
   if(settleDoneWrap) settleDoneWrap.style.display = isMlive ? 'none' : '';
+  // M라이브: 실질마진이익율을 상품마진에서 동기화 + DIM
+  var profitRateEl = document.getElementById('p-profit-rate');
+  if(profitRateEl){
+    if(isMlive){
+      profitRateEl.readOnly = true;
+      profitRateEl.style.background = 'var(--bg)';
+      profitRateEl.style.opacity = '0.5';
+      syncMarginToProfit();
+    } else {
+      profitRateEl.readOnly = false;
+      profitRateEl.style.background = '';
+      profitRateEl.style.opacity = '';
+    }
+  }
   // M라이브 + PUSH 체크 시에만 APP PUSH 섹션 표시
   updatePushSectionVisibility();
   // AI챗봇 섹션 (재방 전용)
