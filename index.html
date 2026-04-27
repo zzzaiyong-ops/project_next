@@ -7611,6 +7611,17 @@ function renderCamps(){
   var countEl = document.getElementById('camp-count');
   if(countEl) countEl.textContent = '총 '+filtered.length+'건'+(ME_ROLE==='md' ? ' (본인 담당)' : '');
 
+  // 미확정(1.캠페인요청) 2일 이상 → 상단 정렬
+  var _now2 = Date.now();
+  var _twoDays = 2*24*60*60*1000;
+  filtered.sort(function(a,b){
+    var aUnconf = a.stage==='1.캠페인요청' && (function(){ var d=new Date((a._registeredAt||a.start||a.startDate||'').slice(0,10)).getTime(); return !isNaN(d) && (_now2-d)>=_twoDays; })();
+    var bUnconf = b.stage==='1.캠페인요청' && (function(){ var d=new Date((b._registeredAt||b.start||b.startDate||'').slice(0,10)).getTime(); return !isNaN(d) && (_now2-d)>=_twoDays; })();
+    if(aUnconf && !bUnconf) return -1;
+    if(!aUnconf && bUnconf) return 1;
+    return (b.start||b.startDate||'') > (a.start||a.startDate||'') ? 1 : -1;
+  });
+
   // 페이징
   var totalPg2 = Math.max(1, Math.ceil(filtered.length / _campPageSize));
   if(_campPage > totalPg2) _campPage = totalPg2;
@@ -7638,6 +7649,9 @@ function renderCamps(){
     var infCount = (c.infData&&c.infData.length>0) ? c.infData.filter(function(d){return d.infName;}).length : (c.infName?1:0);
     var hasMlive = c.appMkt && c.appMkt.channels && c.appMkt.channels.indexOf('모바일라이브')>=0;
     var hasInfMkt = c.appMkt && c.appMkt.channels && c.appMkt.channels.some(function(ch){return ch!=='모바일라이브';});
+    // 미확정 2일 이상 → NEW 표기
+    var _isNewUnconf = c.stage==='1.캠페인요청' && (function(){ var d=new Date((c._registeredAt||c.start||c.startDate||'').slice(0,10)).getTime(); return !isNaN(d) && (_now2-d)>=_twoDays; })();
+    var _newBadge = _isNewUnconf ? '<span style="background:var(--red);color:#fff;padding:1px 5px;border-radius:10px;font-size:9px;font-weight:800;margin-right:3px">NEW</span>' : '';
 
     if(isMliveTab){
       // M-live tab: 주차, 방송일시, 편성코드, 캠페인명, 담당MD, 매출, 단계, 인플마케팅
@@ -7652,7 +7666,7 @@ function renderCamps(){
         + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
         + '<td style="font-size:11px;color:var(--accent2);font-weight:700;white-space:nowrap">'+_weekLabel+'</td>'
         + '<td style="font-size:12px;color:var(--text3);white-space:nowrap">'+fmtBroadcastDt(c)+'</td>'
-        + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+escHtml(liveCode)+'</td>'
+        + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+_newBadge+escHtml(liveCode)+'</td>'
         + '<td style="text-align:center">'+_bcTypeBadge+'</td>'
         + '<td><strong>'+escHtml(c.name)+'</strong></td>'
         + '<td style="color:var(--text2)">'+escHtml(mdNm||'-')+'</td>'
@@ -7664,7 +7678,7 @@ function renderCamps(){
       // 인플루언서 tab: 기존 구조
       rows += '<tr onclick="editProd('+c.id+')">'
         + '<td style="text-align:center;font-size:11px;font-weight:700;color:var(--text3);width:36px">'+rowNum+'</td>'
-        + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+escHtml(displayCampCode(c))+'</td>'
+        + '<td class="mob-hide" style="font-size:11px;font-family:monospace;color:var(--accent2);white-space:nowrap">'+_newBadge+escHtml(displayCampCode(c))+'</td>'
         + '<td><strong>'+escHtml(c.name)+'</strong><br><span style="font-size:11px;color:var(--text3)">'+(mdNm?'MD:'+mdNm:'')+'</span></td>'
         + '<td style="font-size:12px;color:var(--text3)">'+(c.start||'').slice(5)+'~'+(c.end||'').slice(5)+'</td>'
         + '<td style="color:var(--text2)">'+pdName+'</td>'
@@ -11089,7 +11103,13 @@ function saveProd(){
     if(newData.settleDone && (newData.stage==='7.정산'||newData.stage==='6.APP마케팅확정')){
       newData.stage = '7.정산완료';
     }
+    newData._lastModifiedAt = new Date().toISOString();
+    newData._lastModifiedBy = ME||'';
     addAct('✏️', name+' 캠페인 요청 수정', nowStr(), v('p-owner'));
+    // MD가 수정한 경우 로컬 알림 생성 (담당자에게)
+    if(ME_ROLE==='md'){
+      addNotif('✏️', '📝 ['+name+'] MD('+ME+')가 캠페인을 수정했습니다.', nowStr(), newData.id);
+    }
     // 수정한 본인에게는 알람 없음 — 타인이 수정 시에만 담당자에게 알람
 
     // ── 담당자 알림: 본인 외 다른 사람이 본인 담당 캠페인 수정 시 ──
@@ -11196,6 +11216,7 @@ function saveProd(){
         }
       }
     }
+    newData._registeredAt = new Date().toISOString();
     console.log('[saveProd] 신규 저장 실행, id:', newData.id);
     closeMo('product');
     // 저장 완료 팝업 즉시 표시
@@ -12586,6 +12607,35 @@ function initMoneyInputs(){
 }
 function addAct(ico,txt,time,by){ DB.activities.unshift({ico,txt,time,by}); if(DB.activities.length>30) DB.activities.pop(); }
 
+// ── 미확정 캠페인 알람 + MD 수정 알람 체크 ──
+function checkCampaignAlerts(){
+  var now = Date.now();
+  var twoDays = 2*24*60*60*1000;
+  var allValid = DB.campaigns.filter(function(c){ return c.name && c.name.trim(); });
+  // 1) 2일 미확정 캠페인 알람 (1단계 캠페인요청 상태가 2일 이상 유지)
+  allValid.forEach(function(c){
+    if(c.stage!=='1.캠페인요청') return;
+    // 등록일 추정: start 또는 _registeredAt
+    var regDate = c._registeredAt || c.start || c.startDate || '';
+    if(!regDate) return;
+    var regTime = new Date(regDate.slice(0,10)).getTime();
+    if(isNaN(regTime)) return;
+    var elapsed = now - regTime;
+    if(elapsed >= twoDays){
+      var days = Math.floor(elapsed/86400000);
+      var txt = '⏰ ['+c.name+'] 캠페인이 '+days+'일째 미확정 상태입니다. 확정을 진행해주세요.';
+      var key = 'unconfirmed-'+c.id;
+      if(!DB._alertedKeys) DB._alertedKeys = {};
+      if(!DB._alertedKeys[key]){
+        addNotif('⏰', txt, (c.start||'').slice(0,10), c.id);
+        DB._alertedKeys[key] = true;
+      }
+    }
+  });
+  // 3) MD 수정 알람은 saveProd에서 이미 처리됨 (Firebase user-notifs)
+  renderNotif();
+}
+
 
 // 기간 필터 상태
 // 날짜 기본값: 현재월 ~ 현재월+1
@@ -12824,6 +12874,7 @@ function renderAllPages(){
   renderS1(); renderS2(); renderS3(); renderS4(); renderS5(); renderS6(); renderS7();
   renderCamps(); renderReports(); renderDash(); updateBadges();
   if(_dashMode==='mlive') renderMliveDash();
+  checkCampaignAlerts();
 }
 function openQuick(){ openMo('quick'); }
 // 팝업 외부클릭 닫힘 비활성화 - 닫기/취소 버튼으로만 닫힘
