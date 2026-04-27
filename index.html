@@ -12617,11 +12617,11 @@ function initMoneyInputs(){
 }
 function addAct(ico,txt,time,by){ DB.activities.unshift({ico,txt,time,by}); if(DB.activities.length>30) DB.activities.pop(); }
 
-// ── 미확정 캠페인 알람 체크 ──
+// ── 캠페인 알람 체크 ──
 function checkCampaignAlerts(){
   var allValid = DB.campaigns.filter(function(c){ return c.name && c.name.trim(); });
   if(!DB._alertedKeys) DB._alertedKeys = {};
-  // 1.캠페인요청 상태 캠페인 → 즉시 알람
+  // 1.캠페인요청 상태 캠페인 → 즉시 알람 (관리자/매니저용)
   allValid.forEach(function(c){
     if(c.stage!=='1.캠페인요청') return;
     var key = 'new-camp-'+c.id;
@@ -12629,6 +12629,26 @@ function checkCampaignAlerts(){
     addNotif('🆕', '['+c.name+'] 신규 캠페인이 등록되었습니다. 확정을 진행해주세요.', (c._registeredAt||c.start||'').slice(0,10), c.id);
     DB._alertedKeys[key] = true;
   });
+  // MD 로그인 시: 본인이 등록한 캠페인 중 확정된 건 알림
+  if(ME_ROLE==='md'){
+    var confirmedList = [];
+    allValid.forEach(function(c){
+      var isMycamp = (c.owner||'').trim()===ME || (c.pdSingle||'').trim()===ME;
+      if(!isMycamp) return;
+      if(c.stage==='1.캠페인요청') return;
+      var key = 'confirmed-md-'+c.id;
+      if(DB._alertedKeys[key]) return;
+      addNotif('✅', '['+c.name+'] 캠페인이 확정되었습니다. ('+c.stage+')', (c._lastModifiedAt||c.start||'').slice(0,10), c.id);
+      DB._alertedKeys[key] = true;
+      confirmedList.push(c.name);
+    });
+    if(confirmedList.length && !DB._confirmedPopupShown){
+      DB._confirmedPopupShown = true;
+      setTimeout(function(){
+        alert('✅ 요청하신 캠페인이 확정되었습니다!\n\n' + confirmedList.map(function(n,i){ return (i+1)+'. '+n; }).join('\n'));
+      }, 500);
+    }
+  }
   renderNotif();
 }
 
