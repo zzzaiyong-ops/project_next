@@ -863,7 +863,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
     <div class="page-ttl" id="page-ttl">대시보드</div>
     <div class="topbar-r">
       <span title="Firebase 실시간 연결 상태"><span class="sync-dot" id="fb-status-dot"></span></span>
-      <div class="notif-btn" onclick="toggleNotif()" id="notif-btn">🔔<div class="notif-pip" id="notif-pip"></div></div>
+      <div class="notif-btn" onclick="toggleNotif()" id="notif-btn">🔔<div class="notif-pip" id="notif-pip" style="display:none"></div></div>
       <button class="btn btn-ghost btn-sm mob-hide" onclick="openCampBulkModal()" title="엑셀로 캠페인 일괄 등록" style="display:inline-flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg> 엑셀등록</button>
       <button class="btn btn-primary" onclick="openNewProd()">+ 캠페인 등록</button>
     </div>
@@ -12604,32 +12604,18 @@ function initMoneyInputs(){
 }
 function addAct(ico,txt,time,by){ DB.activities.unshift({ico,txt,time,by}); if(DB.activities.length>30) DB.activities.pop(); }
 
-// ── 미확정 캠페인 알람 + MD 수정 알람 체크 ──
+// ── 미확정 캠페인 알람 체크 ──
 function checkCampaignAlerts(){
-  var now = Date.now();
-  var twoDays = 2*24*60*60*1000;
   var allValid = DB.campaigns.filter(function(c){ return c.name && c.name.trim(); });
-  // 1) 2일 미확정 캠페인 알람 (1단계 캠페인요청 상태가 2일 이상 유지)
+  if(!DB._alertedKeys) DB._alertedKeys = {};
+  // 1.캠페인요청 상태 캠페인 → 즉시 알람
   allValid.forEach(function(c){
     if(c.stage!=='1.캠페인요청') return;
-    // 등록일 추정: start 또는 _registeredAt
-    var regDate = c._registeredAt || c.start || c.startDate || '';
-    if(!regDate) return;
-    var regTime = new Date(regDate.slice(0,10)).getTime();
-    if(isNaN(regTime)) return;
-    var elapsed = now - regTime;
-    if(elapsed >= twoDays){
-      var days = Math.floor(elapsed/86400000);
-      var txt = '⏰ ['+c.name+'] 캠페인이 '+days+'일째 미확정 상태입니다. 확정을 진행해주세요.';
-      var key = 'unconfirmed-'+c.id;
-      if(!DB._alertedKeys) DB._alertedKeys = {};
-      if(!DB._alertedKeys[key]){
-        addNotif('⏰', txt, (c.start||'').slice(0,10), c.id);
-        DB._alertedKeys[key] = true;
-      }
-    }
+    var key = 'new-camp-'+c.id;
+    if(DB._alertedKeys[key]) return;
+    addNotif('🆕', '['+c.name+'] 신규 캠페인이 등록되었습니다. 확정을 진행해주세요.', (c._registeredAt||c.start||'').slice(0,10), c.id);
+    DB._alertedKeys[key] = true;
   });
-  // 3) MD 수정 알람은 saveProd에서 이미 처리됨 (Firebase user-notifs)
   renderNotif();
 }
 
