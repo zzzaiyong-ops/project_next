@@ -3437,6 +3437,8 @@ function initAfterLogin(){
     if(cur && cur !== 'login-screen') renderPage(cur);
     else renderDash();
     updateOnline();
+    // MD 로그인 시 확정 캠페인 팝업 (최초 데이터 로드 1회)
+    if(!DB._mdLoginChecked){ DB._mdLoginChecked=true; checkMdConfirmedOnLogin(); }
     // 추가 데이터 로드 (AI분석, M라이브, 월목표)
     loadInfAiFromDb(); loadMliveFromDb(); loadTargetsFromDb();
   });
@@ -4651,6 +4653,8 @@ function enterDemoMode(role){
     // 기본정보 관리
     if(typeof renderMdcatTable==='function') renderMdcatTable();
     if(typeof renderMcnTable==='function')   renderMcnTable();
+    // MD 로그인 시 확정 캠페인 팝업
+    checkMdConfirmedOnLogin();
   }, 50);
 
   showToast('🔍 데모 모드 (저장 안됨)');
@@ -6174,8 +6178,19 @@ function saveConfirmModal(campId){
   _myLastSaveTime = Date.now();
   _myLastSaveCamps = [DB.campaigns[idx]];
 
-  addAct('✅', DB.campaigns[idx].name+' 캠페인 확정', nowStr(), ME);
-  addNotif('✅', DB.campaigns[idx].name+' 캠페인 확정됨', '방금 전');
+  var _confirmedCamp = DB.campaigns[idx];
+  _confirmedCamp._lastModifiedAt = new Date().toISOString();
+  addAct('✅', _confirmedCamp.name+' 캠페인 확정', nowStr(), ME);
+  addNotif('✅', '['+_confirmedCamp.name+'] 캠페인이 확정되었습니다.', nowStr(), campId);
+  // 담당 MD에게 Firebase 알림 생성
+  var _campMd = (_confirmedCamp.owner||'').trim();
+  if(_campMd && _campMd!==ME && fbReady && fbDB){
+    var _mdKey = _campMd.replace(/[.#$/[\]]/g,'_');
+    fbDB.ref('influencer-hub/user-notifs/'+_mdKey).push({
+      ico:'✅', txt:'['+_confirmedCamp.name+'] 요청하신 캠페인이 확정되었습니다.', time:nowStr(),
+      campId:campId, campName:_confirmedCamp.name, editor:ME, unread:true, createdAt:Date.now()
+    });
+  }
 
   document.getElementById('s2-confirm-modal').remove();
   setTimeout(function(){ renderAllPages(); }, 100);
@@ -12617,7 +12632,7 @@ function initMoneyInputs(){
 }
 function addAct(ico,txt,time,by){ DB.activities.unshift({ico,txt,time,by}); if(DB.activities.length>30) DB.activities.pop(); }
 
-// ── 캠페인 알람 체크 ──
+// ── 캠페인 알람 체크 (renderAllPages 시 호출) ──
 function checkCampaignAlerts(){
   var allValid = DB.campaigns.filter(function(c){ return c.name && c.name.trim(); });
   if(!DB._alertedKeys) DB._alertedKeys = {};
@@ -12629,30 +12644,31 @@ function checkCampaignAlerts(){
     addNotif('🆕', '['+c.name+'] 신규 캠페인이 등록되었습니다. 확정을 진행해주세요.', (c._registeredAt||c.start||'').slice(0,10), c.id);
     DB._alertedKeys[key] = true;
   });
-  // MD 로그인 시: 본인이 등록한 캠페인 중 확정된 건 알림
-  if(ME_ROLE==='md'){
-    var _confirmedRead = [];
-    try{ _confirmedRead = JSON.parse(localStorage.getItem('confirmed-notif-'+ME)||'[]'); }catch(e){}
-    var confirmedList = [];
-    allValid.forEach(function(c){
-      var isMycamp = (c.owner||'').trim()===ME || (c.pdSingle||'').trim()===ME;
-      if(!isMycamp) return;
-      if(c.stage==='1.캠페인요청') return;
-      var key = 'confirmed-md-'+c.id;
-      if(_confirmedRead.indexOf(key)>=0) return;
-      if(DB._alertedKeys[key]) return;
-      addNotif('✅', '['+c.name+'] 캠페인이 확정되었습니다. ('+c.stage+')', (c._lastModifiedAt||c.start||'').slice(0,10), c.id);
-      DB._alertedKeys[key] = true;
-      _confirmedRead.push(key);
-      confirmedList.push(c.name);
-    });
-    try{ localStorage.setItem('confirmed-notif-'+ME, JSON.stringify(_confirmedRead)); }catch(e){}
-    if(confirmedList.length && !DB._confirmedPopupShown){
-      DB._confirmedPopupShown = true;
-      setTimeout(function(){
-        alert('✅ 요청하신 캠페인이 확정되었습니다!\n\n' + confirmedList.map(function(n,i){ return (i+1)+'. '+n; }).join('\n'));
-      }, 500);
-    }
+  renderNotif();
+}
+// ── MD 로그인 시 확정 캠페인 팝업 (1회만, 로그인 직후 호출) ──
+function checkMdConfirmedOnLogin(){
+  if(ME_ROLE!=='md') return;
+  var allValid = DB.campaigns.filter(function(c){ return c.name && c.name.trim(); });
+  var _confirmedRead = [];
+  try{ _confirmedRead = JSON.parse(localStorage.getItem('confirmed-notif-'+ME)||'[]'); }catch(e){}
+  var confirmedList = [];
+  allValid.forEach(function(c){
+    var isMycamp = (c.owner||'').trim()===ME || (c.pdSingle||'').trim()===ME;
+    if(!isMycamp) return;
+    // 2단계 이상 = 확정된 건 (1단계 제외)
+    if(c.stage==='1.캠페인요청') return;
+    var key = 'confirmed-md-'+c.id+'-'+c.stage;
+    if(_confirmedRead.indexOf(key)>=0) return;
+    addNotif('✅', '['+c.name+'] 캠페인이 확정되었습니다. ('+c.stage+')', (c._lastModifiedAt||c.start||'').slice(0,10), c.id);
+    _confirmedRead.push(key);
+    confirmedList.push(c.name);
+  });
+  try{ localStorage.setItem('confirmed-notif-'+ME, JSON.stringify(_confirmedRead)); }catch(e){}
+  if(confirmedList.length){
+    setTimeout(function(){
+      alert('✅ 요청하신 캠페인이 확정되었습니다!\n\n' + confirmedList.map(function(n,i){ return (i+1)+'. '+n; }).join('\n'));
+    }, 500);
   }
   renderNotif();
 }
