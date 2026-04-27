@@ -12631,17 +12631,22 @@ function checkCampaignAlerts(){
   });
   // MD 로그인 시: 본인이 등록한 캠페인 중 확정된 건 알림
   if(ME_ROLE==='md'){
+    var _confirmedRead = [];
+    try{ _confirmedRead = JSON.parse(localStorage.getItem('confirmed-notif-'+ME)||'[]'); }catch(e){}
     var confirmedList = [];
     allValid.forEach(function(c){
       var isMycamp = (c.owner||'').trim()===ME || (c.pdSingle||'').trim()===ME;
       if(!isMycamp) return;
       if(c.stage==='1.캠페인요청') return;
       var key = 'confirmed-md-'+c.id;
+      if(_confirmedRead.indexOf(key)>=0) return;
       if(DB._alertedKeys[key]) return;
       addNotif('✅', '['+c.name+'] 캠페인이 확정되었습니다. ('+c.stage+')', (c._lastModifiedAt||c.start||'').slice(0,10), c.id);
       DB._alertedKeys[key] = true;
+      _confirmedRead.push(key);
       confirmedList.push(c.name);
     });
+    try{ localStorage.setItem('confirmed-notif-'+ME, JSON.stringify(_confirmedRead)); }catch(e){}
     if(confirmedList.length && !DB._confirmedPopupShown){
       DB._confirmedPopupShown = true;
       setTimeout(function(){
