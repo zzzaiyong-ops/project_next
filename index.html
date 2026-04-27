@@ -7611,12 +7611,10 @@ function renderCamps(){
   var countEl = document.getElementById('camp-count');
   if(countEl) countEl.textContent = '총 '+filtered.length+'건'+(ME_ROLE==='md' ? ' (본인 담당)' : '');
 
-  // 미확정(1.캠페인요청) 2일 이상 → 상단 정렬
-  var _now2 = Date.now();
-  var _twoDays = 2*24*60*60*1000;
+  // 미확정(1.캠페인요청) → 상단 정렬 (등록 즉시)
   filtered.sort(function(a,b){
-    var aUnconf = a.stage==='1.캠페인요청' && (function(){ var d=new Date((a._registeredAt||a.start||a.startDate||'').slice(0,10)).getTime(); return !isNaN(d) && (_now2-d)>=_twoDays; })();
-    var bUnconf = b.stage==='1.캠페인요청' && (function(){ var d=new Date((b._registeredAt||b.start||b.startDate||'').slice(0,10)).getTime(); return !isNaN(d) && (_now2-d)>=_twoDays; })();
+    var aUnconf = a.stage==='1.캠페인요청';
+    var bUnconf = b.stage==='1.캠페인요청';
     if(aUnconf && !bUnconf) return -1;
     if(!aUnconf && bUnconf) return 1;
     return (b.start||b.startDate||'') > (a.start||a.startDate||'') ? 1 : -1;
@@ -7649,9 +7647,8 @@ function renderCamps(){
     var infCount = (c.infData&&c.infData.length>0) ? c.infData.filter(function(d){return d.infName;}).length : (c.infName?1:0);
     var hasMlive = c.appMkt && c.appMkt.channels && c.appMkt.channels.indexOf('모바일라이브')>=0;
     var hasInfMkt = c.appMkt && c.appMkt.channels && c.appMkt.channels.some(function(ch){return ch!=='모바일라이브';});
-    // 미확정 2일 이상 → NEW 표기
-    var _isNewUnconf = c.stage==='1.캠페인요청' && (function(){ var d=new Date((c._registeredAt||c.start||c.startDate||'').slice(0,10)).getTime(); return !isNaN(d) && (_now2-d)>=_twoDays; })();
-    var _newBadge = _isNewUnconf ? '<span style="background:var(--red);color:#fff;padding:1px 5px;border-radius:10px;font-size:9px;font-weight:800;margin-right:3px">NEW</span>' : '';
+    // 미확정(1.캠페인요청) → 즉시 NEW 표기
+    var _newBadge = c.stage==='1.캠페인요청' ? '<span style="background:var(--red);color:#fff;padding:1px 5px;border-radius:10px;font-size:9px;font-weight:800;margin-right:3px">NEW</span>' : '';
 
     if(isMliveTab){
       // M-live tab: 주차, 방송일시, 편성코드, 캠페인명, 담당MD, 매출, 단계, 인플마케팅
