@@ -11569,6 +11569,15 @@ function addInfBlock(data){
     +'<input type="checkbox" class="inf-sexempt-'+n+'" style="width:15px;height:15px;accent-color:var(--orange);cursor:pointer"'+(d.sampleExempt?' checked':'')+'>'
     +'<span style="font-size:12.5px;font-weight:600;color:var(--orange)">🚫 샘플발송 미대상</span></label>'
     +'</div>'
+    // 컨텐츠 영역
+    +'<div style="margin:8px 0;border-top:1px dashed var(--border);padding-top:8px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📹 컨텐츠</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    +'<label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600">스토리 <input class="inp inp-sm inf-ct-story-'+n+'" type="number" min="0" placeholder="0" value="'+(d.ctStory||'')+'" style="width:45px;text-align:center">개</label>'
+    +'<label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600">릴스 <input class="inp inp-sm inf-ct-reels-'+n+'" type="number" min="0" placeholder="0" value="'+(d.ctReels||'')+'" style="width:45px;text-align:center">개</label>'
+    +'<label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600">롱폼 <input class="inp inp-sm inf-ct-long-'+n+'" type="number" min="0" placeholder="0" value="'+(d.ctLong||'')+'" style="width:45px;text-align:center">개</label>'
+    +'<label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600">숏폼 <input class="inp inp-sm inf-ct-short-'+n+'" type="number" min="0" placeholder="0" value="'+(d.ctShort||'')+'" style="width:45px;text-align:center">개</label>'
+    +'</div></div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">'
     +'<div><label style="font-size:11.5px;font-weight:600;margin-bottom:4px;display:block">연락처</label>'
     +'<input class="inp inf-contact-'+n+'" placeholder="전화번호 또는 이메일" value="'+(d.contact||'')+'"></div>'
@@ -11613,6 +11622,10 @@ function getInfBlocksData(){
       sampleSent:!!(block.querySelector('.inf-ssent-'+n)?.checked),
       sampleExempt:!!(block.querySelector('.inf-sexempt-'+n)?.checked),
       sampleAddress:block.querySelector('.inf-saddr-'+n)?.value.trim()||'',
+      ctStory: parseInt(block.querySelector('.inf-ct-story-'+n)?.value)||0,
+      ctReels: parseInt(block.querySelector('.inf-ct-reels-'+n)?.value)||0,
+      ctLong:  parseInt(block.querySelector('.inf-ct-long-'+n)?.value)||0,
+      ctShort: parseInt(block.querySelector('.inf-ct-short-'+n)?.value)||0,
     });
   });
   return result;
