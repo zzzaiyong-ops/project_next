@@ -12656,8 +12656,8 @@ function checkMdConfirmedOnLogin(){
   allValid.forEach(function(c){
     var isMycamp = (c.owner||'').trim()===ME || (c.pdSingle||'').trim()===ME;
     if(!isMycamp) return;
-    // 2단계 이상 = 확정된 건 (1단계 제외)
-    if(c.stage==='1.캠페인요청') return;
+    // 2.캠페인확정 단계만 알림
+    if(c.stage!=='2.캠페인확정') return;
     var key = 'confirmed-md-'+c.id+'-'+c.stage;
     if(_confirmedRead.indexOf(key)>=0) return;
     addNotif('✅', '['+c.name+'] 캠페인이 확정되었습니다. ('+c.stage+')', (c._lastModifiedAt||c.start||'').slice(0,10), c.id);
