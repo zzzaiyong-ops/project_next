@@ -11118,10 +11118,6 @@ function saveProd(){
     newData._lastModifiedAt = new Date().toISOString();
     newData._lastModifiedBy = ME||'';
     addAct('✏️', name+' 캠페인 요청 수정', nowStr(), v('p-owner'));
-    // MD가 수정한 경우 로컬 알림 생성 (담당자에게)
-    if(ME_ROLE==='md'){
-      addNotif('✏️', '📝 ['+name+'] MD('+ME+')가 캠페인을 수정했습니다.', nowStr(), newData.id);
-    }
     // 수정한 본인에게는 알람 없음 — 타인이 수정 시에만 담당자에게 알람
 
     // ── 담당자 알림: 본인 외 다른 사람이 본인 담당 캠페인 수정 시 ──
@@ -12636,14 +12632,28 @@ function addAct(ico,txt,time,by){ DB.activities.unshift({ico,txt,time,by}); if(D
 function checkCampaignAlerts(){
   var allValid = DB.campaigns.filter(function(c){ return c.name && c.name.trim(); });
   if(!DB._alertedKeys) DB._alertedKeys = {};
-  // 1.캠페인요청 상태 캠페인 → 즉시 알람 (관리자/매니저용)
-  allValid.forEach(function(c){
-    if(c.stage!=='1.캠페인요청') return;
-    var key = 'new-camp-'+c.id;
-    if(DB._alertedKeys[key]) return;
-    addNotif('🆕', '['+c.name+'] 신규 캠페인이 등록되었습니다. 확정을 진행해주세요.', (c._registeredAt||c.start||'').slice(0,10), c.id);
-    DB._alertedKeys[key] = true;
-  });
+
+  if(ME_ROLE==='md'){
+    // MD: 본인 캠페인 중 2.캠페인확정된 건만 알림
+    allValid.forEach(function(c){
+      if(c.stage!=='2.캠페인확정') return;
+      var isMycamp = (c.owner||'').trim()===ME || (c.pdSingle||'').trim()===ME;
+      if(!isMycamp) return;
+      var key = 'confirmed-'+c.id;
+      if(DB._alertedKeys[key]) return;
+      addNotif('✅', '['+c.name+'] 캠페인이 확정되었습니다.', (c._lastModifiedAt||c.start||'').slice(0,10), c.id);
+      DB._alertedKeys[key] = true;
+    });
+  } else {
+    // 관리자/매니저: MD가 등록한 신규 캠페인(1단계) 알림
+    allValid.forEach(function(c){
+      if(c.stage!=='1.캠페인요청') return;
+      var key = 'new-camp-'+c.id;
+      if(DB._alertedKeys[key]) return;
+      addNotif('🆕', '['+c.name+'] 신규 캠페인이 등록되었습니다. 확정을 진행해주세요.', (c._registeredAt||c.start||'').slice(0,10), c.id);
+      DB._alertedKeys[key] = true;
+    });
+  }
   renderNotif();
 }
 // ── MD 로그인 시 확정 캠페인 팝업 (1회만, 로그인 직후 호출) ──
