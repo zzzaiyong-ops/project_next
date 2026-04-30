@@ -5644,6 +5644,10 @@ function renderDash(){
   }
 
   document.getElementById('ds-role-tbl').innerHTML=sumRow+roleRows;
+  // 펼침 상태 복원
+  if(window._dashExpandedRoles){
+    window._dashExpandedRoles.forEach(function(id){ toggleRoleExpand(id); });
+  }
 
   renderCalendar();
   updateBadges();
@@ -10215,7 +10219,7 @@ function renderWeeklyView(){
       var mlId = 'ml-'+row.weekKey.replace(/[^a-zA-Z0-9]/g,'');
       var pr = wk.totAmt>0?(wk.totProfit/wk.totAmt*100).toFixed(0)+'%':'-';
 
-      html += '<tr style="background:var(--bg3);font-weight:600;cursor:pointer" onclick="document.querySelectorAll(\'.'+mlId+'\').forEach(function(r){r.style.display=r.style.display===\'none\'?\'table-row\':\'none\'})">'
+      html += '<tr style="background:var(--bg3);font-weight:600;cursor:pointer" onclick="if(!window._s8ExpandedWeeks)window._s8ExpandedWeeks=new Set();var _rows=document.querySelectorAll(\'.'+mlId+'\');var _show=_rows[0]&&_rows[0].style.display===\'none\';_rows.forEach(function(r){r.style.display=_show?\'table-row\':\'none\'});if(_show)window._s8ExpandedWeeks.add(\''+mlId+'\');else window._s8ExpandedWeeks.delete(\''+mlId+'\')">'
         +'<td style="padding:5px 8px;text-align:center;font-size:13px">+</td>'
         +'<td style="padding:5px 8px;white-space:nowrap"><b>'+wk.label+' M라이브</b></td>'
         +'<td></td><td></td><td></td>'
@@ -10276,6 +10280,12 @@ function renderWeeklyView(){
 
   html += '</tbody></table></div></div>';
   container.innerHTML = html;
+  // 펼침 상태 복원
+  if(window._s8ExpandedWeeks){
+    window._s8ExpandedWeeks.forEach(function(mlId){
+      document.querySelectorAll('.'+mlId).forEach(function(r){ r.style.display='table-row'; });
+    });
+  }
   // KPI 진행률 표시 (gt 계산 완료 후)
   var kpiEl = document.getElementById('s8-kpi-progress');
   if(kpiEl && _tgtAll > 0){
@@ -11827,17 +11837,20 @@ function renderSettleBlocks(settleList){
 
 
 function toggleRoleExpand(id){
+  if(!window._dashExpandedRoles) window._dashExpandedRoles = new Set();
   var arrow = document.getElementById(id+'-arrow');
   var detailRows = document.querySelectorAll('.'+id+'-detail');
   var noRow = document.getElementById(id+'-r0');
   var firstDetail = detailRows[0] || noRow;
-  
+
   var isOpen = firstDetail && firstDetail.style.display !== 'none';
   var newDisplay = isOpen ? 'none' : 'table-row';
-  
+
   if(noRow) noRow.style.display = newDisplay;
   detailRows.forEach(function(r){ r.style.display = newDisplay; });
   if(arrow) arrow.textContent = isOpen ? '▶' : '▼';
+  if(isOpen) window._dashExpandedRoles.delete(id);
+  else window._dashExpandedRoles.add(id);
 }
 function toggleSection(id){
   var body = document.getElementById(id);
