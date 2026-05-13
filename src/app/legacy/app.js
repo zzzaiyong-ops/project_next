@@ -7384,13 +7384,17 @@ function renderReports(){
     var mdcatVal = camp.mdcat||(camp.skus&&camp.skus[0]?camp.skus[0].mdcat:'')||'-';
     var revenue  = camp.settleRevenue || 0;
     var orders   = camp.settleOrders  || 0;
-    var feeRate  = parseFloat(camp.feeRate)||0;
-    var feeAmt   = parseInt(camp.feeAmount)||0;
-    var agRate   = parseFloat(camp.agencyRate)||0;
-    var daFee    = parseInt(camp.settleDa)||0;
-    var infFee   = Math.round(revenue * feeRate / 100);
-    var agFee    = Math.round(revenue * agRate  / 100);
-    var totalCost= infFee + feeAmt + agFee + daFee;
+    // ── settleData에서 정산 상세 정보 읽기 ──
+    var sd0    = (camp.settleData && camp.settleData[0]) || {};
+    var sdSkus = sd0.skuItems || [];
+    var totalInflow  = sdSkus.reduce(function(s,si){return s+(si.inflow||0);},0);
+    var totalNewMem  = sdSkus.reduce(function(s,si){return s+(si.newMembers||0);},0);
+    var totalNetOrd  = sdSkus.reduce(function(s,si){return s+(si.netOrders||0);},0);
+    var sdViews  = sd0.views || 0;
+    var ctrStr   = totalInflow>0 ? (totalNetOrd/totalInflow*100).toFixed(1)+'%' : '-';
+    // 비용 = 세금계산서 공급가액(부가세별도) 재계산
+    var _s8CF2   = Math.round((sd0.commFeeVat||0) / 1.1);
+    var totalCost= _s8CF2 + (sd0.fixedFee||0) + (sd0.metaFee||0);
     var startOnly = (camp.start||camp.startDate||'-').slice(0,10);
     var endOnly   = (camp.end||camp.endDate||'-').slice(0,10);
     var dateStr  = (startOnly!=='-' ? startOnly.slice(5) : '-')+' ~ '+(endOnly!=='-' ? endOnly.slice(5) : '-');
@@ -7408,6 +7412,10 @@ function renderReports(){
       + '<td style="font-size:12px">'+(camp.infName||'-')+'</td>'
       + '<td style="font-weight:700;color:var(--green)">'+(revenue ? revenue.toLocaleString('ko-KR')+'원' : '-')+'</td>'
       + '<td style="color:var(--text2)">'+(orders||'-')+'</td>'
+      + '<td style="font-size:12px;color:var(--text2)">'+(totalInflow ? totalInflow.toLocaleString() : '-')+'</td>'
+      + '<td style="font-size:12px;color:var(--text2)">'+(totalNewMem ? totalNewMem.toLocaleString() : '-')+'</td>'
+      + '<td style="font-size:12px;color:var(--accent2);font-weight:600">'+ctrStr+'</td>'
+      + '<td style="font-size:12px;color:var(--text2)">'+(sdViews ? sdViews.toLocaleString() : '-')+'</td>'
       + '<td style="font-weight:600;color:var(--orange)">'+(totalCost ? totalCost.toLocaleString('ko-KR')+'원' : '-')+'</td>'
       + '<td style="font-size:12px;color:var(--text3)">'+dateStr+'</td>'
       + '<td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editProd('+camp.id+')">상세</button></td>'
@@ -7415,7 +7423,7 @@ function renderReports(){
   });
 
   document.getElementById('rep-tbl').innerHTML = rows ||
-    '<tr><td colspan="13" class="empty" style="padding:32px;text-align:center;color:var(--text3)">해당 조건의 캠페인이 없습니다</td></tr>';
+    '<tr><td colspan="17" class="empty" style="padding:32px;text-align:center;color:var(--text3)">해당 조건의 캠페인이 없습니다</td></tr>';
   // 전체선택 체크박스 동기화
   var allCb = document.getElementById('s7-check-all'); if(allCb) allCb.checked = true;
   // 주차별 뷰 렌더링
@@ -7443,17 +7451,23 @@ function openS7Detail(campId){
 
   var revenue   = camp.settleRevenue || 0;
   var orders    = camp.settleOrders  || 0;
-  var feeRate   = parseFloat(camp.feeRate)||0;
-  var feeAmt    = parseInt(camp.feeAmount)||0;
-  var agRate    = parseFloat(camp.agencyRate)||0;
-  var daFee     = parseInt(camp.settleDa)||0;
-  var infFee    = Math.round(revenue * feeRate / 100);
-  var agFee     = Math.round(revenue * agRate  / 100);
-  var totalCost = infFee + feeAmt + agFee + daFee;
   var fmt = function(n){ return n ? n.toLocaleString('ko-KR')+'원' : '-'; };
   var pct = function(a,b){ return (b&&a) ? (a/b*100).toFixed(1)+'%' : '-'; };
 
-  // 반응도/도달 데이터 (저장된 데이터 또는 입력용)
+  // settleData에서 정산 상세 정보 읽기
+  var sd0      = (camp.settleData && camp.settleData[0]) || {};
+  var sdSkus   = sd0.skuItems || [];
+  var totalInflow  = sdSkus.reduce(function(s,si){return s+(si.inflow||0);},0);
+  var totalNewMem  = sdSkus.reduce(function(s,si){return s+(si.newMembers||0);},0);
+  var totalBuyers  = sdSkus.reduce(function(s,si){return s+(si.buyers||0);},0);
+  var totalNetOrd  = sdSkus.reduce(function(s,si){return s+(si.netOrders||0);},0);
+  var sdViews      = sd0.views    || 0;
+  var sdComments   = sd0.comments || 0;
+  var ctrVal = totalInflow>0 ? (totalNetOrd/totalInflow*100).toFixed(2) : '';
+  var _d2CF2   = Math.round((sd0.commFeeVat||0) / 1.1);
+  var taxSupply= _d2CF2 + (sd0.fixedFee||0) + (sd0.metaFee||0);
+  var totalCost= taxSupply;
+  // 반응도/도달 데이터 (s7Perf 또는 settleData 우선)
   var perf = camp.s7Perf || {};
 
   var el = document.createElement('div');
@@ -7473,38 +7487,32 @@ function openS7Detail(campId){
     + '<div style="background:var(--bg2);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">주문건수</div><div style="font-size:18px;font-weight:800;color:var(--blue)">'+(orders||'-')+'건</div></div>'
     + '</div></div>'
 
-    // 비용
+    // 비용 (세금계산서 공급가액 기준)
     + '<div style="margin-bottom:16px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:14px">'
-    + '<div style="font-weight:700;color:var(--text2);margin-bottom:10px">📊 비용</div>'
+    + '<div style="font-weight:700;color:var(--text2);margin-bottom:10px">📊 비용 (세금계산서 공급가액)</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px;font-size:13px">'
-    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">인플루언서 매출수수료 ('+feeRate+'%)</span><span style="font-weight:600">'+fmt(infFee)+'</span></div>'
-    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">원고료</span><span style="font-weight:600">'+fmt(feeAmt)+'</span></div>'
-    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">에이전시 수수료 cafe24 ('+agRate+'%)</span><span style="font-weight:600">'+fmt(agFee)+'</span></div>'
-    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">광고수익</span><span style="font-weight:600">'+fmt(daFee)+'</span></div>'
-    + '<div style="border-top:1px solid var(--border2);padding-top:8px;margin-top:4px;display:flex;justify-content:space-between"><span style="font-weight:800">비용 합계</span><span style="font-weight:800;color:var(--orange);font-size:15px">'+fmt(totalCost)+'</span></div>'
+    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">수수료 광고비2 (부가세별도)</span><span style="font-weight:600">'+fmt(_d2CF2)+'</span></div>'
+    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">정액 광고비 (부가세별도)</span><span style="font-weight:600">'+fmt(sd0.fixedFee||0)+'</span></div>'
+    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">별도 광고비 (메타광고)</span><span style="font-weight:600">'+fmt(sd0.metaFee||0)+'</span></div>'
+    + (sd0.commFeeVat ? '<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">수수료 광고비 (부가세포함)</span><span style="font-weight:600">'+fmt(sd0.commFeeVat)+'</span></div>' : '')
+    + '<div style="border-top:1px solid var(--border2);padding-top:8px;margin-top:4px;display:flex;justify-content:space-between"><span style="font-weight:800">세금계산서 공급가액 합계</span><span style="font-weight:800;color:var(--orange);font-size:15px">'+fmt(taxSupply)+'</span></div>'
     + '</div></div>'
 
-    // 반응도 입력
+    // 인플루언서 매출 실적 (settleData 기반)
     + '<div style="margin-bottom:16px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:14px">'
-    + '<div style="font-weight:700;color:var(--text2);margin-bottom:10px">📣 반응도</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
-    + '<div><label style="font-size:11px;color:var(--text3)">콘텐츠 조회수 (만)</label><input class="inp" id="s7-views" type="number" placeholder="0" value="'+(perf.views||'')+'" style="margin-top:4px"></div>'
-    + '<div><label style="font-size:11px;color:var(--text3)">댓글수</label><input class="inp" id="s7-comments" type="number" placeholder="0" value="'+(perf.comments||'')+'" style="margin-top:4px"></div>'
-    + '<div><label style="font-size:11px;color:var(--text3)">좋아요수</label><input class="inp" id="s7-likes" type="number" placeholder="0" value="'+(perf.likes||'')+'" style="margin-top:4px"></div>'
+    + '<div style="font-weight:700;color:var(--text2);margin-bottom:10px">🎯 인플루언서 매출 실적</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+    + '<div style="background:var(--bg2);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">당사유입</div><div style="font-size:16px;font-weight:800;color:var(--blue)">'+(totalInflow ? totalInflow.toLocaleString() : '-')+'</div></div>'
+    + '<div style="background:var(--bg2);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">구매자수</div><div style="font-size:16px;font-weight:800;color:var(--blue)">'+(totalBuyers ? totalBuyers.toLocaleString() : '-')+'</div></div>'
+    + '<div style="background:var(--bg2);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">신규가입</div><div style="font-size:16px;font-weight:800;color:var(--purple)">'+(totalNewMem ? totalNewMem.toLocaleString() : '-')+'</div></div>'
+    + '<div style="background:var(--bg2);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">CTR (전환율)</div><div style="font-size:16px;font-weight:800;color:var(--accent2)">'+(ctrVal ? ctrVal+'%' : '-')+'</div></div>'
+    + '<div style="background:var(--bg2);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">조회수</div><div style="font-size:16px;font-weight:800;color:var(--text2)">'+(sdViews ? sdViews.toLocaleString() : '-')+'</div></div>'
+    + '<div style="background:var(--bg2);border-radius:var(--r-sm);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">릴스댓글</div><div style="font-size:16px;font-weight:800;color:var(--text2)">'+(sdComments ? sdComments.toLocaleString() : '-')+'</div></div>'
     + '</div></div>'
 
-    // 도달 입력
-    + '<div style="margin-bottom:20px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:14px">'
-    + '<div style="font-weight:700;color:var(--text2);margin-bottom:10px">🎯 도달</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
-    + '<div><label style="font-size:11px;color:var(--text3)">유입</label><input class="inp" id="s7-inflow" type="number" placeholder="0" value="'+(perf.inflow||'')+'" oninput="calcS7Reach('+campId+')" style="margin-top:4px"></div>'
-    + '<div><label style="font-size:11px;color:var(--text3)">유입율% <span style="font-weight:400">(유입/조회수)</span></label><input class="inp" id="s7-inflow-rate" placeholder="자동계산" readonly style="margin-top:4px;background:var(--bg4);color:var(--accent2);font-weight:700"></div>'
-    + '<div><label style="font-size:11px;color:var(--text3)">전환율% <span style="font-weight:400">(유입/주문건수)</span></label><input class="inp" id="s7-conv-rate" placeholder="자동계산" readonly style="margin-top:4px;background:var(--bg4);color:var(--accent2);font-weight:700"></div>'
-    + '</div></div>'
-
-    + '<div style="display:flex;justify-content:flex-end;gap:10px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="font-size:11px;color:var(--text3)">※ 상세 정보는 정산 화면에서 수정 가능합니다.</span>'
     + '<button class="btn btn-ghost" onclick="document.getElementById(&quot;s7-detail-modal&quot;).remove()">닫기</button>'
-    + '<button class="btn btn-primary" onclick="saveS7Detail('+campId+','+orders+','+revenue+')">저장</button>'
     + '</div></div>';
 
   document.body.appendChild(el);
