@@ -1,5 +1,4 @@
-
-<!-- ════════════════════════════════════
+﻿<!-- ════════════════════════════════════
      LOGIN SCREEN
 ════════════════════════════════════ -->
 <div id="login-screen">
@@ -116,23 +115,52 @@
     <span class="online-dot"></span>
     <span id="online-text">나 혼자 접속 중</span>
   </div>
+  <!-- 업무 모드 전환 라디오 -->
+  <div style="padding:6px 10px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;gap:4px">
+      <label id="sidebar-mode-inf" onclick="switchDashMode('inf');goPage('dashboard')" style="flex:1;display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 8px;border:2px solid var(--accent);border-radius:var(--r-sm);background:var(--accent-bg);transition:all .15s;white-space:nowrap">
+        <input type="radio" name="sidebar-mode" value="inf" checked style="accent-color:var(--accent);width:13px;height:13px;flex-shrink:0">
+        <span style="font-size:11px;font-weight:800;color:var(--text)">인플루언서</span>
+      </label>
+      <label id="sidebar-mode-mlive" onclick="switchDashMode('mlive');goPage('dashboard')" style="flex:1;display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 8px;border:2px solid var(--border);border-radius:var(--r-sm);background:var(--bg);transition:all .15s;white-space:nowrap">
+        <input type="radio" name="sidebar-mode" value="mlive" style="accent-color:var(--accent);width:13px;height:13px;flex-shrink:0">
+        <span style="font-size:11px;font-weight:800;color:var(--text)">M라이브</span>
+      </label>
+    </div>
+  </div>
   <nav>
     <div class="nav-sec">메인</div>
     <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard',this)"><span class="ico">▦</span> 대시보드</div>
+    <div class="nav-item" data-page="campaigns" id="nav-campaigns" onclick="goPage('campaigns',this)"><span class="ico">🚀</span> 전체 캠페인 <span class="nbadge" id="b-camp">3</span></div>
+    <!-- 인플루언서 마케팅 사이드바 -->
+    <div id="sidebar-inf-nav">
     <div class="nav-sec">7단계 업무 흐름</div>
     <div class="nav-item" data-page="s1" id="nav-s1" onclick="goPage('s1',this)"><span class="ico">📋</span> 1단계 · 캠페인요청</div>
     <div class="nav-item" data-page="s2" id="nav-s2" onclick="goPage('s2',this)"><span class="ico">✅</span> 2단계 · 캠페인확정 <span class="nbadge orange" id="b-s2">0</span></div>
     <div class="nav-item" data-page="s3" id="nav-s3" onclick="goPage('s3',this)"><span class="ico">📦</span> 3단계 · 상품정보등록 <span class="nbadge" id="b-s3">0</span></div>
     <div class="nav-item" data-page="s4" id="nav-s4" onclick="goPage('s4',this)"><span class="ico">📨</span> 4단계 · MCN요청 <span class="nbadge" id="b-s4">0</span></div>
     <div class="nav-item" data-page="s5" id="nav-s5" onclick="goPage('s5',this)"><span class="ico">👤</span> 5단계 · 인플루언서확정 <span class="nbadge orange" id="b-s5">0</span></div>
-    <div class="nav-item" data-page="s6" id="nav-s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 6단계 · APP마케팅 <span class="nbadge" id="b-s6">0</span></div>
+    <div class="nav-item" data-page="s6" id="nav-s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 6단계 · 모바일마케팅 <span class="nbadge" id="b-s6">0</span></div>
     <div class="nav-item" data-page="s7" id="nav-s7" onclick="goPage('s7',this)"><span class="ico">💰</span> 7단계 · 정산 <span class="nbadge" id="b-s7">0</span></div>
     <div class="nav-item" data-page="s8" id="nav-s8" onclick="goPage('s8',this)"><span class="ico">📈</span> 8단계 · 성과분석</div>
     <div class="nav-sec">관리</div>
     <div class="nav-item" data-page="influencers" id="nav-influencers" onclick="goPage('influencers',this)"><span class="ico">🗂️</span> 인플루언서 DB</div>
-    <div class="nav-item" data-page="campaigns" id="nav-campaigns" onclick="goPage('campaigns',this)"><span class="ico">🚀</span> 전체 캠페인 <span class="nbadge" id="b-camp">3</span></div>
+    </div>
+    <!-- 모바일라이브 사이드바 -->
+    <div id="sidebar-mlive-nav" style="display:none">
+    <div class="nav-sec">📺 M라이브 업무 흐름</div>
+    <div class="nav-item" data-page="s1" onclick="goPage('s1',this)"><span class="ico">📋</span> 1단계 · 편성요청 <span class="nbadge" id="b-ml-s1">0</span></div>
+    <div class="nav-item" data-page="s2" onclick="goPage('s2',this)"><span class="ico">✅</span> 2단계 · 편성확정 <span class="nbadge orange" id="b-ml-s2">0</span></div>
+    <div class="nav-item" data-page="s3" onclick="goPage('s3',this)"><span class="ico">📦</span> 3단계 · 상품정보등록 <span class="nbadge" id="b-ml-s3">0</span></div>
+    <div class="nav-item" data-page="s6" onclick="goPage('s6',this)"><span class="ico">📱</span> 4단계 · 모바일마케팅 <span class="nbadge" id="b-ml-s6">0</span></div>
+    <div class="nav-item" data-page="s7" onclick="goPage('s7',this)"><span class="ico">💰</span> 5단계 · 정산 <span class="nbadge" id="b-ml-s7">0</span></div>
+    <div class="nav-item" data-page="s8" onclick="goPage('s8',this)"><span class="ico">📈</span> 6단계 · 성과분석</div>
+    </div>
     <div class="nav-item" data-page="basemgmt" id="nav-basemgmt" style="display:none" onclick="goPage('basemgmt',this)"><span class="ico">⚙️</span> 기본정보 관리</div>
   </nav>
+  <div style="padding:4px 8px;border-top:1px solid var(--border)">
+    <button onclick="toggleSidebarCollapse()" style="width:100%;background:none;border:none;cursor:pointer;font-size:14px;color:var(--text3);padding:6px 0;font-family:inherit" title="메뉴 접기/펼치기" id="sidebar-toggle-btn">◀ 접기</button>
+  </div>
   <div class="sidebar-foot">
     <div style="padding:0 12px 8px">
       <button onclick="openProfilePanel()" style="background:rgba(108,92,231,0.12);border:1px solid rgba(108,92,231,0.25);border-radius:6px;padding:5px 10px;color:var(--accent2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='rgba(108,92,231,0.22)'" onmouseout="this.style.background='rgba(108,92,231,0.12)'">👤 내 정보 수정</button>
@@ -147,6 +175,8 @@
     </div>
   </div>
 </aside>
+<div class="mob-overlay" id="mob-overlay" onclick="toggleMobSidebar()"></div>
+<div id="sidebar-bookmark" onclick="toggleSidebarCollapse()">☰</div>
 
 <!-- MAIN -->
 <main class="main">
@@ -155,7 +185,8 @@
 
   <div class="topbar">
     <!-- 모바일 뒤로가기 (콘텐츠→사이드바) -->
-    <button id="mob-back-btn" onclick="closeMobContent()" style="display:none;margin-right:8px">← 메뉴</button>
+    <button id="mob-back-btn" onclick="closeMobContent()" style="display:none;margin-right:8px">← 뒤로</button>
+    <button id="mob-hamburger" onclick="toggleMobSidebar()" style="display:none;margin-right:8px;font-size:18px;background:none;border:none;cursor:pointer;padding:4px 8px">☰</button>
     <!-- 햄버거 버튼: PC에서만 (불필요하므로 모바일에서는 뒤로가기로 대체) -->
     <button id="mob-menu-btn" onclick="toggleMobMenu()" style="display:none;background:none;border:none;cursor:pointer;padding:4px 6px;margin-right:8px;color:var(--text);font-size:20px;line-height:1" aria-label="메뉴">☰</button>
     <!-- 페이지 뒤로가기 버튼 (대시보드 제외 모든 페이지에서 표시) -->
@@ -180,6 +211,14 @@
 
   <!-- ═══ DASHBOARD ═══ -->
   <div id="page-dashboard" class="page active">
+    <!-- ── 대시보드 유형 탭 (인플루언서 / 모바일라이브) ── -->
+    <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
+      <div class="tab active" id="dash-tab-inf" onclick="switchDashMode('inf')" style="padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;border-bottom:3px solid var(--accent);margin-bottom:-2px">👤 인플루언서 마케팅</div>
+      <div class="tab" id="dash-tab-mlive" onclick="switchDashMode('mlive')" style="padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;color:var(--text3);border-bottom:3px solid transparent;margin-bottom:-2px">📺 모바일라이브</div>
+    </div>
+
+    <!-- ══ 인플루언서 대시보드 영역 ══ -->
+    <div id="dash-inf-area">
 
     <!-- MD 전용 대시보드 블록 (md 역할 로그인 시 표시) -->
     <div id="dash-md-block" style="display:none;margin-bottom:18px">
@@ -321,6 +360,66 @@
       </div>
     </div>
 
+    </div><!-- /dash-inf-area -->
+
+    <!-- ══ 모바일라이브 대시보드 영역 ══ -->
+    <div id="dash-mlive-area" style="display:none">
+      <!-- MD 전용: M-live 상품정보 입력대상 -->
+      <div id="dash-mlive-md-block" style="display:none;margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:18px">📺</span>
+          <div style="font-size:15px;font-weight:800" id="dash-mlive-md-greeting">안녕하세요!</div>
+          <div style="font-size:12px;color:var(--text3);margin-left:4px">모바일라이브 현황</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div onclick="goPage('campaigns',document.getElementById('nav-campaigns'))"
+            style="background:var(--bg2);border:2px solid var(--blue);border-radius:var(--r-lg);padding:22px 24px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden"
+            onmouseover="this.style.background='var(--blue-bg)'" onmouseout="this.style.background='var(--bg2)'">
+            <div style="font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.4px;margin-bottom:10px">📦 상품 정보 입력 대상</div>
+            <div style="display:flex;align-items:flex-end;gap:6px">
+              <div style="font-size:42px;font-weight:900;color:var(--blue);line-height:1" id="dash-mlive-md-req-count">0</div>
+              <div style="font-size:16px;font-weight:700;color:var(--blue);margin-bottom:6px">건</div>
+            </div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:8px">본인 MD 담당 모바일라이브 중 상품정보 미입력 건</div>
+          </div>
+          <div style="background:var(--bg2);border:2px solid var(--accent);border-radius:var(--r-lg);padding:22px 24px;position:relative;overflow:hidden">
+            <div style="font-size:12px;font-weight:700;color:var(--accent2);letter-spacing:.4px;margin-bottom:10px">📈 <span id="dash-mlive-md-rev-month">4월</span> M라이브 실적</div>
+            <div style="display:flex;align-items:flex-end;gap:6px">
+              <div style="font-size:42px;font-weight:900;color:var(--accent2);line-height:1" id="dash-mlive-md-revenue">0</div>
+              <div style="font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:6px">억원</div>
+            </div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:8px">이번 달 모바일라이브 예상 매출 합계</div>
+          </div>
+        </div>
+      </div>
+      <!-- M-live 월간 캘린더 (색상별 시간대) -->
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-hd">
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="mlDashCalPrev()">◀</button>
+            <span id="ml-dash-cal-title" style="font-size:15px;font-weight:800;min-width:120px;text-align:center">-</span>
+            <button class="btn btn-ghost btn-sm" onclick="mlDashCalNext()">▶</button>
+          </div>
+          <div style="display:flex;gap:12px;font-size:11px;align-items:center" id="ml-dash-cal-legend">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#0984e3"></span> 본방</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#ff9f43"></span> 재방</span>
+          </div>
+        </div>
+        <div style="padding:12px">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--red);padding:4px 0">일</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">월</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">화</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">수</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">목</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">금</div>
+            <div style="font-size:11px;font-weight:700;text-align:center;color:var(--blue);padding:4px 0">토</div>
+          </div>
+          <div id="ml-dash-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+        </div>
+      </div>
+    </div><!-- /dash-mlive-area -->
+
   </div>
 
   <!-- ═══ S1: 캠페인 요청 ═══ -->
@@ -363,19 +462,21 @@
     </div>
     <div class="card">
       <div class="card-hd">
-        <span class="card-ttl">1단계 · 캠페인 요청</span>
+        <span class="card-ttl" id="s1-card-title">1단계 · 캠페인 요청</span>
         <div class="card-acts">
           <input class="search-inp" placeholder="캠페인명 검색..." oninput="filterProds(this.value)">
+          <button class="btn btn-ghost btn-xs" onclick="toggleS1Sort()" id="s1-sort-btn" style="font-size:11px;padding:4px 8px">등록일 ▼</button>
           <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s1')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
           <button class="btn btn-primary" onclick="openNewProd()">+ 캠페인 등록</button>
         </div>
       </div>
       <table id="camp-req-table">
-        <thead><tr><th style="width:36px;text-align:center">#</th>
+        <thead id="s1-thead"><tr><th style="width:36px;text-align:center">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s1" onchange="toggleAllCheck('s1',this.checked)" style="cursor:pointer"></th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th class="mob-hide">MDCAT</th><th>역할</th>
           <th class="mob-hide">인플루언서규모</th><th class="mob-hide">예상매출</th>
-          <th class="mob-hide">시작일</th><th class="mob-hide">종료일</th><th style="background:var(--bg)"></th>
+          <th class="mob-hide">시작일</th><th class="mob-hide">종료일</th><th class="mob-hide">등록일</th><th style="background:var(--bg)"></th>
         </tr></thead>
         <tbody id="prod-tbl"></tbody>
       </table>
@@ -410,13 +511,14 @@
     </div>
     <div class="card" style="margin-bottom:18px">
       <div class="card-hd">
-        <span class="card-ttl">2단계 · 캠페인 확정</span>
+        <span class="card-ttl" id="s2-card-title">2단계 · 캠페인 확정</span>
         <div class="card-acts"><button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s2')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button></div>
       </div>
       <div class="stage-table-wrap"><table class="stage-table">
         <thead><tr>
           <th style="width:36px;text-align:center;color:var(--text3)">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s2" onchange="toggleAllCheck('s2',this.checked)" style="cursor:pointer"></th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th>
           <th style="width:9%;min-width:70px">MDCAT</th>
           <th>역할</th>
@@ -460,7 +562,7 @@
     </div>
     <div class="card">
       <div class="card-hd">
-        <span class="card-ttl">3단계 · 상품정보등록 <span style="font-size:12px;font-weight:400;color:var(--text3)">(2단계 확정 후 상품/가격 정보 입력 대기)</span></span>
+        <span class="card-ttl" id="s3-card-title">3단계 · 상품정보등록</span>
         <div class="card-acts">
           <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s3')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
         </div>
@@ -469,6 +571,7 @@
         <thead><tr>
           <th style="width:36px;text-align:center;color:var(--text3)">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s3" onchange="toggleAllCheck('s3',this.checked)" style="cursor:pointer"></th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>역할</th><th>상품코드</th><th>가격정보</th><th style="width:8%;min-width:65px">시작일</th><th style="width:8%;min-width:65px">종료일</th><th style="width:99vw;background:var(--bg)"></th>
         </tr></thead>
         <tbody id="s3-tbl"></tbody>
@@ -512,6 +615,7 @@
         <thead><tr>
           <th style="width:36px;text-align:center;color:var(--text3)">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s4" onchange="toggleAllCheck('s4',this.checked)" style="cursor:pointer"></th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>역할</th><th>인플루언서규모</th><th style="width:9%;min-width:75px">예상매출</th><th>MCN업체 · 인플루언서</th><th style="width:8%;min-width:65px">시작일</th><th style="width:8%;min-width:65px">종료일</th><th style="width:99vw;background:var(--bg)"></th>
         </tr></thead>
         <tbody id="mcn-tbl"></tbody>
@@ -554,6 +658,7 @@
         <thead><tr>
           <th style="width:36px;text-align:center;color:var(--text3)">#</th>
           <th style="width:32px"><input type="checkbox" id="chk-all-s5" onchange="toggleAllCheck('s5',this.checked)" style="cursor:pointer"></th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>역할</th>
           <th>인플루언서규모</th><th style="width:9%;min-width:75px">예상매출</th>
           <th>MCN업체</th><th>인플루언서</th>
@@ -592,11 +697,12 @@
     </div>
     <div class="card">
       <div class="card-hd">
-        <span class="card-ttl">6단계 · APP 마케팅 <span style="font-size:11px;color:var(--text3);font-weight:400">(5단계 인플루언서 확정된 캠페인)</span></span>
+        <span class="card-ttl" id="s6-card-title">6단계 · 모바일마케팅</span>
       </div>
       <div class="stage-table-wrap"><table class="stage-table">
         <thead><tr>
           <th style="width:36px;text-align:center">#</th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
           <th style="width:22%;min-width:130px">캠페인명</th><th style="width:9%;min-width:70px">MDCAT</th><th>인플루언서규모</th>
           <th>인플루언서</th><th style="width:9%;min-width:75px">예상매출</th>
           <th style="text-align:center">APP MKT 요청</th><th style="width:99vw;background:var(--bg)"></th>
@@ -626,6 +732,12 @@
         <label>담당MD</label>
         <div class="fdd-wrap" id="fdd-wrap-s7-md"><input class="inp inp-sm fdd-input" id="sf-s7-md" placeholder="전체" readonly style="height:30px;font-size:12px;width:100px;cursor:pointer" onclick="fddOpen('s7-md','md')" onkeydown="fddKey(event,'s7-md')"><div class="fdd-list" id="fdd-list-s7-md"><input class="fdd-search" id="fdd-search-s7-md" placeholder="검색..." oninput="fddFilter(this,'s7-md')"></div></div>
       </div>
+      <div class="stage-filter mob-filter-hide" id="s7-settle-date-wrap" style="display:none">
+        <label>정산일자</label>
+        <input type="month" class="inp" id="sf-s7-settle-from" style="height:30px;font-size:12px;width:120px" oninput="renderS7()">
+        <span style="font-size:12px;color:var(--text3)">~</span>
+        <input type="month" class="inp" id="sf-s7-settle-to" style="height:30px;font-size:12px;width:120px" oninput="renderS7()">
+      </div>
 
       <div style="margin-left:auto;display:flex;gap:6px">
         <input class="inp inp-sm" id="sf-s7-name" placeholder="캠페인명" style="height:30px;font-size:12px;width:110px" oninput="renderS7()">
@@ -634,12 +746,14 @@
     </div>
     <div class="card">
       <div class="card-hd">
-        <span class="card-ttl">7단계 · 정산 관리</span>
+        <span class="card-ttl" id="s7-card-title">7단계 · 정산 관리</span>
         <div style="display:flex;gap:7px">
-          <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s7')" style="padding:4px 8px;display:inline-flex;align-items:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide"> 엑셀다운로드</span></button>
+          <button class="btn btn-ghost btn-xs" onclick="exportExcelByStage('s7')" style="height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:5px;font-size:11px"><svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide">엑셀다운로드</span></button>
+          <button class="btn btn-ghost btn-xs" onclick="downloadSettleTemplate()" style="height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:5px;font-size:11px">📋 <span class="mob-hide">업로드 양식</span></button>
+          <label class="btn btn-ghost btn-xs" style="height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:5px;font-size:11px;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg><span class="mob-hide">엑셀업로드</span><input type="file" accept=".xlsx,.xls" style="display:none" onchange="importSettleExcel(this)"></label>
         </div>
       </div>
-      <div class="stage-table-wrap"><table class="stage-table"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck('s7',this.checked)" style="cursor:pointer"></th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr></thead>
+      <div class="stage-table-wrap"><table class="stage-table"><thead id="s7-thead"></thead>
       <tbody id="s6-tbl"></tbody></table>
         <div id="s6-pg-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border-top:1px solid var(--border)"></div>
     </div>
@@ -649,27 +763,51 @@
   <!-- ═══ S7: 성과분석 ═══ -->
   <div id="page-s8" class="page">
     <!-- 필터 바 -->
-    <div class="filter-bar" style="margin-bottom:16px">
-      <label class="filter-radio active" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" checked onchange="setS7Filter('active')"> 진행중 캠페인</label>
-      <label class="filter-radio" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" onchange="setS7Filter('done')"> 종료 캠페인</label>
+    <div class="filter-bar" style="margin-bottom:16px;flex-wrap:wrap">
+      <label class="filter-radio active" id="s8-filter-all"><input type="radio" name="s8-type" value="all" checked onchange="setS8Type('all')"> 전체</label>
+      <label class="filter-radio" id="s8-filter-mlive"><input type="radio" name="s8-type" value="mlive" onchange="setS8Type('mlive')"> 모바일라이브</label>
+      <label class="filter-radio" id="s8-filter-inf"><input type="radio" name="s8-type" value="inf" onchange="setS8Type('inf')"> 인플루언서 캠페인</label>
+      <div style="border-left:1px solid var(--border);height:20px;margin:0 8px"></div>
+      <label class="filter-radio" id="s7-filter-active"><input type="radio" name="s7-filter" value="active" onchange="setS7Filter('active')"> 진행중</label>
+      <label class="filter-radio active" id="s7-filter-done"><input type="radio" name="s7-filter" value="done" checked onchange="setS7Filter('done')"> 종료</label>
       <div class="date-filter" style="margin-left:16px">
+        <div style="display:flex;align-items:center;gap:6px;margin-right:8px">
+          <label class="filter-radio active" id="s8-period-month"><input type="radio" name="s8-period" value="month" checked onchange="setS8Period('month')"> 월</label>
+          <label class="filter-radio" id="s8-period-week"><input type="radio" name="s8-period" value="week" onchange="setS8Period('week')"> 주</label>
+        </div>
         <label>기간</label>
-        <input type="date" class="inp" id="s7-date-from">
+        <input type="month" class="inp" id="s7-date-from">
         <span style="font-size:12px;color:var(--text3)">~</span>
-        <input type="date" class="inp" id="s7-date-to">
+        <input type="month" class="inp" id="s7-date-to">
+        <input type="week" class="inp" id="s8-week-from" style="display:none">
+        <span id="s8-week-sep" style="display:none;font-size:12px;color:var(--text3)">~</span>
+        <input type="week" class="inp" id="s8-week-to" style="display:none">
         <button class="btn btn-primary btn-sm" onclick="renderReports()">조회</button>
         <button class="btn btn-ghost btn-sm" onclick="clearS7Filter()">초기화</button>
       </div>
-      <div style="margin-left:auto">
-        <button class="btn btn-ghost btn-sm" onclick="exportExcel('report')" style="display:inline-flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:inline-block;vertical-align:middle"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg> 리포트 내보내기</button>
+      <div id="s8-week-dropdown" style="display:flex;align-items:center;gap:6px;margin-left:8px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">주차</label>
+        <select class="sel inp-sm" id="s8-week-filter" style="height:30px;font-size:12px;width:100px" onchange="renderReports()">
+          <option value="">전체</option>
+        </select>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:4px;flex-shrink:0">
+        <button class="btn btn-ghost btn-xs" onclick="downloadTargetTemplate()" style="font-size:11px;height:30px;display:inline-flex;align-items:center">목표양식</button>
+        <label class="btn btn-ghost btn-xs" style="cursor:pointer;font-size:11px;height:30px;display:inline-flex;align-items:center"><input type="file" accept=".xlsx,.xls,.csv" id="s8-target-upload" style="display:none" onchange="uploadMonthlyTarget(this)">목표업로드</label>
+        <label class="btn btn-ghost btn-xs" style="cursor:pointer;font-size:11px;height:30px;display:inline-flex;align-items:center"><input type="file" accept=".csv,.xlsx,.xls,.txt,.tsv" id="s8-mlive-upload" style="display:none" onchange="uploadMliveExcel(this)">M라이브업로드</label>
+        <button class="btn btn-ghost btn-xs" onclick="exportExcel('report')" style="font-size:11px;height:30px;display:inline-flex;align-items:center">리포트</button>
       </div>
     </div>
-    <!-- 성과 그리드 -->
-    <div class="card" style="margin-bottom:18px">
+    <!-- 주차별 성과 테이블 -->
+    <div id="s8-weekly-view"></div>
+    <!-- 기존 성과 그리드 (인플루언서 캠페인 상세) -->
+    <div class="card" style="margin-bottom:18px" id="s8-inf-detail-card">
       <div class="card-hd"><span class="card-ttl">캠페인 성과 현황</span></div>
       <div style="overflow-x:auto">
         <table><thead><tr>
-          <th style="width:22%;min-width:130px">캠페인명</th><th>규모</th><th style="width:9%;min-width:70px">MDCAT</th><th>카테고리</th>
+          <th style="width:30px;text-align:center"><input type="checkbox" id="s7-check-all" checked onchange="toggleS7CheckAll(this.checked)"></th>
+          <th style="width:100px;white-space:nowrap" class="mob-hide">캠페인코드</th>
+          <th style="width:20%;min-width:130px">캠페인명</th><th>규모</th><th style="width:9%;min-width:70px">MDCAT</th><th>카테고리</th>
           <th>MCN업체</th><th>인플루언서</th><th>매출</th><th>건수</th><th>비용</th><th>시작~종료일</th><th></th>
         </tr></thead>
         <tbody id="rep-tbl"></tbody></table>
@@ -697,6 +835,11 @@
     <!-- 필터바 -->
     <!-- 전체캠페인 필터바: 1행 - 목록/칸반 + 캠페인명 + 조회 -->
     <div class="filter-bar" style="margin-bottom:6px">
+      <div class="tabs" style="margin:0;border:none;flex-shrink:0">
+        <div class="tab active" id="camp-type-tab-inf" onclick="_campTypeFilter='인플루언서';document.getElementById('camp-type-tab-inf').classList.add('active');document.getElementById('camp-type-tab-mlive').classList.remove('active');renderCamps()">인플루언서</div>
+        <div class="tab" id="camp-type-tab-mlive" onclick="_campTypeFilter='모바일라이브';document.getElementById('camp-type-tab-mlive').classList.add('active');document.getElementById('camp-type-tab-inf').classList.remove('active');renderCamps()">모바일라이브</div>
+      </div>
+      <div style="width:1px;height:20px;background:var(--border);margin:0 6px"></div>
       <div class="tabs" style="margin:0;border:none;flex-shrink:0">
         <div class="tab active" onclick="switchCampView('list',this)">목록</div>
         <div class="tab" onclick="switchCampView('kanban',this)">칸반</div>
@@ -741,7 +884,15 @@
       </div>
       <div class="stage-filter mob-filter-hide">
         <label>MCN</label>
-        <input class="inp inp-sm" id="sf-camp-mcn" placeholder="업체 검색" style="height:30px;font-size:12px;width:90px" oninput="renderCamps()">
+        <select class="sel inp-sm" id="sf-camp-mcn" style="height:30px;font-size:12px;width:120px" onchange="renderCamps()">
+          <option value="">전체</option>
+        </select>
+      </div>
+      <div class="stage-filter mob-filter-hide" id="sf-camp-week-wrap">
+        <label>주차</label>
+        <select class="sel inp-sm" id="sf-camp-week" style="height:30px;font-size:12px;width:120px" onchange="renderCamps()">
+          <option value="">전체</option>
+        </select>
       </div>
       <div style="margin-left:auto;display:flex;gap:6px">
         <button class="btn btn-primary btn-sm" onclick="applyDateFilter('camp')">조회</button>
@@ -750,7 +901,7 @@
     <div id="camp-list" style="display:block">
       <div class="card">
         <div class="card-hd"><span class="card-ttl">전체 캠페인 <span id="camp-count" style="font-size:12px;font-weight:400;color:var(--text3)"></span></span></div>
-        <div style="overflow-x:auto;min-height:100px;display:block"><table style="width:100%;border-collapse:collapse;min-height:100px"><thead><tr><th style="width:36px;text-align:center">#</th><th style="width:22%;min-width:130px">캠페인명</th><th>기간</th><th>캠페인담당</th><th style="width:9%;min-width:75px">예상매출</th><th>단계</th><th>인플루언서</th><th style="background:var(--bg)"></th></tr></thead>
+        <div style="overflow-x:auto;min-height:100px;display:block"><table style="width:100%;border-collapse:collapse;min-height:100px"><thead id="camp-thead"></thead>
         <tbody id="camp-tbl"></tbody></table></div>
         <div id="camp-pagination" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 18px;border-top:1px solid var(--border)"></div>
       </div>
@@ -790,6 +941,7 @@
       <div class="tab" id="bm-tab-users" onclick="switchBmTab('users',this)">👥 사용자</div>
       <div class="tab" id="bm-tab-roles" onclick="switchBmTab('roles',this)">🔑 역할·권한</div>
       <div class="tab" id="bm-tab-mcn" onclick="switchBmTab('mcn',this)">🏢 MCN 업체</div>
+      <div class="tab" id="bm-tab-showhost" onclick="switchBmTab('showhost',this)">🎤 쇼호스트</div>
     </div>
 
     <!-- 탭: MDCAT 코드 -->
@@ -933,10 +1085,48 @@
       </div>
     </div>
 
+    <!-- 탭: 쇼호스트 -->
+    <div id="bm-panel-showhost" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:12.5px;color:var(--text3)">모바일라이브 캠페인의 쇼호스트로 선택할 수 있는 명단을 관리합니다.</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddShowhostModal()">+ 쇼호스트 추가</button>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-ttl">쇼호스트 목록</span>
+          <span id="showhost-count" style="font-size:12px;color:var(--text3)"></span>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="width:40px;text-align:center">#</th>
+            <th>이름</th><th>소속</th><th>연락처</th><th>전문 카테고리</th><th>메모</th><th>등록일</th><th></th>
+          </tr></thead>
+          <tbody id="showhost-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
 </main>
+
+<!-- 쇼호스트 추가/수정 모달 -->
+<div class="mo" id="mo-addshowhost"><div class="mo-box" style="width:460px">
+  <div class="mo-hd"><span class="mo-ttl" id="addshowhost-title">+ 쇼호스트 추가</span><button class="mo-x" onclick="closeMo('addshowhost')">✕</button></div>
+  <div class="mo-body">
+    <input type="hidden" id="sh-edit-id" value="">
+    <div class="fr"><label>이름 <span style="color:var(--red)">*</span></label><input class="inp" id="sh-name" placeholder="홍길동"></div>
+    <div class="fr"><label>소속</label><input class="inp" id="sh-company" placeholder="예) 프리랜서, OO MCN"></div>
+    <div class="fr"><label>연락처</label><input class="inp" id="sh-phone" placeholder="010-0000-0000"></div>
+    <div class="fr"><label>전문 카테고리</label><input class="inp" id="sh-category" placeholder="예) 뷰티, 패션, 식품"></div>
+    <div class="fr"><label>메모</label><textarea class="ta" id="sh-memo" style="min-height:60px;resize:vertical"></textarea></div>
+  </div>
+  <div class="mo-ft">
+    <button class="btn btn-ghost btn-sm" onclick="closeMo('addshowhost')">취소</button>
+    <button class="btn btn-primary btn-sm" onclick="saveShowhost()">저장</button>
+  </div>
+</div></div>
 
 <!-- ── 캠페인 엑셀 일괄 등록 모달 ── -->
 <div class="mo" id="mo-campbulk"><div class="mo-box" style="width:720px">
@@ -948,7 +1138,7 @@
     <div style="background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--blue);line-height:1.8">
       <b>📋 엑셀 컬럼 안내</b> (1행은 헤더 자동 스킵)<br>
       <span style="color:var(--text3);font-size:11.5px">
-        A:캠페인명* &nbsp;B:시작일* &nbsp;C:종료일* &nbsp;D:예상매출* &nbsp;E:예산* &nbsp;F:역할(메가/앵콜/신규/시딩)* &nbsp;G:캠페인담당 &nbsp;H:담당MD &nbsp;I:브랜드 &nbsp;J:협력업체 &nbsp;K:카테고리 &nbsp;L:MDCAT &nbsp;M:MCN업체 &nbsp;N:상품코드 &nbsp;O:상품명 &nbsp;P:MD할인가 &nbsp;Q:카드할인 &nbsp;R:신규적립금 &nbsp;S:신규쿠폰 &nbsp;T:소구포인트 &nbsp;U:선정사유(쉼표구분)
+        A:캠페인명* &nbsp;B:시작일* &nbsp;C:종료일* &nbsp;D:예상매출* &nbsp;E:예산* &nbsp;F:역할(메가/앵콜/미들/시딩)* &nbsp;G:캠페인담당 &nbsp;H:담당MD &nbsp;I:브랜드 &nbsp;J:협력업체 &nbsp;K:카테고리 &nbsp;L:MDCAT &nbsp;M:MCN업체 &nbsp;N:상품코드 &nbsp;O:상품명 &nbsp;P:MD할인가 &nbsp;Q:카드할인 &nbsp;R:신규적립금 &nbsp;S:신규쿠폰 &nbsp;T:소구포인트 &nbsp;U:선정사유(쉼표구분)
       </span>
     </div>
     <div style="display:flex;gap:10px;margin-bottom:16px">
@@ -1246,25 +1436,25 @@
 
 <!-- 캠페인 요청 등록 모달 (1단계) -->
 <div class="mo" id="mo-product"><div class="mo-box wide">
-  <div class="mo-hd" style="flex-wrap:wrap;gap:8px">
-    <span class="mo-ttl" id="prod-mo-title">캠페인 등록</span>
-    <div id="prod-stage-area" style="display:none;align-items:center;gap:8px;margin-left:0">
-      <span style="font-size:11px;font-weight:600;color:var(--text3)">현재 단계</span>
-      <span id="prod-stage-badge" style="font-size:12px;font-weight:800;padding:3px 12px;border-radius:20px;background:var(--accent-bg);color:var(--accent2)">-</span>
-      <span style="font-size:11px;color:var(--text3)">→ 변경:</span>
-      <select id="prod-stage-select" class="sel inp-sm" style="height:28px;font-size:12px;width:160px" onchange="changeProdStageInline(this.value)">
+  <div class="mo-hd" style="flex-wrap:nowrap;gap:6px;align-items:center">
+    <span class="mo-ttl" id="prod-mo-title" style="white-space:nowrap;flex-shrink:0">캠페인 등록</span>
+    <span id="p-campcode" style="font-size:11px;font-family:monospace;font-weight:700;color:var(--accent2);background:var(--accent-bg);padding:2px 8px;border-radius:10px;display:none;white-space:nowrap"></span>
+    <span id="p-livecode-badge" style="font-size:11px;font-family:monospace;font-weight:700;color:var(--orange);background:var(--orange-bg);padding:2px 8px;border-radius:10px;display:none;white-space:nowrap"></span>
+    <button class="btn btn-ghost btn-xs" id="mlive-sched-cal-btn" onclick="openMliveSchedCal()" style="display:none;font-size:11px;padding:3px 8px;background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent2);font-weight:700;white-space:nowrap" title="확정된 모바일라이브 편성 보기">📅 편성</button>
+    <div id="prod-stage-area" style="display:none;align-items:center;gap:6px;white-space:nowrap">
+      <span id="prod-stage-badge" style="font-size:11px;font-weight:800;padding:2px 10px;border-radius:16px;background:var(--accent-bg);color:var(--accent2)">-</span>
+      <select id="prod-stage-select" class="sel inp-sm" style="height:26px;font-size:11px;width:140px;padding:0 6px" onchange="changeProdStageInline(this.value)">
         <option value="1.캠페인요청">1단계 · 캠페인요청</option>
         <option value="2.캠페인확정">2단계 · 캠페인확정</option>
         <option value="4.MCN요청">4단계 · MCN요청</option>
         <option value="5.인플루언서확정">5단계 · 인플루언서확정</option>
-        <option value="6.APP마케팅확정">6단계 · APP마케팅확정</option>
+        <option value="6.APP마케팅확정">6단계 · 모바일마케팅확정</option>
         <option value="7.정산">7단계 · 정산</option>
         <option value="8.성과분석">8단계 · 성과분석</option>
       </select>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-      <button class="btn btn-ghost btn-sm" onclick="openPasteFillModal()" style="font-size:12px;background:var(--accent-bg);border-color:var(--accent);color:var(--accent2)" title="모든 섹션 항목을 한번에 자동 입력">📋 전체붙여넣기</button>
-      <button class="btn btn-ghost btn-sm" onclick="openCopyCampModal()" style="font-size:12px">📋 캠페인복사</button>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0">
+      <button class="btn btn-ghost btn-sm" onclick="openPasteFillModal()" style="font-size:11px;padding:4px 8px;background:var(--accent-bg);border-color:var(--accent);color:var(--accent2)" title="모든 섹션 항목을 한번에 자동 입력">📋 붙여넣기</button>
       <button class="mo-x" onclick="closeMo('product')">✕</button>
     </div>
   </div>
@@ -1282,9 +1472,46 @@
           </label>
         </div>
       </div>
-      <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
-      <div class="fr2"><div><label>시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local"></div><div><label>종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local"></div></div>
-      <div class="fr2"><div><label>예산 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-budget" placeholder="3,000,000"></div><div><label>MDCAT <span style="color:var(--red)">*</span></label>
+      <!-- ── 캠페인 유형 선택 (인플루언서 마케팅 / 모바일라이브) ── -->
+      <div style="background:linear-gradient(135deg,var(--accent-bg),rgba(108,92,231,0.05));border:2px solid var(--accent);border-radius:var(--r);padding:14px 16px;margin-bottom:18px;box-shadow:0 2px 8px rgba(108,92,231,0.12)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:800;color:var(--accent2);letter-spacing:.3px">⚡ 캠페인 유형 선택</span>
+          <span style="color:var(--red);font-weight:800">*</span>
+          <span style="font-size:10.5px;color:var(--text3);font-weight:500;margin-left:4px">유형에 따라 입력 항목이 달라집니다</span>
+          <span id="p-camptype-lock-msg" style="display:none;font-size:10.5px;color:var(--red);font-weight:600;margin-left:6px">🔒 데이터 등록된 캠페인은 유형 변경 불가</span>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--bg);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;transition:all .15s" id="p-camptype-label-mlive">
+              <input type="radio" name="p-camptype" id="p-camptype-mlive" value="모바일라이브" style="accent-color:var(--accent);width:18px;height:18px" onchange="updateCampTypeUI()" checked>
+              <div style="font-size:26px;line-height:1">📺</div>
+              <div><div style="font-size:14px;font-weight:800;color:var(--text)">모바일라이브</div><div style="font-size:11px;color:var(--text3);margin-top:2px">쇼호스트 진행 라이브 캠페인</div></div>
+            </label>
+            <div id="p-camptype-mlive-btns" style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openCopyCampModal('모바일라이브')" style="flex:1;font-size:11.5px;padding:6px 8px;border-color:var(--accent);color:var(--accent2)">📋 M라이브 복사</button>
+              <button class="btn btn-ghost btn-sm" onclick="openRebroadcastModal()" style="flex:1;font-size:11.5px;padding:6px 8px;border-color:var(--orange);color:var(--orange)">🔄 재방등록</button>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--bg);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;transition:all .15s" id="p-camptype-label-inf">
+              <input type="radio" name="p-camptype" id="p-camptype-inf" value="인플루언서" style="accent-color:var(--accent);width:18px;height:18px" onchange="updateCampTypeUI()">
+              <div style="font-size:26px;line-height:1">👤</div>
+              <div><div style="font-size:14px;font-weight:800;color:var(--text)">인플루언서 마케팅</div><div style="font-size:11px;color:var(--text3);margin-top:2px">인플루언서 섭외/진행 캠페인</div></div>
+            </label>
+            <div id="p-camptype-inf-btns" style="display:none;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openCopyCampModal('인플루언서')" style="flex:1;font-size:11.5px;padding:6px 8px">📋 캠페인복사</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fr2"><div><label>캠페인명 <span style="color:var(--red)">*</span></label><input class="inp" id="p-name" placeholder="예) 여름 선크림 체험단" oninput="updateAiChatSection()"></div><div><label>예상 매출 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-revenue" placeholder="10,000,000"></div></div>
+      <div class="fr2"><div><label><span id="p-start-label">시작일</span> <span style="color:var(--red)">*</span></label><input class="inp" id="p-start" type="datetime-local" step="60" onchange="autoSetMliveEndTime()"></div><div><label><span id="p-end-label">종료일</span> <span style="color:var(--red)">*</span></label><input class="inp" id="p-end" type="datetime-local" step="60"></div></div>
+      <!-- 모바일라이브 확정일자 (관리자 입력) -->
+      <div class="fr2" id="p-confirm-dates-row" style="display:none">
+        <div><label>확정시작일 <span style="font-size:10px;color:var(--text3);font-weight:400">관리자</span></label><input class="inp" id="p-confirm-start" type="datetime-local" step="60" onchange="onConfirmDateChange()"></div>
+        <div><label>확정종료일 <span style="font-size:10px;color:var(--text3);font-weight:400">관리자</span></label><input class="inp" id="p-confirm-end" type="datetime-local" step="60"></div>
+      </div>
+      <div class="fr2" id="p-budget-row"><div><label>예산 (원) <span style="color:var(--red)">*</span></label><input class="inp inp-money" id="p-budget" placeholder="3,000,000"></div><div><label>MDCAT <span style="color:var(--red)">*</span></label>
         <div class="fdd-wrap" id="fdd-wrap-p-mdcat">
           <input class="inp fdd-input" id="p-mdcat" placeholder="MDCAT 선택..." readonly style="cursor:pointer" onclick="mdcatDdOpen()" onkeydown="if(event.key==='Escape')mdcatDdClose()">
           <div class="fdd-list" id="fdd-list-p-mdcat">
@@ -1293,6 +1520,7 @@
         </div>
       </div></div>
 
+      <div id="p-role-wrap">
       <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin:14px 0 8px">캠페인 역할 <span style="color:var(--red)">*</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-mega">
@@ -1304,18 +1532,19 @@
           <div><div style="font-size:12.5px;font-weight:700">앵콜</div><div style="font-size:10px;color:var(--text3)">재진행</div></div>
         </label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-new">
-          <input type="radio" name="p-role" id="p-role-new" value="신규" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
-          <div><div style="font-size:12.5px;font-weight:700">신규</div><div style="font-size:10px;color:var(--text3)">인지도 확보</div></div>
+          <input type="radio" name="p-role" id="p-role-new" value="미들" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
+          <div><div style="font-size:12.5px;font-weight:700">미들</div><div style="font-size:10px;color:var(--text3)">인지도 확보</div></div>
         </label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:90px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;transition:all .15s" id="p-role-label-seeding">
           <input type="radio" name="p-role" id="p-role-seeding" value="시딩" style="accent-color:var(--accent)" onchange="updateProdRoleLabels()">
           <div><div style="font-size:12.5px;font-weight:700">시딩</div><div style="font-size:10px;color:var(--text3)">바이럴 확산</div></div>
         </label>
       </div>
+      </div>
 
 
 
-      <div class="fr2"><div><label>캠페인담당</label>
+      <div class="fr2" id="p-pd-single-row"><div><label>캠페인담당</label>
 <div class="search-sel-wrap" id="wrap-p-pd-single">
   <input class="inp search-sel-input" id="p-pd-single" placeholder="이름 검색..." autocomplete="off"
     oninput="searchSelFilter('p-pd-single','manager')"
@@ -1326,7 +1555,7 @@
 </div>
 </div><div></div></div>
 
-      <div style="margin:14px 0 8px">
+      <div style="margin:14px 0 8px" id="p-reasons-wrap">
         <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">캠페인 선정 사유 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
         <div style="margin-bottom:6px">
           <div style="font-size:10.5px;font-weight:700;color:var(--blue);margin-bottom:5px">📦 상품</div>
@@ -1349,6 +1578,74 @@
           </div>
         </div>
       </div>
+
+      <!-- ── 모바일라이브 전용: 상품마진/편성사유/마케팅요청사항/협력사마케팅지원 ── -->
+      <div id="p-mlive-extra-wrap" style="display:none;margin-top:14px;border-top:1px dashed var(--border);padding-top:14px">
+        <!-- 담당 MD (모바일라이브 기본정보) -->
+        <div class="fr2" style="margin-bottom:12px">
+          <div><label>담당 MD</label>
+            <div class="search-sel-wrap" id="wrap-p-mlive-md">
+              <input class="inp search-sel-input" id="p-mlive-md" placeholder="이름 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-mlive-md','md')"
+                onfocus="searchSelOpen('p-mlive-md','md')"
+                onkeydown="searchSelKey(event,'p-mlive-md')">
+              <button class="search-sel-clear" id="clear-p-mlive-md" onclick="searchSelClear('p-mlive-md')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-mlive-md"></div>
+            </div>
+          </div>
+          <div><label>상품마진 (%)</label><input class="inp" id="p-product-margin" placeholder="00" type="number" min="0" max="100" style="width:120px"></div>
+        </div>
+        <!-- 편성사유 -->
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">편성사유 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="메가브랜드" style="accent-color:var(--accent);width:13px;height:13px"> 메가브랜드</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="광고비" style="accent-color:var(--accent);width:13px;height:13px"> 광고비</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="고효율" style="accent-color:var(--accent);width:13px;height:13px"> 고효율</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="신규브랜드" style="accent-color:var(--accent);width:13px;height:13px"> 신규브랜드</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="슈퍼브랜드" style="accent-color:var(--accent);width:13px;height:13px"> 슈퍼브랜드</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="단독판매" style="accent-color:var(--accent);width:13px;height:13px"> 단독판매</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="인플루언서" style="accent-color:var(--accent);width:13px;height:13px"> 인플루언서</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--accent-bg);border:1px solid rgba(108,92,231,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-reason-cb" value="시즌아이템" style="accent-color:var(--accent);width:13px;height:13px"> 시즌아이템</label>
+          </div>
+        </div>
+        <!-- 마케팅 요청사항 -->
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">마케팅 요청사항 <span style="font-weight:400;font-size:10px">(복수 선택 / 확정 시 모바일마케팅에 반영)</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="슈퍼브랜드" style="accent-color:var(--orange);width:13px;height:13px"> 슈퍼브랜드</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="모바일라이브" style="accent-color:var(--orange);width:13px;height:13px"> 모바일라이브</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="DMP광고" style="accent-color:var(--orange);width:13px;height:13px"> DMP광고</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="PUSH" style="accent-color:var(--orange);width:13px;height:13px"> PUSH</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="카톡플친" style="accent-color:var(--orange);width:13px;height:13px"> 카톡플친</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="신세계상품권" style="accent-color:var(--orange);width:13px;height:13px"> 신세계상품권</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="스타벅스" style="accent-color:var(--orange);width:13px;height:13px"> 스타벅스</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="팝업" style="accent-color:var(--orange);width:13px;height:13px"> 팝업</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--orange-bg);border:1px solid rgba(255,159,67,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-mktreq-cb" value="최상단배너" style="accent-color:var(--orange);width:13px;height:13px"> 최상단배너</label>
+          </div>
+        </div>
+        <!-- 협력사 마케팅지원 -->
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">협력사 마케팅지원 <span style="font-weight:400;font-size:10px">(복수 선택)</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="구매인증" style="accent-color:var(--green);width:13px;height:13px"> 구매인증</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="바이럴" style="accent-color:var(--green);width:13px;height:13px"> 바이럴</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="사은품" style="accent-color:var(--green);width:13px;height:13px"> 사은품</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="무료배송" style="accent-color:var(--green);width:13px;height:13px"> 무료배송</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--green-bg);border:1px solid rgba(0,184,148,.2);border-radius:20px;padding:4px 10px"><input type="checkbox" class="mlive-partner-cb" value="카톡플친" style="accent-color:var(--green);width:13px;height:13px"> 카톡플친</label>
+          </div>
+        </div>
+        <!-- 외부채널송출 -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">외부채널송출</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:5px 12px"><input type="checkbox" class="mlive-extch-cb" value="지마켓" style="accent-color:var(--blue);width:14px;height:14px"> 지마켓</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:5px 12px"><input type="checkbox" class="mlive-extch-cb" value="카카오" style="accent-color:var(--blue);width:14px;height:14px"> 카카오</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;background:var(--blue-bg);border:1px solid rgba(8,116,212,.2);border-radius:20px;padding:5px 12px"><input type="checkbox" class="mlive-extch-cb" value="미진행" style="accent-color:var(--blue);width:14px;height:14px"> 미진행</label>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ══ 섹션 B: 상품 정보 (접기/펼치기) ══ -->
@@ -1365,13 +1662,8 @@
         </div>
       </div>
       <div class="mo-sec-body" id="sec-product">
-        <div class="fr">
-          <label>상품기본정보 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(자유 기재)</span></label>
-          <textarea class="ta" id="p-product-basic-info" placeholder="① 상품명/상품구성 : &#10;②가격/프로모션 조건 : MD할인가,카드즉시할인5%(5만원이상),신규가입3천원 적립, 최종공구가&#10;③이벤트 : 사전알림댓글 이벤트, 구매인증 이벤트, 모바일라이브 유무 등&#10;④참고용상품링크 : " maxlength="2000" style="min-height:120px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/2000'"></textarea>
-          <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/2000</div>
-        </div>
         <div class="fr2"><div><label>브랜드</label><input class="inp" id="p-brand" placeholder="스킨랩"></div><div><label>협력업체</label><input class="inp" id="p-company" placeholder="(주)스킨랩"></div></div>
-        <div class="fr2"><div><label>담당 MD</label>
+        <div class="fr2"><div><label>카테고리</label><input class="inp" id="p-cat" placeholder="예) 뷰티, 식품, 패션"></div><div id="p-owner-product-wrap"><label>담당 MD</label>
 <div class="search-sel-wrap" id="wrap-p-owner">
   <input class="inp search-sel-input" id="p-owner" placeholder="이름 검색..." autocomplete="off"
     oninput="searchSelFilter('p-owner','md')"
@@ -1380,14 +1672,23 @@
   <button class="search-sel-clear" id="clear-p-owner" onclick="searchSelClear('p-owner')" tabindex="-1">✕</button>
   <div class="search-sel-list" id="list-p-owner"></div>
 </div>
-</div><div></div></div>
-        <div class="fr2"><div><label>카테고리</label><input class="inp" id="p-cat" placeholder="예) 뷰티, 식품, 패션"></div><div></div></div>
-        <div class="fr"><label>캠페인 소구 포인트</label>
+</div></div>
+        <!-- 캠페인 소구 포인트 -->
+        <div class="fr" id="p-appeal-wrap">
+          <label>캠페인 소구 포인트</label>
           <textarea class="ta" id="p-appeal" placeholder="핵심 소구 포인트, 차별화 요소, 타겟 메시지..." maxlength="500" style="min-height:80px;resize:vertical" oninput="this.nextElementSibling.textContent=this.value.length+'/500'"></textarea>
           <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
         </div>
+        <!-- 상품딜코드 + 판매시작/종료일 -->
+        <div id="p-deal-code-row" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div><label>상품 딜코드</label><input class="inp" id="p-deal-code" placeholder="예) D202604001"></div>
+            <div><label>판매시작일</label><input class="inp" id="p-sale-start" type="date"></div>
+            <div><label>판매종료일</label><input class="inp" id="p-sale-end" type="date"></div>
+          </div>
+        </div>
         <!-- 상세 상품코드 + 가격 통합 테이블 -->
-        <div style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
+        <div id="p-sku-table-wrap" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="display:flex;align-items:center;gap:10px">
               <span style="font-size:11.5px;font-weight:700;color:var(--text2)">📦 상품코드 · 가격 정보</span>
@@ -1412,31 +1713,40 @@
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap;border-left:2px solid var(--border2)">정가</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap">MD할인가</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap">카드할인</th>
-                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">신규적립금</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">웰컴고객</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap">신규쿠폰</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">웰컴방송쿠폰</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">사후적립금</th>
                   <th style="padding:6px 8px;text-align:left;white-space:nowrap">기타프로모션</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap;color:var(--accent)">최종공구가</th>
                   <th style="padding:6px 8px;text-align:right;white-space:nowrap;color:var(--orange)">온라인최저가</th>
+                  <th style="padding:6px 8px;text-align:right;white-space:nowrap">재고</th>
                   <th style="padding:6px 4px;width:28px"></th>
                 </tr>
               </thead>
               <tbody id="sku-list"></tbody>
             </table>
           </div>
-          <div style="margin-top:8px;background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--r-sm);padding:7px 12px;font-size:11px;color:var(--blue)">
-            💡 최종공구가 = MD할인가 - 카드할인 - 신규적립금 - 신규쿠폰 &nbsp;|&nbsp; 상품코드 입력 시 MDCAT·카테고리·상품명·브랜드 자동완성
-          </div>
         </div>
-        <!-- CS정보 / 배송정보 -->
-        <div style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px;display:flex;flex-direction:column;gap:12px">
+        <!-- 이벤트 -->
+        <div class="fr" style="margin-top:12px" id="p-event-text-wrap">
+          <label>이벤트 <span style="font-size:10px;color:var(--text3);font-weight:400">사전알림 이벤트, 구매인증 이벤트 등</span></label>
+          <textarea class="ta" id="p-event-text" placeholder="이벤트 내용 입력..." maxlength="500" style="min-height:60px;resize:vertical"></textarea>
+        </div>
+        <!-- 최저가 링크 -->
+        <div class="fr" style="margin-top:12px" id="p-lowest-price-link-wrap">
+          <label>최저가 링크 <span style="font-size:10px;color:var(--text3);font-weight:400">온라인 최저가 비교 URL</span></label>
+          <input class="inp" id="p-lowest-price-link" placeholder="https://" style="font-size:12px">
+        </div>
+        <!-- CS정보 / 배송정보 (인플루언서 전용, 모바일라이브 숨김) -->
+        <div id="p-cs-delivery-wrap" style="margin-top:14px;border-top:1px solid var(--border2);padding-top:14px;display:flex;flex-direction:column;gap:12px">
           <div class="fr">
             <label>CS 정보 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(최대 500자)</span></label>
-            <textarea class="ta" id="p-cs-info" placeholder="1)과세/면세 : &#10;2)제조사/원산지 : &#10;3)반품.교환정책 : &#10;4)반품교환문의 : 1800-0850&#10;5)출고지/교환반품주소&#10;6)CS고객센터 협의사항:" maxlength="500" style="min-height:110px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/500'"></textarea>
+            <textarea class="ta" id="p-cs-info" maxlength="500" style="min-height:110px;resize:vertical;white-space:pre-wrap" oninput="var c=this.value.length;this.nextElementSibling.textContent=c+'/500'"></textarea>
             <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px">0/500</div>
           </div>
           <div class="fr">
             <label>배송 정보</label>
-            <!-- 배송 구조화 항목 -->
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div>
@@ -1463,7 +1773,7 @@
                   <label style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block">제주·도서산간 배송료</label>
                   <div style="display:flex;align-items:center;gap:8px">
                     <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap">
-                      <input type="checkbox" id="p-island-free" style="accent-color:var(--accent);cursor:pointer" onchange="document.getElementById('p-island-fee').disabled=this.checked;if(this.checked)document.getElementById('p-island-fee').value=''">없음
+                      <input type="checkbox" id="p-island-free" style="accent-color:var(--accent);cursor:pointer" onchange="document.getElementById('p-island-fee').disabled=this.checked;if(this.checked)document.getElementById('p-island-fee').value=''">배송불가
                     </label>
                     <input class="inp inp-sm inp-money" id="p-island-fee" placeholder="0" style="flex:1;text-align:right" oninput="formatMoney(this)">
                     <span style="font-size:12px;color:var(--text3);white-space:nowrap">원</span>
@@ -1496,8 +1806,72 @@
       </div>
     </div>
 
+    <!-- ══ 섹션 D2: 쇼호스트 정보 (모바일라이브 전용) ══ -->
+    <div class="mo-section" id="sec-host-wrap" style="display:none">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-host')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="host" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
+          <span>🎤 쇼호스트 정보</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <span class="mo-sec-arr" id="arr-sec-host">▼</span>
+        </div>
+      </div>
+      <div class="mo-sec-body" id="sec-host">
+        <div class="fr2" style="margin-bottom:10px">
+          <div>
+            <label>요청 쇼호스트 1</label>
+            <div class="search-sel-wrap" id="wrap-p-host-req1">
+              <input class="inp search-sel-input" id="p-host-req1" placeholder="쇼호스트 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-host-req1','showhost')"
+                onfocus="searchSelOpen('p-host-req1','showhost')"
+                onkeydown="searchSelKey(event,'p-host-req1')">
+              <button class="search-sel-clear" id="clear-p-host-req1" onclick="searchSelClear('p-host-req1')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-host-req1"></div>
+            </div>
+          </div>
+          <div>
+            <label>요청 쇼호스트 2</label>
+            <div class="search-sel-wrap" id="wrap-p-host-req2">
+              <input class="inp search-sel-input" id="p-host-req2" placeholder="쇼호스트 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-host-req2','showhost')"
+                onfocus="searchSelOpen('p-host-req2','showhost')"
+                onkeydown="searchSelKey(event,'p-host-req2')">
+              <button class="search-sel-clear" id="clear-p-host-req2" onclick="searchSelClear('p-host-req2')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-host-req2"></div>
+            </div>
+          </div>
+        </div>
+        <div class="fr2" style="margin-bottom:10px">
+          <div>
+            <label>확정 쇼호스트 1 <span style="font-size:10px;color:var(--text3)">(DB 등록 호스트만)</span></label>
+            <div class="search-sel-wrap" id="wrap-p-host-conf1">
+              <input class="inp search-sel-input" id="p-host-conf1" placeholder="쇼호스트 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-host-conf1','showhost')"
+                onfocus="searchSelOpen('p-host-conf1','showhost')"
+                onkeydown="searchSelKey(event,'p-host-conf1')">
+              <button class="search-sel-clear" id="clear-p-host-conf1" onclick="searchSelClear('p-host-conf1')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-host-conf1"></div>
+            </div>
+          </div>
+          <div>
+            <label>확정 쇼호스트 2 <span style="font-size:10px;color:var(--text3)">(DB 등록 호스트만)</span></label>
+            <div class="search-sel-wrap" id="wrap-p-host-conf2">
+              <input class="inp search-sel-input" id="p-host-conf2" placeholder="쇼호스트 검색..." autocomplete="off"
+                oninput="searchSelFilter('p-host-conf2','showhost')"
+                onfocus="searchSelOpen('p-host-conf2','showhost')"
+                onkeydown="searchSelKey(event,'p-host-conf2')">
+              <button class="search-sel-clear" id="clear-p-host-conf2" onclick="searchSelClear('p-host-conf2')" tabindex="-1">✕</button>
+              <div class="search-sel-list" id="list-p-host-conf2"></div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3)">※ 쇼호스트는 [기본정보 관리 → 🎤 쇼호스트] 탭에서 등록한 호스트만 선택할 수 있습니다.</div>
+      </div>
+    </div>
+
     <!-- ══ 섹션 D: 인플루언서 정보 ══ -->
-    <div class="mo-section">
+    <div class="mo-section" id="sec-inf-wrap">
       <div class="mo-sec-hd" onclick="toggleSection('sec-inf')">
         <div style="display:flex;align-items:center;gap:8px;flex:1">
           <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="inf" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
@@ -1525,7 +1899,7 @@
       <div class="mo-sec-hd" onclick="toggleSection('sec-appmkt')">
         <div style="display:flex;align-items:center;gap:8px;flex:1">
           <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="appmkt" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
-          <span>📱 APP 마케팅</span>
+          <span>📱 모바일마케팅</span>
         </div>
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
           <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openSectionPaste('appmkt')" style="font-size:11px;padding:3px 8px;color:var(--accent2)">📋 붙여넣기</button>
@@ -1541,28 +1915,68 @@
             <span style="color:var(--orange)">⊘ 해당없음 (정산으로 이동)</span>
           </label>
         </div>
-        <div id="appmkt-channels-area" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="팝업"> 팝업</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="최상단배너"> 최상단배너</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="PUSH"> PUSH</label>
-          <label class="promo-label"><input type="checkbox" class="appmkt-cb" value="카톡플친"> 카톡플친</label>
-        </div>
-        <div id="appmkt-super-fields" style="display:none;margin-bottom:12px">
-          <div class="fr2">
-            <div><label>슈퍼브랜드 시작일 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-super-start" type="date"></div>
-            <div><label>슈퍼브랜드 종료일 <span style="color:var(--red)">*</span></label><input class="inp" id="appmkt-super-end" type="date"></div>
+        <div id="appmkt-channels-area" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+          <!-- 슈퍼브랜드: 체크 + 시작일/종료일 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-super" value="슈퍼브랜드" onchange="toggleAppMktFields()"> 슈퍼브랜드</label>
+            <input class="inp inp-sm" id="appmkt-super-start" type="date" placeholder="시작일" style="flex:1" disabled>
+            <span style="font-size:11px;color:var(--text3)">~</span>
+            <input class="inp inp-sm" id="appmkt-super-end" type="date" placeholder="종료일" style="flex:1" disabled>
           </div>
-        </div>
-        <div id="appmkt-live-fields" style="display:none;margin-bottom:4px">
-          <div class="fr">
-            <label>모바일라이브 방송일시 <span style="color:var(--red)">*</span></label>
-            <input class="inp" id="appmkt-live-dt" type="datetime-local">
+          <!-- 모바일라이브: 체크 + 편성코드(복수) + 검색 + 바로가기 + 방송일시 -->
+          <div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-live" value="모바일라이브" onchange="toggleAppMktFields()"> 모바일라이브</label>
+              <input class="inp inp-sm" id="appmkt-live-code" placeholder="편성코드 입력 후 Enter" style="flex:1" disabled onchange="updateTotalRevLabel()" onkeydown="if(event.key==='Enter'){event.preventDefault();addMliveCodeTag();}">
+              <button class="btn btn-ghost btn-xs" id="appmkt-live-code-add-btn" type="button" onclick="addMliveCodeTag()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none">+ 추가</button>
+              <button class="btn btn-ghost btn-xs" id="appmkt-live-code-search-btn" type="button" onclick="openMliveCodePicker()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none" title="편성코드 검색">🔍</button>
+              <button class="btn btn-ghost btn-xs" id="appmkt-live-goto-inf-btn" type="button" onclick="gotoInfCampFromMlive()" style="white-space:nowrap;padding:3px 6px;font-size:10px;display:none;color:var(--green);border-color:var(--green)" title="인플루언서 마케팅 캠페인 등록">👤+</button>
+              <input class="inp inp-sm" id="appmkt-live-dt" type="datetime-local" onchange="checkMliveScheduleDup()" style="width:180px;flex-shrink:0" disabled>
+            </div>
+            <div id="appmkt-live-codes-tags" style="display:flex;flex-wrap:wrap;gap:4px;min-height:0;margin:4px 0 0 118px"></div>
+          </div>
+          <!-- DMP광고: 체크 + 발송모수 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-dmp" value="DMP광고" onchange="toggleAppMktFields()"> DMP광고</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-dmp-send" placeholder="발송모수 (명)" style="flex:1" oninput="formatMoney(this)" disabled>
+          </div>
+          <!-- PUSH: 체크 + 발송모수 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-push" value="PUSH" onchange="toggleAppMktFields()"> PUSH</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-push-send" placeholder="발송모수 (명)" style="flex:1" oninput="formatMoney(this)" disabled>
+          </div>
+          <!-- 카톡플친: 체크 + 발송모수 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-kakao" value="카톡플친" onchange="toggleAppMktFields()"> 카톡플친</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-kakao-send" placeholder="발송모수 (명)" style="flex:1" oninput="formatMoney(this)" disabled>
+          </div>
+          <!-- 신세계상품권: 체크 + 금액 + 인원 -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-ssg" value="신세계상품권" onchange="toggleAppMktFields()"> 신세계상품권</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-ssg-amount" placeholder="만원" style="flex:1" oninput="formatMoney(this)" disabled>
+            <span style="font-size:11px;color:var(--text3);white-space:nowrap">만원</span>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-ssg-count" placeholder="명" style="flex:1" oninput="formatMoney(this)" disabled>
+            <span style="font-size:11px;color:var(--text3);white-space:nowrap">명</span>
+          </div>
+          <!-- 스타벅스 + 팝업 + 최상단배너 (한 행) -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-starbucks" value="스타벅스" onchange="toggleAppMktFields()"> 스타벅스</label>
+            <input class="inp inp-sm inp-money appmkt-inline-input" id="appmkt-starbucks-count" placeholder="명" style="width:70px" oninput="formatMoney(this)" disabled>
+            <span style="font-size:11px;color:var(--text3);white-space:nowrap">명</span>
+            <span style="width:1px;height:16px;background:var(--border);margin:0 4px"></span>
+            <label class="promo-label" style="flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-popup" value="팝업" onchange="toggleAppMktFields()"> 팝업</label>
+            <label class="promo-label" style="flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-banner" value="최상단배너" onchange="toggleAppMktFields()"> 최상단배너</label>
+          </div>
+          <!-- ��이럴 + 기타 (한 행) -->
+          <div style="display:flex;align-items:center;gap:8px">
+            <label class="promo-label" style="min-width:110px;flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-viral" value="바이럴" onchange="toggleAppMktFields()"> 바이럴</label>
+            <span style="width:1px;height:16px;background:var(--border);margin:0 4px"></span>
+            <label class="promo-label" style="flex-shrink:0"><input type="checkbox" class="appmkt-cb" id="appmkt-etc" value="기타" onchange="toggleAppMktFields()"> 기타</label>
+            <input class="inp inp-sm appmkt-inline-input" id="appmkt-etc-text" placeholder="기타 내용 입력 (50자)" maxlength="50" style="flex:1" disabled>
           </div>
         </div>
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-          <div class="fr">
+          <div class="fr" id="appmkt-landing-row">
             <label>🔗 인플루언서 랜딩 페이지 <span style="font-size:10px;color:var(--text3);font-weight:400">(시크릿코드)</span></label>
             <input class="inp" id="appmkt-landing-url" placeholder="https://" style="font-size:12px">
           </div>
@@ -1572,6 +1986,69 @@
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- ══ 섹션 F2: APP PUSH (모바일라이브 전용) ══ -->
+    <div class="mo-section" id="sec-push-wrap" style="display:none;border-bottom:none">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-push')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <label onclick="event.stopPropagation()"><input type="checkbox" class="share-sec-cb" data-sec="push" checked style="accent-color:var(--accent);width:13px;height:13px;cursor:pointer"></label>
+          <span>🔔 APP PUSH</span>
+        </div>
+        <span class="mo-sec-arr" id="arr-sec-push">▼</span>
+      </div>
+      <div class="mo-sec-body" id="sec-push">
+        <!-- 선정사유 -->
+        <div class="fr" style="margin-bottom:12px">
+          <label>선정사유</label>
+          <input class="inp" id="p-push-reason" placeholder="선정사유 입력..." maxlength="100">
+        </div>
+        <!-- 소구포인트 -->
+        <div class="fr" style="margin-bottom:12px">
+          <label>소구포인트 <span style="font-size:10px;color:var(--text3);font-weight:400">MD 입력</span></label>
+          <textarea class="ta" id="p-push-appeal" placeholder="PUSH 발송용 핵심 소구 포인트를 입력하세요..." maxlength="300" style="min-height:60px;resize:vertical"></textarea>
+        </div>
+        <!-- 발송 메시지 내용 -->
+        <div class="fr" style="margin-bottom:12px">
+          <label>발송 메시지 내용</label>
+          <textarea class="ta" id="p-push-content" placeholder="PUSH 메시지 내용을 입력하세요..." maxlength="500" style="min-height:80px;resize:vertical"></textarea>
+        </div>
+        <!-- 랜딩링크 -->
+        <div class="fr">
+          <label>랜딩링크 <span style="font-size:10px;color:var(--text3);font-weight:400">입력값 뒤에 고정 파라미터가 자동 추가됩니다</span></label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="inp" id="p-push-landing-base" placeholder="https://example.com/page" style="flex:1;font-size:12px" oninput="updatePushLandingPreview()">
+          </div>
+          <div style="margin-top:6px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <div style="font-size:10px;font-weight:700;color:var(--text3)">완성된 랜딩링크:</div>
+              <button class="btn btn-ghost btn-xs" onclick="copyPushLandingLink()" style="font-size:10px;padding:2px 8px;color:var(--accent2)">📋 복사</button>
+            </div>
+            <div id="p-push-landing-preview" style="font-size:11px;font-family:monospace;color:var(--accent2);word-break:break-all">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 섹션 F3: AI챗봇 정보 (재방 전용) ══ -->
+    <div class="mo-section" id="sec-aichat-wrap" style="display:none;border-bottom:none">
+      <div class="mo-sec-hd" onclick="toggleSection('sec-aichat')">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <span>🤖 AI챗봇 정보</span>
+        </div>
+        <span class="mo-sec-arr" id="arr-sec-aichat">▼</span>
+      </div>
+      <div class="mo-sec-body" id="sec-aichat">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600">
+            <input type="checkbox" id="p-aichat-use" style="accent-color:var(--accent);width:16px;height:16px"> AI 챗봇 사용
+          </label>
+        </div>
+        <div class="fr">
+          <label>AI챗봇 학습내용 <span style="font-size:10px;color:var(--text3);font-weight:400">(최대 50자)</span></label>
+          <input class="inp" id="p-aichat-learn" placeholder="학습내용 입력..." maxlength="50">
+        </div>
       </div>
     </div>
 
@@ -1590,13 +2067,57 @@
       </div>
       <div class="mo-sec-body" id="sec-settle">
         <div class="fr2" style="margin-bottom:12px">
-          <div><label>DA 광고료 (원)</label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
-          <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
+          <div><label><span id="p-settle-da-label">광고수익</span> (원) <span id="p-settle-da-desc" style="font-size:10px;color:var(--text3)"></span></label><input class="inp inp-money" id="p-settle-da" placeholder="0" oninput="calcSettleCost()"></div>
+          <div id="p-settle-done-wrap" style="display:flex;align-items:center;gap:10px;padding-top:20px">
             <input type="checkbox" id="p-settle-done" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer">
             <label for="p-settle-done" style="font-size:13px;font-weight:600;cursor:pointer">✅ 정산 완료</label>
           </div>
         </div>
+        <div class="fr" style="margin-bottom:12px" id="p-marketing-items-wrap">
+          <label>마케팅 항목 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(자유 기재)</span></label>
+          <textarea class="ta" id="p-marketing-items" placeholder="예) 광고 소재 제작비, 모델료, 촬영비 등..." style="min-height:60px;resize:vertical;white-space:pre-wrap"></textarea>
+        </div>
         <div class="fr2" style="margin-bottom:12px">
+          <div><label>실질마진이익율 (%) <span style="font-size:10px;color:var(--text3)">매출×이익율=이익</span></label><input class="inp" id="p-profit-rate" type="number" step="0.1" placeholder="24" oninput="calcSettleCost()"></div>
+          <div id="p-ad-income-wrap"><label><span id="p-ad-income-label">업체광고비</span> (원) <span style="font-size:10px;color:var(--text3)">업체에서 수취한 광고비</span></label><input class="inp inp-money" id="p-ad-income" placeholder="0" oninput="calcSettleCost()"></div>
+        </div>
+        <div class="fr2" style="margin-bottom:12px">
+          <div id="p-total-revenue-wrap"><label><span id="p-total-revenue-label">전체 매출</span> (원) <span id="p-total-revenue-desc" style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-total-revenue" placeholder="0" oninput="calcSettleCost()"></div>
+          <div></div>
+        </div>
+        <!-- 인플루언서 매출 영역 -->
+        <div id="p-inf-revenue-area" style="margin-bottom:12px;border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;background:var(--bg3)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:12px;font-weight:800;color:var(--text)">인플루언서 매출</span>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;font-weight:600;color:var(--accent2)">
+              <input type="checkbox" id="p-inf-rev-include-mlive" style="accent-color:var(--accent);width:14px;height:14px" onchange="calcInfTotalWithMlive()"> 모바일라이브 실적 포함
+            </label>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+            <div><label style="font-size:11px">인플루언서 전체매출</label><div id="p-inf-total-display" style="font-size:14px;font-weight:800;padding:6px 0">-</div></div>
+            <div><label style="font-size:11px">인플 주문건수</label><div id="p-inf-orders-display" style="font-size:14px;font-weight:800;padding:6px 0">-</div></div>
+            <div></div>
+          </div>
+          <!-- M라이브 실적 상세 (편성코드 연동 시) -->
+          <div id="p-mlive-perf-row" style="display:none;border-top:1px dashed var(--border);padding-top:8px">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:11px">
+              <div><label style="color:var(--text3)">방송중 매출</label><div id="p-mlive-onair-display" style="font-weight:700">-</div></div>
+              <div><label style="color:var(--text3)">방송중 건수</label><div id="p-mlive-onair-qty-display" style="font-weight:700">-</div></div>
+              <div><label style="color:var(--text3)">방송외 매출</label><div id="p-mlive-offair-display" style="font-weight:700">-</div></div>
+              <div><label style="color:var(--text3)">방송외 건수</label><div id="p-mlive-offair-qty-display" style="font-weight:700">-</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:11px;margin-top:6px">
+              <div><label style="color:var(--text3)">M라이브 전체매출</label><div id="p-mlive-total-display" style="font-weight:700">-</div></div>
+              <div><label style="color:var(--text3)">M라이브 전체건수</label><div id="p-mlive-total-qty-display" style="font-weight:700">-</div></div>
+              <div></div><div></div>
+            </div>
+          </div>
+        </div>
+        <div class="fr2" style="margin-bottom:12px" id="p-onair-offair-row">
+          <div><label>방송중 매출 (원) <span style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-onair-revenue" placeholder="0" oninput="calcSettleCost()"></div>
+          <div><label>방송외 매출 (원) <span style="font-size:10px;color:var(--text3)">엑셀 업로드 자동 기입</span></label><input class="inp inp-money" id="p-offair-revenue" placeholder="0" oninput="calcSettleCost()"></div>
+        </div>
+        <div class="fr2" style="margin-bottom:12px" id="p-settle-dates-row">
           <div><label>정산처리일 <span style="font-size:10.5px;color:var(--text3);font-weight:400">(캠페인 종료+14일 자동)</span></label><input class="inp" id="p-settle-process-date" type="date"></div>
           <div><label>비용지불일</label><input class="inp" id="p-settle-payment-date" type="date"></div>
         </div>
@@ -1611,6 +2132,8 @@
       <button onclick="copyShareText()" class="btn btn-ghost btn-sm" style="font-size:12px">📋 텍스트복사</button>
       <button onclick="shareToKakao()" style="background:#FEE500;border:none;border-radius:8px;padding:7px 12px;color:#3A1D1D;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:5px">💬 카카오톡</button>
     </div>
+    <button class="btn btn-danger btn-sm" id="prod-del-btn" style="display:none" onclick="delCampFromModal()">삭제</button>
+    <button class="btn btn-ghost btn-sm" id="prod-export-btn" style="display:none;color:var(--green);border-color:var(--green)" onclick="exportCampaignProposal()">📊 엑셀 다운로드</button>
     <button class="btn btn-ghost btn-sm" onclick="closeMo('product')">취소</button>
     <button class="btn btn-primary btn-sm" id="prod-save-btn" onclick="saveProd()">캠페인 등록</button>
   </div>
@@ -1676,7 +2199,7 @@
 
 <!-- APP Marketing (5단계) -->
 <div class="mo" id="mo-appmarketing"><div class="mo-box">
-  <div class="mo-hd"><span class="mo-ttl">APP마케팅 요청 (6단계)</span><button class="mo-x" onclick="closeMo('appmarketing')">✕</button></div>
+  <div class="mo-hd"><span class="mo-ttl">모바일마케팅 요청 (6단계)</span><button class="mo-x" onclick="closeMo('appmarketing')">✕</button></div>
   <div class="mo-body">
     <div class="fr"><label>캠페인 선택</label><select class="sel" id="app-camp"></select></div>
     <div class="fr2"><div><label>전시기획</label><input class="inp" id="app-display" placeholder="메인배너, 기획전 등"></div><div><label>전시 리소스</label><select class="sel" id="app-resource"><option>팝업</option><option>홈구좌</option><option>GNB</option><option>기타</option></select></div></div>
@@ -1704,10 +2227,13 @@
 <div class="mo" id="mo-influencer"><div class="mo-box">
   <div class="mo-hd"><span class="mo-ttl">인플루언서 등록</span><button class="mo-x" onclick="closeMo('influencer')">✕</button></div>
   <div class="mo-body">
-    <div class="fr2"><div><label>이름 *</label><input class="inp" id="i-name" placeholder="홍길동"></div><div><label>채널/아이디</label><input class="inp" id="i-handle" placeholder="@hong_beauty"></div></div>
-    <div class="fr2"><div><label>플랫폼</label><select class="sel" id="i-plat"><option>인스타그램</option><option>유튜브</option><option>틱톡</option><option>X(트위터)</option><option>블로그</option><option>복합</option></select></div><div><label>팔로워</label><input class="inp" id="i-flw" type="number" placeholder="50000"></div></div>
-    <div class="fr2"><div><label>참여율 (%)</label><input class="inp" id="i-eng" placeholder="3.2"></div><div><label>카테고리</label><select class="sel" id="i-cat"><option>뷰티</option><option>식품/맛집</option><option>패션</option><option>라이프스타일</option><option>IT/테크</option><option>여행</option><option>육아</option><option>기타</option></select></div></div>
-    <div class="fr2"><div><label>연락처</label><input class="inp" id="i-contact" placeholder="이메일 또는 DM"></div><div><label>광고 단가 (원)</label><input class="inp inp-money" id="i-fee" placeholder="300,000"></div></div>
+    <div class="fr2"><div><label>이름 *</label><input class="inp" id="i-name" placeholder="홍길동"></div><div><label>카테고리</label><select class="sel" id="i-cat"><option>뷰티</option><option>식품/맛집</option><option>패션</option><option>라이프스타일</option><option>IT/테크</option><option>여행</option><option>육아</option><option>기타</option></select></div></div>
+    <div style="margin-bottom:10px"><label style="font-size:12px;font-weight:600;margin-bottom:6px;display:block">채널 정보</label>
+      <div class="fr2" style="margin-bottom:6px"><div><label style="font-size:11px;color:var(--text3)">📸 인스타그램</label><input class="inp" id="i-insta" placeholder="@계정명"></div><div><label style="font-size:11px;color:var(--text3)">▶ 유튜브</label><input class="inp" id="i-youtube" placeholder="@채널명"></div></div>
+      <div class="fr2"><div><label style="font-size:11px;color:var(--text3)">𝕏 트위터/X</label><input class="inp" id="i-twitter" placeholder="@계정명"></div><div><label style="font-size:11px;color:var(--text3)">팔로워 (대표)</label><input class="inp" id="i-flw" type="number" placeholder="50000"></div></div>
+    </div>
+    <div class="fr2"><div><label>연락처</label><input class="inp" id="i-contact" placeholder="전화번호 또는 이메일"></div><div><label>광고 단가 (원)</label><input class="inp inp-money" id="i-fee" placeholder="300,000"></div></div>
+    <div class="fr"><label>주소</label><input class="inp" id="i-address" placeholder="샘플 수신 주소"></div>
     <div class="fr"><label>메모</label><textarea class="ta" id="i-memo" placeholder="협업 이력, 특이사항..."></textarea></div>
   </div>
   <div class="mo-ft"><button class="btn btn-ghost" onclick="closeMo('influencer')">취소</button><button class="btn btn-primary" onclick="saveInf()">등록</button></div>
@@ -1734,6 +2260,35 @@
   </div>
 </div></div>
 
+<!-- M라이브 편성 달력 모달 -->
+<div class="mo" id="mo-mlive-sched-cal" style="z-index:1150"><div class="mo-box" style="width:min(960px,95vw)">
+  <div class="mo-hd">
+    <span class="mo-ttl">📅 M라이브 편성 달력 <span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:8px">전체 사용자 기준</span></span>
+    <button class="mo-x" onclick="closeMo('mlive-sched-cal')">✕</button>
+  </div>
+  <div class="mo-body" style="padding:16px 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="mliveCalPrev()">◀</button>
+        <div id="mlive-cal-title" style="font-size:15px;font-weight:800;min-width:120px;text-align:center">-</div>
+        <button class="btn btn-ghost btn-sm" onclick="mliveCalNext()">▶</button>
+      </div>
+      <div id="mlive-cal-count" style="font-size:11.5px;color:var(--text3)"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--red);padding:4px 0">일</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">월</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">화</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">수</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">목</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--text2);padding:4px 0">금</div>
+      <div style="font-size:11px;font-weight:700;text-align:center;color:var(--blue);padding:4px 0">토</div>
+    </div>
+    <div id="mlive-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text3)">※ 모바일라이브 유형으로 등록된 전체 캠페인의 시작일 기준으로 표시됩니다.</div>
+  </div>
+</div></div>
+
 <!-- Email -->
 <div class="mo" id="mo-email"><div class="mo-box">
   <div class="mo-hd"><span class="mo-ttl">✉️ 이메일 발송 초안</span><button class="mo-x" onclick="closeMo('email')">✕</button></div>
@@ -1756,4 +2311,3 @@
     <button class="btn btn-primary" onclick="sendEmail()">✉️ 메일 앱으로 열기</button>
   </div>
 </div></div>
-
