@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone *)",
+      "Bash(py --version)",
+      "PowerShell(Get-Command python, python3, py -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\nodejs\" -ErrorAction SilentlyContinue | Select-Object Name; Get-ChildItem \"C:\\\\Program Files \\(x86\\)\\\\nodejs\" -ErrorAction SilentlyContinue | Select-Object Name; Get-ChildItem \"$env:APPDATA\\\\npm\" -ErrorAction SilentlyContinue | Select-Object -First 5 Name)",
+      "Bash(grep -n \"<body\\\\|</body>\\\\|<script>\\\\s*$\\\\|<!-- BODY START\\\\|<!-- BODY END\\\\|<style>\\\\|</style>\" \"C:/Users/ssg/OneDrive - Shinsegae/배재영_/2026/project/project_next/index.html\")",
+      "Bash(grep -c \"bySku\\\\|getSettleCurrentSkus\\\\|recalcSettleTotal\\\\|syncSettleSkuRowsAll\\\\|settle-sku-row\" \"/c/Users/ssg/Desktop/SSGLIVE_정산개선_v3.html\")",
+      "Bash(powershell -Command ' *)"
+    ]
+  }
+}
