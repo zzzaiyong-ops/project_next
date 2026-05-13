@@ -4463,9 +4463,9 @@ function renderS7(){
       infList.forEach(function(inf, infIdx){
         var sd = settleList[infIdx] || {};
         var rev = sd.revenue || 0;
-        var infFeeAmt   = Math.round(rev * (inf.feeRate||0) / 100);
-        var agFeeAmt    = Math.round(rev * (inf.agencyRate||0) / 100);
-        var totalCost   = infFeeAmt + (inf.feeAmount||0) + agFeeAmt + (infIdx===0 ? da : 0);
+        // 전체 비용 = 세금계산서 공급가액(부가세별도) — commFeeVat 기준 재계산으로 단수 오차 방지
+        var _gCF2    = Math.round((sd.commFeeVat||0) / 1.1);
+        var totalCost = _gCF2 + (sd.fixedFee||0) + (sd.metaFee||0);
         var revStr  = rev  ? rev.toLocaleString()+'원'       : '-';
         var costStr = totalCost ? totalCost.toLocaleString()+'원' : '-';
         var ordStr  = sd.orders ? sd.orders+'건' : '-';
@@ -11405,6 +11405,9 @@ function exportS7ExcelFiltered(camps){
       : (c.skus&&c.skus.length) ? c.skus.map(function(s){ return {skuCode:s.code||''}; })
       : [{skuCode:''}];
     var codeStyle = {font:{name:'맑은 고딕',sz:9,bold:true,color:{rgb:'FF0563C1'}},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:_BD7};
+    // 부동소수점 오차 방지: commFee2/taxSupply는 commFeeVat 기준 재계산
+    var _expCF2  = Math.round((sd.commFeeVat||0) / 1.1);
+    var _expTax  = _expCF2 + (sd.fixedFee||0) + (sd.metaFee||0);
     skuItems.forEach(function(si, idx){
       R++;
       var convR = si.inflow>0 ? parseFloat((si.netOrders/si.inflow*100).toFixed(2)) : (si.convRate||0);
@@ -11422,10 +11425,10 @@ function exportS7ExcelFiltered(camps){
         {v:si.netAmt||(si.netOrders*si.dealPrice)||0,t:'n',s:numStyle},
         {v:si.adCommRate||0,t:'n',s:pctStyle},
         {v:idx===0?(sd.commFeeVat||0):0,t:'n',s:numStyle},
-        {v:idx===0?(sd.commFee2||0):0,t:'n',s:numStyle},
+        {v:idx===0?_expCF2:0,t:'n',s:numStyle},
         {v:idx===0?(sd.fixedFee||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.metaFee||0):0,t:'n',s:numStyle},
-        {v:idx===0?(sd.taxSupply||0):0,t:'n',s:numStyle},
+        {v:idx===0?_expTax:0,t:'n',s:numStyle},
         {v:idx===0?(sd.views||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.comments||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.settleDate||''):'',t:'s',s:dtStyle},
@@ -11470,6 +11473,9 @@ function downloadSettleTemplate(){
       : (c.skus&&c.skus.length) ? c.skus.map(function(s){ return {skuCode:s.code||''}; })
       : [{skuCode:''}];
     var codeStyle = {font:{name:'맑은 고딕',sz:9,bold:true,color:{rgb:'FF0563C1'}},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:dtStyle.border};
+    // 부동소수점 오차 방지: commFee2/taxSupply는 commFeeVat 기준 재계산
+    var _expCF2  = Math.round((sd.commFeeVat||0) / 1.1);
+    var _expTax  = _expCF2 + (sd.fixedFee||0) + (sd.metaFee||0);
     skuItems.forEach(function(si, idx){
       R++;
       var convR = si.inflow>0 ? parseFloat((si.netOrders/si.inflow*100).toFixed(2)) : (si.convRate||0);
@@ -11487,10 +11493,10 @@ function downloadSettleTemplate(){
         {v:si.netAmt||(si.netOrders*si.dealPrice)||0,t:'n',s:numStyle},
         {v:si.adCommRate||0,t:'n',s:pctStyle},
         {v:idx===0?(sd.commFeeVat||0):0,t:'n',s:numStyle},
-        {v:idx===0?(sd.commFee2||0):0,t:'n',s:numStyle},
+        {v:idx===0?_expCF2:0,t:'n',s:numStyle},
         {v:idx===0?(sd.fixedFee||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.metaFee||0):0,t:'n',s:numStyle},
-        {v:idx===0?(sd.taxSupply||0):0,t:'n',s:numStyle},
+        {v:idx===0?_expTax:0,t:'n',s:numStyle},
         {v:idx===0?(sd.views||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.comments||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.settleDate||''):'',t:'s',s:dtStyle},
