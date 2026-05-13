@@ -5479,8 +5479,8 @@ function renderDash(){
     {key:'시딩',  color:'var(--green)',  bg:'var(--green-bg)'},
   ];
 
-  var totalCounts   = months.map(function(m){return DB.campaigns.filter(function(c){return campInMonth(c,m.year,m.month);}).length;});
-  var totalRevenues = months.map(function(m){return DB.campaigns.reduce(function(sum,c){return sum+(c.revenue||0)*(campInMonth(c,m.year,m.month)?1:0);},0);});
+  var totalCounts   = months.map(function(m){return DB.campaigns.filter(function(c){return (c.campType||'')!=='모바일라이브'&&campInMonth(c,m.year,m.month);}).length;});
+  var totalRevenues = months.map(function(m){return DB.campaigns.reduce(function(sum,c){return sum+((c.campType||'')!=='모바일라이브'&&campInMonth(c,m.year,m.month)?(c.revenue||0):0);},0);});
 
   // 온라인/방송 분류 함수
   // campType 미지정은 온라인으로 집계 (SSG LIVE 기본값)
@@ -5497,7 +5497,7 @@ function renderDash(){
   // ── 월 합계: thead ds-sum-m0/m1/m2 에 직접 렌더 ──
   var sumRow = ''; // tbody 불필요
   months.forEach(function(mo, idx){
-    var allMo = DB.campaigns.filter(function(c){return campInMonth(c,mo.year,mo.month);});
+    var allMo = DB.campaigns.filter(function(c){return (c.campType||'')!=='모바일라이브'&&campInMonth(c,mo.year,mo.month);});
     var totCnt = allMo.length;
     var totRev = allMo.reduce(function(s,c){return s+(c.revenue||0);},0);
     var el = document.getElementById('ds-sum-m'+idx);
@@ -5511,8 +5511,8 @@ function renderDash(){
   var roleRows = '<tr style="background:var(--accent-bg)">'
     + '<td><span style="color:var(--accent2);font-weight:800;font-size:13px;white-space:nowrap">계 (예상매출)</span></td>'
     + months.map(function(mo){
-        var onl = DB.campaigns.filter(function(c){return campInMonth(c,mo.year,mo.month)&&isOnline(c);});
-        var brd = DB.campaigns.filter(function(c){return campInMonth(c,mo.year,mo.month)&&isBroadcast(c);});
+        var onl = DB.campaigns.filter(function(c){return (c.campType||'')!=='모바일라이브'&&campInMonth(c,mo.year,mo.month)&&isOnline(c);});
+        var brd = DB.campaigns.filter(function(c){return (c.campType||'')!=='모바일라이브'&&campInMonth(c,mo.year,mo.month)&&isBroadcast(c);});
         var onRev = fmtRevT(onl.reduce(function(s,c){return s+(c.revenue||0);},0));
         var brRev = fmtRevT(brd.reduce(function(s,c){return s+(c.revenue||0);},0));
         return '<td style="text-align:center;padding:7px 6px;background:var(--blue-bg)">'
@@ -5528,6 +5528,7 @@ function renderDash(){
   ROLES.forEach(function(r){
     var campsByMonth = months.map(function(m){
       return DB.campaigns.filter(function(c){
+        if((c.campType||'')==='모바일라이브') return false;
         var rm = r.key==='(미정)'?(!c.role||c.role===''):c.role===r.key;
         var confirmed = c.stage && ['5.인플루언서확정','6.APP마케팅확정','7.정산','7.정산완료'].indexOf(c.stage) >= 0;
         return rm&&confirmed&&campInMonth(c,m.year,m.month);
@@ -5610,6 +5611,7 @@ function renderDash(){
   var unconfirmed = {key:'미확정', color:'var(--text3)', bg:'var(--bg4)'};
   var ucByMonth = months.map(function(m){
     return DB.campaigns.filter(function(c){
+      if((c.campType||'')==='모바일라이브') return false;
       var isConfirmed = c.stage && ['5.인플루언서확정','6.APP마케팅확정','7.정산','7.정산완료'].indexOf(c.stage) >= 0;
       return !isConfirmed && campInMonth(c,m.year,m.month);
     });
@@ -5886,7 +5888,7 @@ function editProd(id){
   }]);
   renderSettleBlocks(p.settleData && p.settleData.length ? p.settleData : [{
     revenue: p.settleRevenue||0, orders: p.settleOrders||0
-  }], p.skus||[]);
+  }], p.skus||[], (p.end||p.endDate||'').slice(0,10));
   // 쇼호스트 복원
   var hosts = p.showhosts||{};
   searchSelSetValue('p-host-req1',  hosts.req1||'');
@@ -11703,10 +11705,16 @@ function syncSettleBlocks(){
   });
 }
 
-function addSettleBlock(n, data, campaignSkus){
+function addSettleBlock(n, data, campaignSkus, campEndDate){
   var container = document.getElementById('settle-blocks-container');
   if(!container) return;
   var d = data || {};
+  // 정산일자 자동 계산: 저장된 값 없으면 캠페인 마감일 + 7일
+  var _campEnd = ((campEndDate||document.getElementById('p-end')?.value||'').slice(0,10));
+  var _autoSettleDate = '';
+  if(!d.settleDate && _campEnd){
+    try{ var _sad=new Date(_campEnd); _sad.setDate(_sad.getDate()+7); _autoSettleDate=_sad.toISOString().slice(0,10); }catch(e){}
+  }
   var fmtV = function(v){ return v ? parseInt(v).toLocaleString('ko-KR') : ''; };
 
   // ── SKU 행 목록: 저장된 skuItems + 캠페인 상품정보 병합
@@ -11800,7 +11808,7 @@ function addSettleBlock(n, data, campaignSkus){
     +'<div><label style="font-size:10.5px;color:var(--text3);display:block;margin-bottom:2px">📣 릴스 댓글수</label>'
     +'<input class="inp inp-sm settle-comments-'+n+'" type="number" placeholder="0" value="'+(d.comments||'')+'"></div>'
     +'<div><label style="font-size:10.5px;color:var(--text3);display:block;margin-bottom:2px">정산일자</label>'
-    +'<input class="inp inp-sm settle-settledate-'+n+'" type="date" value="'+(d.settleDate||'')+'"></div>'
+    +'<input class="inp inp-sm settle-settledate-'+n+'" type="date" value="'+(d.settleDate||_autoSettleDate)+'"></div>'
     +'</div>'
     // ── 이슈 및 결과
     +'<div><label style="font-size:11.5px;font-weight:600;display:block;margin-bottom:4px">이슈 및 결과</label>'
@@ -12003,12 +12011,12 @@ function getSettleBlocksData(){
   return result;
 }
 
-function renderSettleBlocks(settleList, campaignSkus){
+function renderSettleBlocks(settleList, campaignSkus, campEndDate){
   var container = document.getElementById('settle-blocks-container');
   if(!container) return;
   container.innerHTML = '';
   if(settleList && settleList.length > 0){
-    settleList.forEach(function(d,i){ addSettleBlock(i+1, d, campaignSkus||[]); });
+    settleList.forEach(function(d,i){ addSettleBlock(i+1, d, campaignSkus||[], campEndDate||''); });
   }
 }
 
@@ -14396,15 +14404,15 @@ function exportS7ExcelFiltered(camps){
   var nmStyle = Object.assign({},dtStyle,{fill:{patternType:'solid',fgColor:{rgb:'FFFFF2CC'}}});
   var numStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'#,##0'};
   var pctStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'0.00'};
-  var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
+  var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','MCN업체','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
   var ws = {};
-  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
+  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
   var R = 0;
   hdrs.forEach(function(h,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:h,t:'s',s:hdStyle}; });
   // ── 2행: 입력 가이드 (A열 공백 → 업로드 시 자동 스킵)
   R++;
   var guideStyle = {font:{name:'맑은 고딕',sz:8,italic:true,color:{rgb:'FF888888'}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F2F2'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'FFD9D9D9'}},bottom:{style:'thin',color:{rgb:'FFD9D9D9'}},left:{style:'thin',color:{rgb:'FFD9D9D9'}},right:{style:'thin',color:{rgb:'FFD9D9D9'}}}};
-  var _guides = ['','조회용(입력불필요)','상품코드 입력','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력'];
+  var _guides = ['','조회용(입력불필요)','상품코드 입력','MCN업체명','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력'];
   _guides.forEach(function(g,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:g,t:'s',s:guideStyle}; });
   ws['!rows'] = [null, {hpt:42}]; // 가이드 행 높이
   camps.forEach(function(c){
@@ -14417,6 +14425,11 @@ function exportS7ExcelFiltered(camps){
     // 부동소수점 오차 방지: commFee2/taxSupply는 commFeeVat 기준 재계산
     var _expCF2  = Math.round((sd.commFeeVat||0) / 1.1);
     var _expTax  = _expCF2 + (sd.fixedFee||0) + (sd.metaFee||0);
+    // 정산일자 자동: 저장값 없으면 캠페인 마감일 + 7일
+    var _campEndStr = (c.end||c.endDate||'').slice(0,10);
+    var _autoSD = '';
+    if(!sd.settleDate && _campEndStr){try{var _d=new Date(_campEndStr);_d.setDate(_d.getDate()+7);_autoSD=_d.toISOString().slice(0,10);}catch(e){}}
+    var _mcnName = inf.mcn || c.mcn || '';
     skuItems.forEach(function(si, idx){
       R++;
       var convR = si.inflow>0 ? parseFloat((si.netOrders/si.inflow*100).toFixed(2)) : (si.convRate||0);
@@ -14424,6 +14437,7 @@ function exportS7ExcelFiltered(camps){
         {v:c.campCode||'',t:'s',s:codeStyle},
         {v:c.name||'',t:'s',s:nmStyle},
         {v:si.skuCode||'',t:'s',s:dtStyle},
+        {v:idx===0?_mcnName:'',t:'s',s:dtStyle},
         {v:inf.infName||c.infName||'',t:'s',s:dtStyle},
         {v:si.inflow||0,t:'n',s:numStyle},
         {v:si.buyers||0,t:'n',s:numStyle},
@@ -14440,7 +14454,7 @@ function exportS7ExcelFiltered(camps){
         {v:idx===0?_expTax:0,t:'n',s:numStyle},
         {v:idx===0?(sd.views||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.comments||0):0,t:'n',s:numStyle},
-        {v:idx===0?(sd.settleDate||''):'',t:'s',s:dtStyle},
+        {v:idx===0?(sd.settleDate||_autoSD):'',t:'s',s:dtStyle},
         {v:idx===0?(sd.issueResult||''):'',t:'s',s:dtStyle}
       ];
       row.forEach(function(cell,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = cell; });
@@ -14463,15 +14477,15 @@ function downloadSettleTemplate(){
   var nmStyle = Object.assign({},dtStyle,{fill:{patternType:'solid',fgColor:{rgb:'FFFFF2CC'}}});
   var numStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'#,##0'};
   var pctStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'0.00'};
-  var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
+  var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','MCN업체','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
   var ws = {};
-  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
+  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
   var R = 0;
   hdrs.forEach(function(h,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:h,t:'s',s:hdStyle}; });
   // ── 2행: 입력 가이드 (A열 공백 → 업로드 시 자동 스킵)
   R++;
   var guideStyle = {font:{name:'맑은 고딕',sz:8,italic:true,color:{rgb:'FF888888'}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F2F2'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'FFD9D9D9'}},bottom:{style:'thin',color:{rgb:'FFD9D9D9'}},left:{style:'thin',color:{rgb:'FFD9D9D9'}},right:{style:'thin',color:{rgb:'FFD9D9D9'}}}};
-  var _guides = ['','조회용(입력불필요)','상품코드 입력','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력'];
+  var _guides = ['','조회용(입력불필요)','상품코드 입력','MCN업체명','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력'];
   _guides.forEach(function(g,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:g,t:'s',s:guideStyle}; });
   ws['!rows'] = [null, {hpt:42}]; // 가이드 행 높이
   camps.forEach(function(c){
@@ -14485,6 +14499,11 @@ function downloadSettleTemplate(){
     // 부동소수점 오차 방지: commFee2/taxSupply는 commFeeVat 기준 재계산
     var _expCF2  = Math.round((sd.commFeeVat||0) / 1.1);
     var _expTax  = _expCF2 + (sd.fixedFee||0) + (sd.metaFee||0);
+    // 정산일자 자동: 저장값 없으면 캠페인 마감일 + 7일
+    var _campEndStr = (c.end||c.endDate||'').slice(0,10);
+    var _autoSD = '';
+    if(!sd.settleDate && _campEndStr){try{var _d=new Date(_campEndStr);_d.setDate(_d.getDate()+7);_autoSD=_d.toISOString().slice(0,10);}catch(e){}}
+    var _mcnName = inf.mcn || c.mcn || '';
     skuItems.forEach(function(si, idx){
       R++;
       var convR = si.inflow>0 ? parseFloat((si.netOrders/si.inflow*100).toFixed(2)) : (si.convRate||0);
@@ -14492,6 +14511,7 @@ function downloadSettleTemplate(){
         {v:c.campCode||'',t:'s',s:codeStyle},
         {v:c.name||'',t:'s',s:nmStyle},
         {v:si.skuCode||'',t:'s',s:dtStyle},
+        {v:idx===0?_mcnName:'',t:'s',s:dtStyle},
         {v:inf.infName||c.infName||'',t:'s',s:dtStyle},
         {v:si.inflow||0,t:'n',s:numStyle},
         {v:si.buyers||0,t:'n',s:numStyle},
@@ -14508,7 +14528,7 @@ function downloadSettleTemplate(){
         {v:idx===0?_expTax:0,t:'n',s:numStyle},
         {v:idx===0?(sd.views||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.comments||0):0,t:'n',s:numStyle},
-        {v:idx===0?(sd.settleDate||''):'',t:'s',s:dtStyle},
+        {v:idx===0?(sd.settleDate||_autoSD):'',t:'s',s:dtStyle},
         {v:idx===0?(sd.issueResult||''):'',t:'s',s:dtStyle}
       ];
       row.forEach(function(cell,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = cell; });
@@ -15531,4 +15551,6 @@ if(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== '여기에_API_KEY' && t
   if(window._removeAuthOverlay) window._removeAuthOverlay();
 }
 </script>
-</script></body></html>
+</script>
+</body>
+</html>
