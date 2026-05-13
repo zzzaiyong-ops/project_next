@@ -11382,8 +11382,11 @@ function exportS7ExcelFiltered(camps){
   if(!window.XLSX){ showToast('XLSX 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.'); return; }
   if(!camps || !camps.length){ showToast('다운로드할 캠페인이 없습니다'); return; }
   var hdStyle = {font:{name:'맑은 고딕',sz:9,bold:true,color:{rgb:'FF222222'}},fill:{patternType:'solid',fgColor:{rgb:'FFD9E1F2'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'FFB0B0B0'}},bottom:{style:'thin',color:{rgb:'FFB0B0B0'}},left:{style:'thin',color:{rgb:'FFB0B0B0'}},right:{style:'thin',color:{rgb:'FFB0B0B0'}}}};
-  var dtStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:{top:{style:'thin',color:{rgb:'FFB0B0B0'}},bottom:{style:'thin',color:{rgb:'FFB0B0B0'}},left:{style:'thin',color:{rgb:'FFB0B0B0'}},right:{style:'thin',color:{rgb:'FFB0B0B0'}}}};
+  var _BD7 = {top:{style:'thin',color:{rgb:'FFB0B0B0'}},bottom:{style:'thin',color:{rgb:'FFB0B0B0'}},left:{style:'thin',color:{rgb:'FFB0B0B0'}},right:{style:'thin',color:{rgb:'FFB0B0B0'}}};
+  var dtStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:_BD7};
   var nmStyle = Object.assign({},dtStyle,{fill:{patternType:'solid',fgColor:{rgb:'FFFFF2CC'}}});
+  var numStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'#,##0'};
+  var pctStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'0.00'};
   var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
   var ws = {};
   ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
@@ -11401,7 +11404,7 @@ function exportS7ExcelFiltered(camps){
     var skuItems = (sd.skuItems&&sd.skuItems.length) ? sd.skuItems
       : (c.skus&&c.skus.length) ? c.skus.map(function(s){ return {skuCode:s.code||''}; })
       : [{skuCode:''}];
-    var codeStyle = {font:{name:'맑은 고딕',sz:9,bold:true,color:{rgb:'FF0563C1'}},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:dtStyle.border};
+    var codeStyle = {font:{name:'맑은 고딕',sz:9,bold:true,color:{rgb:'FF0563C1'}},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:_BD7};
     skuItems.forEach(function(si, idx){
       R++;
       var convR = si.inflow>0 ? parseFloat((si.netOrders/si.inflow*100).toFixed(2)) : (si.convRate||0);
@@ -11410,21 +11413,21 @@ function exportS7ExcelFiltered(camps){
         {v:c.name||'',t:'s',s:nmStyle},
         {v:si.skuCode||'',t:'s',s:dtStyle},
         {v:inf.infName||c.infName||'',t:'s',s:dtStyle},
-        {v:si.inflow||0,t:'n',s:dtStyle},
-        {v:si.buyers||0,t:'n',s:dtStyle},
-        {v:convR,t:'n',s:dtStyle},
-        {v:si.newMembers||0,t:'n',s:dtStyle},
-        {v:si.dealPrice||0,t:'n',s:dtStyle},
-        {v:si.netOrders||0,t:'n',s:dtStyle},
-        {v:si.netAmt||(si.netOrders*si.dealPrice)||0,t:'n',s:dtStyle},
-        {v:si.adCommRate||0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.commFeeVat||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.commFee2||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.fixedFee||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.metaFee||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.taxSupply||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.views||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.comments||0):0,t:'n',s:dtStyle},
+        {v:si.inflow||0,t:'n',s:numStyle},
+        {v:si.buyers||0,t:'n',s:numStyle},
+        {v:convR,t:'n',s:pctStyle},
+        {v:si.newMembers||0,t:'n',s:numStyle},
+        {v:si.dealPrice||0,t:'n',s:numStyle},
+        {v:si.netOrders||0,t:'n',s:numStyle},
+        {v:si.netAmt||(si.netOrders*si.dealPrice)||0,t:'n',s:numStyle},
+        {v:si.adCommRate||0,t:'n',s:pctStyle},
+        {v:idx===0?(sd.commFeeVat||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.commFee2||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.fixedFee||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.metaFee||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.taxSupply||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.views||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.comments||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.settleDate||''):'',t:'s',s:dtStyle},
         {v:idx===0?(sd.issueResult||''):'',t:'s',s:dtStyle}
       ];
@@ -11443,8 +11446,11 @@ function downloadSettleTemplate(){
     return c.campCode && (c.stage==='7.정산'||c.stage==='7.정산완료'||c.stage==='8.성과분석');
   });
   var hdStyle = {font:{name:'맑은 고딕',sz:9,bold:true,color:{rgb:'FF222222'}},fill:{patternType:'solid',fgColor:{rgb:'FFD9E1F2'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'FFB0B0B0'}},bottom:{style:'thin',color:{rgb:'FFB0B0B0'}},left:{style:'thin',color:{rgb:'FFB0B0B0'}},right:{style:'thin',color:{rgb:'FFB0B0B0'}}}};
-  var dtStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:{top:{style:'thin',color:{rgb:'FFB0B0B0'}},bottom:{style:'thin',color:{rgb:'FFB0B0B0'}},left:{style:'thin',color:{rgb:'FFB0B0B0'}},right:{style:'thin',color:{rgb:'FFB0B0B0'}}}};
+  var _BD7 = {top:{style:'thin',color:{rgb:'FFB0B0B0'}},bottom:{style:'thin',color:{rgb:'FFB0B0B0'}},left:{style:'thin',color:{rgb:'FFB0B0B0'}},right:{style:'thin',color:{rgb:'FFB0B0B0'}}};
+  var dtStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'left',vertical:'center'},border:_BD7};
   var nmStyle = Object.assign({},dtStyle,{fill:{patternType:'solid',fgColor:{rgb:'FFFFF2CC'}}});
+  var numStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'#,##0'};
+  var pctStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'0.00'};
   var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
   var ws = {};
   ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
@@ -11472,21 +11478,21 @@ function downloadSettleTemplate(){
         {v:c.name||'',t:'s',s:nmStyle},
         {v:si.skuCode||'',t:'s',s:dtStyle},
         {v:inf.infName||c.infName||'',t:'s',s:dtStyle},
-        {v:si.inflow||0,t:'n',s:dtStyle},
-        {v:si.buyers||0,t:'n',s:dtStyle},
-        {v:convR,t:'n',s:dtStyle},
-        {v:si.newMembers||0,t:'n',s:dtStyle},
-        {v:si.dealPrice||0,t:'n',s:dtStyle},
-        {v:si.netOrders||0,t:'n',s:dtStyle},
-        {v:si.netAmt||(si.netOrders*si.dealPrice)||0,t:'n',s:dtStyle},
-        {v:si.adCommRate||0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.commFeeVat||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.commFee2||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.fixedFee||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.metaFee||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.taxSupply||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.views||0):0,t:'n',s:dtStyle},
-        {v:idx===0?(sd.comments||0):0,t:'n',s:dtStyle},
+        {v:si.inflow||0,t:'n',s:numStyle},
+        {v:si.buyers||0,t:'n',s:numStyle},
+        {v:convR,t:'n',s:pctStyle},
+        {v:si.newMembers||0,t:'n',s:numStyle},
+        {v:si.dealPrice||0,t:'n',s:numStyle},
+        {v:si.netOrders||0,t:'n',s:numStyle},
+        {v:si.netAmt||(si.netOrders*si.dealPrice)||0,t:'n',s:numStyle},
+        {v:si.adCommRate||0,t:'n',s:pctStyle},
+        {v:idx===0?(sd.commFeeVat||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.commFee2||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.fixedFee||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.metaFee||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.taxSupply||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.views||0):0,t:'n',s:numStyle},
+        {v:idx===0?(sd.comments||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.settleDate||''):'',t:'s',s:dtStyle},
         {v:idx===0?(sd.issueResult||''):'',t:'s',s:dtStyle}
       ];
