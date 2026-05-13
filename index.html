@@ -11697,6 +11697,9 @@ function addSettleBlock(n, data, campaignSkus){
     var cs = campSkus[i]||{}, ss = savedItems[i]||{};
     skuRows.push({
       skuCode:    ss.skuCode    || cs.code || '',
+      inflow:     ss.inflow     || 0,
+      buyers:     ss.buyers     || 0,
+      newMembers: ss.newMembers || 0,
       netOrders:  ss.netOrders  || 0,
       convRate:   ss.convRate   || 0,
       dealPrice:  ss.dealPrice  || 0,
@@ -14364,11 +14367,15 @@ function exportS7ExcelFiltered(camps){
   var nmStyle = Object.assign({},dtStyle,{fill:{patternType:'solid',fgColor:{rgb:'FFFFF2CC'}}});
   var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
   var ws = {};
-  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:11},{wch:11},{wch:18},{wch:12},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:12},{wch:24}];
+  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
   var R = 0;
-  hdrs.forEach(function(h,ci){
-    ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:h,t:'s',s:hdStyle};
-  });
+  hdrs.forEach(function(h,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:h,t:'s',s:hdStyle}; });
+  // ── 2행: 입력 가이드 (A열 공백 → 업로드 시 자동 스킵)
+  R++;
+  var guideStyle = {font:{name:'맑은 고딕',sz:8,italic:true,color:{rgb:'FF888888'}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F2F2'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'FFD9D9D9'}},bottom:{style:'thin',color:{rgb:'FFD9D9D9'}},left:{style:'thin',color:{rgb:'FFD9D9D9'}},right:{style:'thin',color:{rgb:'FFD9D9D9'}}}};
+  var _guides = ['','조회용(입력불필요)','상품코드 입력','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력'];
+  _guides.forEach(function(g,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:g,t:'s',s:guideStyle}; });
+  ws['!rows'] = [null, {hpt:42}]; // 가이드 행 높이
   camps.forEach(function(c){
     var inf = (c.infData&&c.infData[0])||{};
     var sd = (c.settleData&&c.settleData[0])||{};
@@ -14405,7 +14412,7 @@ function exportS7ExcelFiltered(camps){
       row.forEach(function(cell,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = cell; });
     });
   });
-  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(R,1),c:hdrs.length-1}});
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(R,2),c:hdrs.length-1}});
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'정산입력');
   XLSX.writeFile(wb,'정산다운로드_'+new Date().toISOString().slice(0,10)+'.xlsx');
@@ -14421,11 +14428,15 @@ function downloadSettleTemplate(){
   var nmStyle = Object.assign({},dtStyle,{fill:{patternType:'solid',fgColor:{rgb:'FFFFF2CC'}}});
   var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
   var ws = {};
-  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:11},{wch:11},{wch:18},{wch:12},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:12},{wch:24}];
+  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
   var R = 0;
-  hdrs.forEach(function(h,ci){
-    ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:h,t:'s',s:hdStyle};
-  });
+  hdrs.forEach(function(h,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:h,t:'s',s:hdStyle}; });
+  // ── 2행: 입력 가이드 (A열 공백 → 업로드 시 자동 스킵)
+  R++;
+  var guideStyle = {font:{name:'맑은 고딕',sz:8,italic:true,color:{rgb:'FF888888'}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F2F2'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'FFD9D9D9'}},bottom:{style:'thin',color:{rgb:'FFD9D9D9'}},left:{style:'thin',color:{rgb:'FFD9D9D9'}},right:{style:'thin',color:{rgb:'FFD9D9D9'}}}};
+  var _guides = ['','조회용(입력불필요)','상품코드 입력','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력'];
+  _guides.forEach(function(g,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:g,t:'s',s:guideStyle}; });
+  ws['!rows'] = [null, {hpt:42}]; // 가이드 행 높이
   camps.forEach(function(c){
     var inf = (c.infData&&c.infData[0])||{};
     var sd = (c.settleData&&c.settleData[0])||{};
@@ -14463,7 +14474,7 @@ function downloadSettleTemplate(){
       row.forEach(function(cell,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = cell; });
     });
   });
-  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(R,1),c:hdrs.length-1}});
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(R,2),c:hdrs.length-1}});
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'정산입력');
   XLSX.writeFile(wb,'정산업로드양식_'+new Date().toISOString().slice(0,10)+'.xlsx');
@@ -14554,10 +14565,11 @@ function importSettleExcel(input){
         sd.views=a.views; sd.comments=a.comments;
         if(a.settleDate) sd.settleDate=a.settleDate;
         if(a.issueResult) sd.issueResult=a.issueResult;
-        // S7 표시용: skuItems 합산
+        // S7 표시용: skuItems 합산 → settleData + camp 루트 양쪽 모두 업데이트
         var totalNet=0, totalOrd=0;
         a.skuItems.forEach(function(s){ totalNet+=s.netAmt||0; totalOrd+=s.netOrders||0; });
         camp.settleRevenue=totalNet; camp.settleOrders=totalOrd;
+        sd.revenue=totalNet; sd.orders=totalOrd;  // 그리드 표시용
         updated++;
       });
       pushToFirebase();
