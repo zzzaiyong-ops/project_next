@@ -11589,6 +11589,16 @@ function importSettleExcel(input){
         a.skuItems.forEach(function(s){ totalNet+=s.netAmt||0; totalOrd+=s.netOrders||0; });
         camp.settleRevenue=totalNet; camp.settleOrders=totalOrd;
         sd.revenue=totalNet; sd.orders=totalOrd;  // 그리드 표시용
+        // 상품정보(c.skus) 상품코드 동기화: 엑셀의 상품코드를 c.skus[]에 반영
+        if(!camp.skus) camp.skus = [];
+        a.skuItems.forEach(function(si, idx){
+          if(!si.skuCode) return;
+          if(camp.skus[idx]){
+            camp.skus[idx].code = si.skuCode;  // 기존 항목 코드 업데이트
+          } else {
+            camp.skus.push({code: si.skuCode}); // 새 상품 추가
+          }
+        });
         updated++;
       });
       pushToFirebase();
