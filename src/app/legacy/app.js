@@ -1444,6 +1444,15 @@ function mergeRemote(remote){
       if(camp.settleData && !Array.isArray(camp.settleData)){
         camp.settleData = Object.values(camp.settleData);
       }
+      // settleData 내부 skuItems 정규화
+      // Firebase는 배열을 {"0":{...},"1":{...}} 형태 객체로 반환 → 배열로 복원
+      if(Array.isArray(camp.settleData)){
+        camp.settleData.forEach(function(sd){
+          if(sd && sd.skuItems && !Array.isArray(sd.skuItems)){
+            sd.skuItems = Object.values(sd.skuItems);
+          }
+        });
+      }
       // skus 정규화
       if(camp.skus && !Array.isArray(camp.skus)){
         camp.skus = Object.values(camp.skus);
