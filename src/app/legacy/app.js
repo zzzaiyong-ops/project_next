@@ -7124,7 +7124,12 @@ function renderWeeklyView(){
       var cost2=Math.round(sr*fr2/100)+fa2+Math.round(sr*ar2/100)+da2; // 비용소계 (DA 포함)
       gt.infCost+=cost2;
       gt.infRev+=sr; gt.infOrd+=infOrd;
-      (c.settleData||[]).forEach(function(s){ gt.views+=s.views||0; gt.inflow+=s.inflow||0; gt.newMem+=s.newMembers||0; });
+      (c.settleData||[]).forEach(function(s){
+        gt.views += s.views||0;
+        var _sSkus = s.skuItems||[];
+        gt.inflow += _sSkus.reduce(function(a,si){return a+(si.inflow||0);},0);
+        gt.newMem += _sSkus.reduce(function(a,si){return a+(si.newMembers||0);},0);
+      });
       // AR: 인플이익
       var _pr2=c.profitRateInput||0, _ai2=c.adIncome||0;
       gt.infProfit += Math.round(sr*_pr2/100) + _ai2 - cost2;
@@ -7185,6 +7190,12 @@ function renderWeeklyView(){
     if(row.type==='inf'){
       var c = row.camp;
       var sd0 = (c.settleData||[])[0]||{};
+      // skuItems에서 신규가입·유입수 집계 (import는 skuItems 레벨에만 저장)
+      var _sd0Skus   = sd0.skuItems||[];
+      var _sd0Inflow = _sd0Skus.reduce(function(a,si){return a+(si.inflow||0);},0);
+      var _sd0NetOrd = _sd0Skus.reduce(function(a,si){return a+(si.netOrders||0);},0);
+      var _sd0NewMem = _sd0Skus.reduce(function(a,si){return a+(si.newMembers||0);},0);
+      var _sd0CtrStr = _sd0Inflow>0 ? (_sd0NetOrd/_sd0Inflow*100).toFixed(1) : '';
       var sr = c.settleRevenue||0;
       var ml = c._matchedMlive||{};
       // 인플 실적만 (모바일라이브 포함 체크된 경우 방송중 실적 차감)
@@ -7231,8 +7242,8 @@ function renderWeeklyView(){
         +'<td style="text-align:right">'+fmtNum(infOrd)+'</td>'
         +'<td style="text-align:right">'+(cost?fmtCost(cost):'-')+'</td>'
         +'<td style="text-align:right;'+cx+'">'+(sd0.views||'-')+'</td>'
-        +'<td style="text-align:right;'+cx+'">'+(sd0.inflow||'-')+'</td>'
-        +'<td style="text-align:right;'+cx+'">'+(sd0.ctr?sd0.ctr+'%':'-')+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+(_sd0Inflow||'-')+'</td>'
+        +'<td style="text-align:right;'+cx+'">'+(_sd0CtrStr?_sd0CtrStr+'%':'-')+'</td>'
         +'<td style="text-align:right;'+dl+'">'+(ml.mobOrderAmt?fmtCost(ml.mobOrderAmt):'-')+'</td>'
         +'<td style="text-align:right">'+fmtNum(ml.mobOrderQty)+'</td>'
         +'<td style="text-align:right;'+dl+'">'+(totalRev?fmtCost(totalRev-sr-(ml.mobOrderAmt||0)):'-')+'</td>'
@@ -7241,7 +7252,7 @@ function renderWeeklyView(){
         +'<td style="text-align:right;'+dl+'">'+fmtCost(totalProfit)+'</td>'
         +'<td style="text-align:right">'+totalProfitRate+'</td>'
         +'<td style="text-align:right">'+(adRev?fmtCost(adRev):'-')+'</td>'
-        +'<td style="text-align:right">'+(sd0.newMembers||'-')+'</td>'
+        +'<td style="text-align:right">'+(_sd0NewMem||'-')+'</td>'
         +'</tr>';
 
     } else if(row.type==='mlive'){
