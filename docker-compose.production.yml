@@ -1,18 +1,9 @@
-# ─────────────────────────────────────────────────────────────────────
-# WARNING: do NOT change the 'ports:' mapping below.
-#   This compose publishes to 127.0.0.1:18098 (loopback) on purpose.
-#   Host nginx (vibe tracking-proxy) takes the external port and injects
-#   the analytics <script> tag. Reverting to an external publish will:
-#     - fail to bind (host nginx already owns the external port), and
-#     - silently break visitor tracking for this project.
-#   See infra/host-nginx/README.md in the Vibe Portal repo.
-# ─────────────────────────────────────────────────────────────────────
 services:
   app:
     image: ssg-m-hub:latest
     container_name: "ssg-m-hub"
     ports:
-      - "127.0.0.1:18098:80"
+      - "8098:80"
     env_file:
       - .env
     environment:
