@@ -11543,7 +11543,7 @@ function importSettleExcel(input){
           newMembers: iNewMem>=0    ? pInt(row[iNewMem])   : 0,
           dealPrice:  iDealPrice>=0 ? pInt(row[iDealPrice]): 0,
           netAmt:     iNet>=0       ? pInt(row[iNet])      : 0,
-          adCommRate: iAdComm>=0    ? pFlt(row[iAdComm])   : 0
+          adCommRate: (function(){ if(iAdComm<0) return 0; var r=pFlt(row[iAdComm]); return (r>0&&r<1)?(Math.round(r*10000)/100):r; })()
         };
         a.skuItems.push(skuItem);
         // 캠페인레벨 필드는 첫 행만 (광고비는 합산)
