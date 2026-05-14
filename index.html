@@ -7495,9 +7495,8 @@ function renderS7(){
       infList.forEach(function(inf, infIdx){
         var sd = settleList[infIdx] || {};
         var rev = sd.revenue || 0;
-        // 전체 비용 = 세금계산서 공급가액(부가세별도) — commFeeVat 기준 재계산으로 단수 오차 방지
-        var _gCF2    = Math.round((sd.commFeeVat||0) / 1.1);
-        var totalCost = _gCF2 + (sd.fixedFee||0) + (sd.metaFee||0);
+        // 전체 비용 = 세금계산서 공급가액(부가세별도) — 저장값 우선, 없으면 commFeeVat 기준 재계산
+        var totalCost = sd.taxSupply || (Math.round((sd.commFeeVat||0)/1.1) + (sd.fixedFee||0) + (sd.metaFee||0));
         var revStr  = rev  ? rev.toLocaleString()+'원'       : '-';
         var costStr = totalCost ? totalCost.toLocaleString()+'원' : '-';
         var ordStr  = sd.orders ? sd.orders+'건' : '-';
@@ -10435,9 +10434,8 @@ function renderReports(){
     var totalNetOrd  = sdSkus.reduce(function(s,si){return s+(si.netOrders||0);},0);
     var sdViews  = sd0.views || 0;
     var ctrStr   = totalInflow>0 ? (totalNetOrd/totalInflow*100).toFixed(1)+'%' : '-';
-    // 비용 = 세금계산서 공급가액(부가세별도) 재계산
-    var _s8CF2   = Math.round((sd0.commFeeVat||0) / 1.1);
-    var totalCost= _s8CF2 + (sd0.fixedFee||0) + (sd0.metaFee||0);
+    // 비용 = 세금계산서 공급가액(부가세별도) — 저장값 우선, 없으면 commFeeVat 기준 재계산
+    var totalCost= sd0.taxSupply || (Math.round((sd0.commFeeVat||0)/1.1) + (sd0.fixedFee||0) + (sd0.metaFee||0));
     var startOnly = (camp.start||camp.startDate||'-').slice(0,10);
     var endOnly   = (camp.end||camp.endDate||'-').slice(0,10);
     var dateStr  = (startOnly!=='-' ? startOnly.slice(5) : '-')+' ~ '+(endOnly!=='-' ? endOnly.slice(5) : '-');
@@ -10508,7 +10506,7 @@ function openS7Detail(campId){
   var sdComments   = sd0.comments || 0;
   var ctrVal = totalInflow>0 ? (totalNetOrd/totalInflow*100).toFixed(2) : '';
   var _d2CF2   = Math.round((sd0.commFeeVat||0) / 1.1);
-  var taxSupply= _d2CF2 + (sd0.fixedFee||0) + (sd0.metaFee||0);
+  var taxSupply= sd0.taxSupply || (_d2CF2 + (sd0.fixedFee||0) + (sd0.metaFee||0));
   var totalCost= taxSupply;
   // 반응도/도달 데이터 (s7Perf 또는 settleData 우선)
   var perf = camp.s7Perf || {};
