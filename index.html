@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- SSGLIVE v2.1 - 카카오SDK 완전제거 빌드 2026-03-17 -->
 <html lang="ko">
 <head>
@@ -2022,9 +2022,10 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
       </div>
     </div>
   </div>
-  <div class="mo-ft">
+  <div class="mo-ft" style="flex-wrap:wrap;gap:8px">
     <button class="btn btn-ghost" onclick="closeMo('adrequest')">취소</button>
-    <button class="btn btn-primary" onclick="generateAdRequests()">생성</button>
+    <button class="btn btn-ghost" onclick="generateAdRequestsXlsx()" style="display:inline-flex;align-items:center;gap:6px;color:var(--green);border-color:var(--green)"><svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg> 엑셀 다운로드</button>
+    <button class="btn btn-primary" onclick="generateAdRequests()">미리보기/인쇄</button>
   </div>
 </div></div>
 
@@ -2977,7 +2978,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   </div>
 </div></div>
 <script>
-﻿console.log('[SSGLIVE] 메인 스크립트 시작');
+console.log('[SSGLIVE] 메인 스크립트 시작');
 
 // ── 고정 기본 텍스트 ──
 var DEFAULT_PRODUCT_BASIC_INFO = "① 상품명/상품구성 :\n②가격/프로모션 조건 : MD할인가,카드즉시할인5%(5만원이상),신규가입3천원 적립, 최종공구가\n③이벤트 : 사전알림댓글 이벤트, 구매인증 이벤트, 모바일라이브 유무 등\n④참고용상품링크 : ";
@@ -14292,12 +14293,11 @@ function _buildAdRequestDoc(year, month, mcnData, camps){
   camps.sort(function(a,b){ return (a.start||a.startDate||'')>(b.start||b.startDate||'')?1:-1; });
   camps.forEach(function(c){
     var sd = (c.settleData&&c.settleData[0])||{};
-    var skus = sd.skuItems||[];
-    var netAmt = skus.reduce(function(s,si){ return s+(si.netAmt||(si.netOrders*(si.dealPrice||0))||0); },0);
     var inf = (c.infData&&c.infData[0])||{};
     var infName = inf.infName||c.infName||'';
     var cs = (c.start||c.startDate||'').slice(0,10);
     var ce = (c.end||c.endDate||'').slice(0,10);
+    var feeRate = parseFloat(inf.feeRate||c.feeRate)||0;
     totalFixed += sd.fixedFee||0;
     totalComm  += sd.commFeeVat||0;
     if(cs) allStarts.push(cs);
@@ -14307,8 +14307,8 @@ function _buildAdRequestDoc(year, month, mcnData, camps){
       +'<td class="tl">'+escHtml(c.name||'-')+'</td>'
       +'<td class="tc">'+escHtml(infName||'-')+'</td>'
       +'<td class="tr">'+((sd.fixedFee||0)?fmtN(sd.fixedFee):'')+'</td>'
-      +'<td class="tr">'+((sd.commFeeVat||0)?fmtN(sd.commFeeVat):'')+'</td>'
-      +'<td class="tr">'+( netAmt?fmtN(netAmt):'')+'</td>'
+      +'<td class="tc">'+(feeRate ? feeRate+'%' : '')+'</td>'
+      +'<td class="tl"></td>'
       +'</tr>';
   });
   for(var ei=camps.length; ei<EMPTY_MIN; ei++){
@@ -14345,7 +14345,7 @@ function _buildAdRequestDoc(year, month, mcnData, camps){
     // ── 인플루언서 캠페인 신청내역
     +'<div class="st">인플루언서 캠페인 신청내역</div>'
     +'<table class="tb">'
-    +'<tr><th style="width:13%">일정</th><th style="width:24%">상품명</th><th style="width:15%">인플루언서명</th><th style="width:16%">정액광고비(부가세별도)</th><th style="width:16%">수수료 (VAT포함)</th><th style="width:16%">기준 순주문 금액</th></tr>'
+    +'<tr><th style="width:13%">일정</th><th style="width:24%">상품명</th><th style="width:15%">인플루언서명</th><th style="width:18%">정액광고비(VAT별도)</th><th style="width:14%">수수료율</th><th style="width:16%">비고</th></tr>'
     +rowsHtml
     +'</table>'
     // ── 대행사 담당자
@@ -14409,6 +14409,188 @@ function _buildAdRequestDoc(year, month, mcnData, camps){
     +'<li>본 캠페인 광고 신청서를 2부 작성, 기명날인 후 각각 1부씩 보관합니다.</li>'
     +'</ol></div>'
     +'</div>';
+}
+
+// ── 광고신청서 엑셀 다운로드 ──
+function generateAdRequestsXlsx(){
+  if(typeof XLSX === 'undefined'){ showToast('엑셀 라이브러리 로드 실패 - 잠시 후 다시 시도하세요.'); return; }
+  var year  = parseInt(document.getElementById('ar-year').value);
+  var month = parseInt(document.getElementById('ar-month').value);
+  if(!year || !month || month<1 || month>12){ showToast('년월을 정확히 입력하세요.'); return; }
+
+  var daysInMonth = new Date(year, month, 0).getDate();
+  var monthStart  = year+'-'+String(month).padStart(2,'0')+'-01';
+  var monthEnd    = year+'-'+String(month).padStart(2,'0')+'-'+String(daysInMonth).padStart(2,'0');
+
+  var confirmedStages = ['5.인플루언서확정','6.APP마케팅확정','7.정산','7.정산완료','8.성과분석'];
+  var monthlyCamps = DB.campaigns.filter(function(c){
+    if((c.campType||'')==='모바일라이브') return false;
+    if(confirmedStages.indexOf(c.stage) < 0) return false;
+    var cs = (c.start||c.startDate||'').slice(0,10);
+    var ce = (c.end||c.endDate||'').slice(0,10);
+    return cs && ce && cs <= monthEnd && ce >= monthStart;
+  });
+  if(!monthlyCamps.length){ showToast(month+'월 확정된 인플루언서 캠페인이 없습니다.'); return; }
+
+  var mcnGroups = {};
+  monthlyCamps.forEach(function(c){
+    var mcnName = (c.mcnList&&c.mcnList.length?c.mcnList[0].agency:null)||c.mcn||'(미지정)';
+    if(!mcnGroups[mcnName]) mcnGroups[mcnName] = [];
+    mcnGroups[mcnName].push(c);
+  });
+
+  var wb = XLSX.utils.book_new();
+  Object.keys(mcnGroups).sort().forEach(function(mcnName, idx){
+    var camps   = mcnGroups[mcnName];
+    var mcnData = MCN_COMPANIES.find(function(m){ return m.name===mcnName; }) || {name:mcnName};
+    var ws      = _buildAdRequestSheet(year, month, mcnData, camps);
+    var sheetName = (mcnName||'MCN'+(idx+1)).replace(/[\\\/\[\]\*\?:]/g,'_').slice(0,31);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+
+  XLSX.writeFile(wb, year+'년 '+month+'월_인플루언서캠페인광고신청서.xlsx');
+  closeMo('adrequest');
+}
+
+function _buildAdRequestSheet(year, month, mcnData, camps){
+  var fmtD = function(d){
+    if(!d) return '';
+    var p = d.slice(0,10).split('-');
+    return parseInt(p[1])+'/'+parseInt(p[2]);
+  };
+  var ssg = {
+    name:'주식회사 신세계라이브쇼핑', addr:'서울 성동구 아차산로 17, 10층',
+    bizno:'502-86-28395', ceo:'문 성 욱',
+    person:'송현주P', email:'shj2@shinsegae.com', phone:'010-2272-7873'
+  };
+
+  // ── 스타일 정의 ──
+  var BDR = {
+    top:{style:'thin',color:{rgb:'BBBBBB'}}, bottom:{style:'thin',color:{rgb:'BBBBBB'}},
+    left:{style:'thin',color:{rgb:'BBBBBB'}}, right:{style:'thin',color:{rgb:'BBBBBB'}}
+  };
+  var BDR_MED = {
+    top:{style:'medium',color:{rgb:'888888'}}, bottom:{style:'medium',color:{rgb:'888888'}},
+    left:{style:'medium',color:{rgb:'888888'}}, right:{style:'medium',color:{rgb:'888888'}}
+  };
+  function hdr(v){ return {v:v,t:'s',s:{font:{name:'맑은 고딕',sz:10,bold:true},fill:{patternType:'solid',fgColor:{rgb:'DDE3F0'}},border:BDR,alignment:{horizontal:'center',vertical:'center',wrapText:true}}}; }
+  function lbl(v){ return {v:v,t:'s',s:{font:{name:'맑은 고딕',sz:10,bold:true},fill:{patternType:'solid',fgColor:{rgb:'EDF0F8'}},border:BDR,alignment:{horizontal:'center',vertical:'center'}}}; }
+  function cel(v){ return {v:v||'',t:'s',s:{font:{name:'맑은 고딕',sz:10},fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}},border:BDR,alignment:{horizontal:'left',vertical:'center'}}}; }
+  function cen(v){ return {v:v||'',t:'s',s:{font:{name:'맑은 고딕',sz:10},fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}},border:BDR,alignment:{horizontal:'center',vertical:'center'}}}; }
+  function num(v){ return {v:v||0,t:'n',s:{font:{name:'맑은 고딕',sz:10},fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}},border:BDR,alignment:{horizontal:'right',vertical:'center'},numFmt:'#,##0'}}; }
+  function pct(v){ return {v:(v||0)/100,t:'n',s:{font:{name:'맑은 고딕',sz:10},fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}},border:BDR,alignment:{horizontal:'center',vertical:'center'},numFmt:'0%'}}; }
+  function blk(){ return {v:'',t:'s',s:{fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}},border:BDR}}; }
+  function ttl(v){ return {v:v,t:'s',s:{font:{name:'맑은 고딕',sz:15,bold:true},border:BDR_MED,alignment:{horizontal:'center',vertical:'center',letterSpacing:4}}}; }
+
+  var aoa = [], merges = [], rows = [];
+  var r = 0;
+  function push(arr, hpx){ aoa.push(arr); rows.push({hpx:hpx||18}); r++; }
+  function M(r1,c1,r2,c2){ merges.push({s:{r:r1,c:c1},e:{r:r2,c:c2}}); }
+
+  // ─ Row 0: 빈 행 ─
+  push([], 6);
+
+  // ─ Row 1: 제목 ─
+  push([ttl('캠 페 인  광 고  신 청 서'),blk(),blk(),blk(),blk(),blk()], 34);
+  M(r-1,0,r-1,5);
+
+  // ─ Row 2: 빈 행 ─
+  push([], 6);
+
+  // ─ Row 3: 섹션 헤더 ─
+  push([hdr('캠페인 정보'),blk(),blk(),blk(),blk(),blk()], 22);
+  M(r-1,0,r-1,5);
+
+  // ─ Row 4: 광고주명 / MCN업체명 ─
+  push([lbl('광고주명'),cel(ssg.name),blk(),lbl('MCN업체명'),cel(mcnData.name||''),blk()], 20);
+  M(r-1,1,r-1,2); M(r-1,4,r-1,5);
+
+  // ─ Row 5: 담당자명 / E-mail ─
+  push([lbl('담당자명'),cel(ssg.person),blk(),lbl('E-mail'),cel(ssg.email),blk()], 20);
+  M(r-1,1,r-1,2); M(r-1,4,r-1,5);
+
+  // ─ Row 6: 전화번호 / 캠페인기간 ─
+  push([lbl('전화번호'),cel(ssg.phone),blk(),lbl('캠페인 기간'),cel(year+'년 '+month+'월'),blk()], 20);
+  M(r-1,1,r-1,2); M(r-1,4,r-1,5);
+
+  // ─ Row 7: 빈 행 ─
+  push([], 6);
+
+  // ─ Row 8: 섹션 헤더 ─
+  push([hdr('인플루언서 캠페인 신청내역'),blk(),blk(),blk(),blk(),blk()], 22);
+  M(r-1,0,r-1,5);
+
+  // ─ Row 9: 테이블 헤더 ─
+  push([hdr('일정'),hdr('상품명'),hdr('인플루언서명'),hdr('정액광고비(VAT별도)'),hdr('수수료율'),hdr('비고')], 22);
+
+  // ─ 데이터 행 ─
+  var EMPTY_MIN = 8;
+  camps.sort(function(a,b){ return (a.start||a.startDate||'')>(b.start||b.startDate||'')?1:-1; });
+  camps.forEach(function(c){
+    var sd      = (c.settleData&&c.settleData[0])||{};
+    var inf0    = (c.infData&&c.infData[0])||{};
+    var cs      = (c.start||c.startDate||'').slice(0,10);
+    var ce      = (c.end||c.endDate||'').slice(0,10);
+    var feeRate = parseFloat(inf0.feeRate||c.feeRate)||0;
+    push([
+      cen(fmtD(cs)+(ce?'~'+fmtD(ce):'')),
+      cel(c.name||''),
+      cen(inf0.infName||c.infName||''),
+      sd.fixedFee ? num(sd.fixedFee) : blk(),
+      feeRate     ? pct(feeRate)     : blk(),
+      cel('')
+    ], 20);
+  });
+  for(var ei=camps.length; ei<EMPTY_MIN; ei++){
+    push([blk(),blk(),blk(),blk(),blk(),blk()], 20);
+  }
+
+  // ─ 빈 행 ─
+  push([], 6);
+
+  // ─ 대행사 담당자 ─
+  push([hdr('대행사 담당자'),blk(),blk(),blk(),blk(),blk()], 22); M(r-1,0,r-1,5);
+  push([lbl('회사명'),  cel(mcnData.name||''),blk(),        lbl('입금 계좌번호'),cel(mcnData.bankAccount||''),blk()], 20); M(r-1,1,r-1,2); M(r-1,4,r-1,5);
+  push([lbl('담당자명'),cel(mcnData.contact||''),blk(),     lbl('E-mail'),      cel(mcnData.email||''),      blk()], 20); M(r-1,1,r-1,2); M(r-1,4,r-1,5);
+  push([lbl('전화번호'),cel(mcnData.phone||''),blk(),       lbl('팩스번호'),    cel(mcnData.fax||''),        blk()], 20); M(r-1,1,r-1,2); M(r-1,4,r-1,5);
+
+  // ─ 빈 행 ─
+  push([], 6);
+
+  // ─ 특이 사항 ─
+  push([hdr('특이 사항(특약)'),blk(),blk(),blk(),blk(),blk()], 22); M(r-1,0,r-1,5);
+  push([cel('-'),blk(),blk(),blk(),blk(),blk()], 36); M(r-1,0,r-1,5);
+
+  // ─ 빈 행 ─
+  push([], 6);
+
+  // ─ 계약 당사자 정보 ─
+  push([hdr('계약 당사자 정보'),blk(),blk(),blk(),blk(),blk()], 22); M(r-1,0,r-1,5);
+  var rPart = r;
+  push([lbl('계약\n당사자'),lbl('사업자명'),cel(ssg.name),blk(),cel(mcnData.bizFullName||mcnData.name||''),blk()], 20); M(r-1,2,r-1,3); M(r-1,4,r-1,5);
+  push([blk(),              lbl('주소'),    cel(ssg.addr), blk(),cel(mcnData.address||''),                 blk()], 20); M(r-1,2,r-1,3); M(r-1,4,r-1,5);
+  push([blk(),              lbl('사업자번호'),cel(ssg.bizno),blk(),cel(mcnData.bizno||''),                  blk()], 20); M(r-1,2,r-1,3); M(r-1,4,r-1,5);
+  push([blk(),              lbl('대표자'),  cel(ssg.ceo+' (인)'),blk(),cel((mcnData.ceo||'')+' (인)'),    blk()], 20); M(r-1,2,r-1,3); M(r-1,4,r-1,5);
+  M(rPart,0,r-1,0); // 계약당사자 세로 병합
+
+  // ─ 빈 행 ─
+  push([], 6);
+
+  // ─ 주의 사항 ─
+  ['1. 본 캠페인 광고 신청서는 광고계약서를 대신하며, 집행기간동안 효력이 발생합니다.',
+   '2. 본 캠페인 광고 신청서를 2부 작성, 기명날인 후 각각 1부씩 보관합니다.',
+   '3. 신규 광고주의 경우, 광고주 / 광고대행사 사업자 등록증 사본 각 1부를 첨부하여 주십시오.'
+  ].forEach(function(note){
+    push([{v:note,t:'s',s:{font:{name:'맑은 고딕',sz:8},alignment:{horizontal:'left',vertical:'center'}}},blk(),blk(),blk(),blk(),blk()], 16);
+    M(r-1,0,r-1,5);
+  });
+
+  // ── 워크시트 생성 ──
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges'] = merges;
+  ws['!rows']   = rows;
+  ws['!cols']   = [{wch:12},{wch:26},{wch:16},{wch:20},{wch:10},{wch:20}];
+  return ws;
 }
 
 function _buildAdRequestPage(docsHtml){

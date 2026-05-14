@@ -1397,9 +1397,10 @@
       </div>
     </div>
   </div>
-  <div class="mo-ft">
+  <div class="mo-ft" style="flex-wrap:wrap;gap:8px">
     <button class="btn btn-ghost" onclick="closeMo('adrequest')">취소</button>
-    <button class="btn btn-primary" onclick="generateAdRequests()">생성</button>
+    <button class="btn btn-ghost" onclick="generateAdRequestsXlsx()" style="display:inline-flex;align-items:center;gap:6px;color:var(--green);border-color:var(--green)"><svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect width="24" height="24" rx="4" fill="#217346"/><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="900" fill="white" font-family="Arial,sans-serif">X</text></svg> 엑셀 다운로드</button>
+    <button class="btn btn-primary" onclick="generateAdRequests()">미리보기/인쇄</button>
   </div>
 </div></div>
 
