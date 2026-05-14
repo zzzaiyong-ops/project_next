@@ -11102,21 +11102,23 @@ function renderMcnTable(){
   var rows = '';
   MCN_COMPANIES.forEach(function(c){
     var createdAt = c.createdAt ? c.createdAt.slice(0,10) : '-';
-    rows += '<tr style="cursor:pointer" onclick="editProd('+c.id+')">' 
+    rows += '<tr style="cursor:pointer" onclick="openEditMcnModal('+c.id+')">'
       +'<td style="font-weight:700">'+escHtml(c.name||'-')+'</td>'
       +'<td style="color:var(--text2)">'+escHtml(c.contact||'-')+'</td>'
       +'<td style="font-size:12.5px;color:var(--text3)">'+escHtml(c.phone||'-')+'</td>'
       +'<td style="font-size:12px;color:var(--text3)">'+(c.email?'<a href="mailto:'+escHtml(c.email)+'" style="color:var(--blue);text-decoration:none" onclick="event.stopPropagation()">'+escHtml(c.email)+'</a>':'-')+'</td>'
+      +'<td style="font-size:12.5px;color:var(--text3)">'+escHtml(c.fax||'-')+'</td>'
+      +'<td style="font-size:12px;color:var(--text3)">'+escHtml(c.bankAccount||'-')+'</td>'
       +'<td style="font-size:12px;color:var(--text3)">'+escHtml(c.memo||'-')+'</td>'
       +'<td style="font-size:12px;color:var(--text3)">'+createdAt+'</td>'
       +'<td><div class="row-acts">'
-      +'<button class="btn btn-ghost btn-xs" data-mid="'+c.id+'" onclick="openEditMcnModal(Number(this.dataset.mid))">수정</button>'
-      +'<button class="btn btn-danger btn-xs" data-mid="'+c.id+'" data-mname="'+escHtml(c.name||'')+'" onclick="deleteMcnCompany(Number(this.dataset.mid),this.dataset.mname)">삭제</button>'
+      +'<button class="btn btn-ghost btn-xs" data-mid="'+c.id+'" onclick="event.stopPropagation();openEditMcnModal(Number(this.dataset.mid))">수정</button>'
+      +'<button class="btn btn-danger btn-xs" data-mid="'+c.id+'" data-mname="'+escHtml(c.name||'')+'" onclick="event.stopPropagation();deleteMcnCompany(Number(this.dataset.mid),this.dataset.mname)">삭제</button>'
       +'</div></td>'
       +'</tr>';
   });
   var tbl = document.getElementById('mcn-company-tbl');
-  if(tbl) tbl.innerHTML = rows || '<tr><td colspan="6" class="empty">등록된 MCN 업체가 없습니다</td></tr>';
+  if(tbl) tbl.innerHTML = rows || '<tr><td colspan="8" class="empty">등록된 MCN 업체가 없습니다</td></tr>';
 }
 
 // MCN 업체 추가 모달 열기
@@ -11127,6 +11129,12 @@ function openAddMcnModal(){
   document.getElementById('mcn-contact').value = '';
   document.getElementById('mcn-phone').value = '';
   document.getElementById('mcn-email').value = '';
+  document.getElementById('mcn-fax').value = '';
+  document.getElementById('mcn-bank-account').value = '';
+  document.getElementById('mcn-bizfullname').value = '';
+  document.getElementById('mcn-address').value = '';
+  document.getElementById('mcn-bizno').value = '';
+  document.getElementById('mcn-ceo').value = '';
   document.getElementById('mcn-memo').value = '';
   document.getElementById('addmcn-save-btn').textContent = '추가';
   openMo('addmcn');
@@ -11143,6 +11151,12 @@ function openEditMcnModal(id){
   document.getElementById('mcn-contact').value = c.contact || '';
   document.getElementById('mcn-phone').value = c.phone || '';
   document.getElementById('mcn-email').value = c.email || '';
+  document.getElementById('mcn-fax').value = c.fax || '';
+  document.getElementById('mcn-bank-account').value = c.bankAccount || '';
+  document.getElementById('mcn-bizfullname').value = c.bizFullName || '';
+  document.getElementById('mcn-address').value = c.address || '';
+  document.getElementById('mcn-bizno').value = c.bizno || '';
+  document.getElementById('mcn-ceo').value = c.ceo || '';
   document.getElementById('mcn-memo').value = c.memo || '';
   document.getElementById('addmcn-save-btn').textContent = '저장';
   openMo('addmcn');
@@ -11155,6 +11169,12 @@ function saveMcnCompany(){
   var phone = document.getElementById('mcn-phone').value.trim();
   var email = document.getElementById('mcn-email').value.trim();
   var memo = document.getElementById('mcn-memo').value.trim();
+  var fax = document.getElementById('mcn-fax').value.trim();
+  var bankAccount = document.getElementById('mcn-bank-account').value.trim();
+  var bizFullName = document.getElementById('mcn-bizfullname').value.trim();
+  var address = document.getElementById('mcn-address').value.trim();
+  var bizno = document.getElementById('mcn-bizno').value.trim();
+  var ceo = document.getElementById('mcn-ceo').value.trim();
   var editId = document.getElementById('edit-mcn-id').value;
   var saveBtn = document.getElementById('addmcn-save-btn');
 
@@ -11171,7 +11191,7 @@ function saveMcnCompany(){
   if(!editId){
     // 신규 추가
     var newId = Date.now();
-    var newData = { id:newId, name:name, contact:contact, phone:phone, email:email, memo:memo, createdAt:new Date().toISOString() };
+    var newData = { id:newId, name:name, contact:contact, phone:phone, email:email, fax:fax, bankAccount:bankAccount, bizFullName:bizFullName, address:address, bizno:bizno, ceo:ceo, memo:memo, createdAt:new Date().toISOString() };
     if(fbReady){
       fbDB.ref('influencer-hub/mcn-companies/'+newId).set(newData)
         .then(function(){
@@ -11187,7 +11207,7 @@ function saveMcnCompany(){
     }
   } else {
     // 수정
-    var updateData = { id:parseInt(editId)||editId, name:name, contact:contact, phone:phone, email:email, memo:memo };
+    var updateData = { id:parseInt(editId)||editId, name:name, contact:contact, phone:phone, email:email, fax:fax, bankAccount:bankAccount, bizFullName:bizFullName, address:address, bizno:bizno, ceo:ceo, memo:memo };
     if(fbReady){
       fbDB.ref('influencer-hub/mcn-companies/'+editId).update(updateData)
         .then(function(){
@@ -11221,6 +11241,225 @@ function deleteMcnCompany(id, name){
   });
 }
 
+// ═══════════════════════════════════════
+// 광고신청서 생성
+// ═══════════════════════════════════════
+function openAdRequestModal(){
+  var now = new Date();
+  var yearEl = document.getElementById('ar-year');
+  var monthEl = document.getElementById('ar-month');
+  if(yearEl) yearEl.value = now.getFullYear();
+  if(monthEl) monthEl.value = now.getMonth()+1;
+  openMo('adrequest');
+}
+
+function generateAdRequests(){
+  var year = parseInt(document.getElementById('ar-year').value);
+  var month = parseInt(document.getElementById('ar-month').value);
+  if(!year || !month || month<1 || month>12){ showToast('년월을 정확히 입력하세요.'); return; }
+
+  var daysInMonth = new Date(year, month, 0).getDate();
+  var monthStart  = year+'-'+String(month).padStart(2,'0')+'-01';
+  var monthEnd    = year+'-'+String(month).padStart(2,'0')+'-'+String(daysInMonth).padStart(2,'0');
+
+  var confirmedStages = ['5.인플루언서확정','6.APP마케팅확정','7.정산','7.정산완료','8.성과분석'];
+  var monthlyCamps = DB.campaigns.filter(function(c){
+    if((c.campType||'')==='모바일라이브') return false;
+    if(confirmedStages.indexOf(c.stage) < 0) return false;
+    var cs = (c.start||c.startDate||'').slice(0,10);
+    var ce = (c.end||c.endDate||'').slice(0,10);
+    return cs && ce && cs <= monthEnd && ce >= monthStart;
+  });
+  if(!monthlyCamps.length){ showToast(month+'월 확정된 인플루언서 캠페인이 없습니다.'); return; }
+
+  // MCN별 그룹핑
+  var mcnGroups = {};
+  monthlyCamps.forEach(function(c){
+    var mcnName = (c.mcnList&&c.mcnList.length?c.mcnList[0].agency:null)||c.mcn||'(미지정)';
+    if(!mcnGroups[mcnName]) mcnGroups[mcnName] = [];
+    mcnGroups[mcnName].push(c);
+  });
+
+  var allDocs = '';
+  Object.keys(mcnGroups).sort().forEach(function(mcnName){
+    var camps = mcnGroups[mcnName];
+    var mcnData = MCN_COMPANIES.find(function(m){ return m.name===mcnName; }) || {name:mcnName};
+    allDocs += _buildAdRequestDoc(year, month, mcnData, camps);
+  });
+
+  var win = window.open('', '_blank');
+  if(!win){ showToast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
+  win.document.write(_buildAdRequestPage(allDocs));
+  win.document.close();
+  closeMo('adrequest');
+}
+
+function _buildAdRequestDoc(year, month, mcnData, camps){
+  var fmtN = function(n){ return (n||0).toLocaleString('ko-KR'); };
+  var fmtD = function(d){
+    if(!d) return '';
+    var p = d.slice(0,10).split('-');
+    return parseInt(p[1])+'/'+parseInt(p[2]);
+  };
+
+  var totalFixed=0, totalComm=0;
+  var allStarts=[], allEnds=[];
+  var EMPTY_MIN = 8;
+
+  var rowsHtml = '';
+  camps.sort(function(a,b){ return (a.start||a.startDate||'')>(b.start||b.startDate||'')?1:-1; });
+  camps.forEach(function(c){
+    var sd = (c.settleData&&c.settleData[0])||{};
+    var skus = sd.skuItems||[];
+    var netAmt = skus.reduce(function(s,si){ return s+(si.netAmt||(si.netOrders*(si.dealPrice||0))||0); },0);
+    var inf = (c.infData&&c.infData[0])||{};
+    var infName = inf.infName||c.infName||'';
+    var cs = (c.start||c.startDate||'').slice(0,10);
+    var ce = (c.end||c.endDate||'').slice(0,10);
+    totalFixed += sd.fixedFee||0;
+    totalComm  += sd.commFeeVat||0;
+    if(cs) allStarts.push(cs);
+    if(ce) allEnds.push(ce);
+    rowsHtml += '<tr>'
+      +'<td class="tc">'+escHtml(fmtD(cs)+(ce?'~'+fmtD(ce):''))+'</td>'
+      +'<td class="tl">'+escHtml(c.name||'-')+'</td>'
+      +'<td class="tc">'+escHtml(infName||'-')+'</td>'
+      +'<td class="tr">'+((sd.fixedFee||0)?fmtN(sd.fixedFee):'')+'</td>'
+      +'<td class="tr">'+((sd.commFeeVat||0)?fmtN(sd.commFeeVat):'')+'</td>'
+      +'<td class="tr">'+( netAmt?fmtN(netAmt):'')+'</td>'
+      +'</tr>';
+  });
+  for(var ei=camps.length; ei<EMPTY_MIN; ei++){
+    rowsHtml += '<tr style="height:22px"><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+  }
+
+  allStarts.sort(); allEnds.sort();
+  var periodStr = (allStarts.length&&allEnds.length)
+    ? allStarts[0].replace(/-/g,'.')+'~'+allEnds[allEnds.length-1].slice(5).replace('-','.')
+    : '';
+
+  var totalAmount  = totalFixed + totalComm;
+  var tax          = Math.round(totalFixed * 0.1);
+  var grandTotal   = totalAmount + tax;
+  var lastDay      = new Date(year, month, 0).getDate();
+  var nextYear     = month===12 ? year+1 : year;
+  var nextMonth    = month===12 ? 1 : month+1;
+
+  var ssg = { name:'주식회사 신세계라이브쇼핑', addr:'서울 성동구 아차산로 17, 10층', bizno:'502-86-28395', ceo:'문 성 욱',
+    person:'송현주P', email:'shj2@shinsegae.com', phone:'010-2272-7873', fax:'02-6450-8542' };
+
+  var mcnFullName = escHtml(mcnData.bizFullName||mcnData.name||'-');
+
+  return '<div class="doc">'
+    +'<h1>캠 페 인 광 고 신 청 서</h1>'
+    // ── 캠페인 정보
+    +'<div class="st">캠페인 정보</div>'
+    +'<table class="tb">'
+    +'<tr><td class="lb">광고주명</td><td colspan="3">'+ssg.name+'</td><td class="lb">캠페인명</td><td colspan="3"><b>인플루언서 광고 캠페인 '+month+'월</b></td></tr>'
+    +'<tr><td class="lb">담당자명</td><td colspan="3">'+ssg.person+'</td><td class="lb">E-mail</td><td colspan="3">'+ssg.email+'</td></tr>'
+    +'<tr><td class="lb">전화번호</td><td colspan="3">'+ssg.phone+'</td><td class="lb">팩스번호</td><td colspan="3">'+ssg.fax+'</td></tr>'
+    +'<tr><td class="lb">캠페인 기간</td><td colspan="3"><b>'+year+'년 '+month+'월</b></td><td class="lb">광고금액(VAT별도)</td><td colspan="3" class="tr"><b>₩ '+fmtN(totalAmount)+'</b></td></tr>'
+    +'</table>'
+    // ── 인플루언서 캠페인 신청내역
+    +'<div class="st">인플루언서 캠페인 신청내역</div>'
+    +'<table class="tb">'
+    +'<tr><th style="width:13%">일정</th><th style="width:24%">상품명</th><th style="width:15%">인플루언서명</th><th style="width:16%">정액광고비(부가세별도)</th><th style="width:16%">수수료 (VAT포함)</th><th style="width:16%">기준 순주문 금액</th></tr>'
+    +rowsHtml
+    +'</table>'
+    // ── 대행사 담당자
+    +'<div class="st">대행사 담당자</div>'
+    +'<table class="tb">'
+    +'<tr><td class="lb">회사명</td><td colspan="3"><b>'+escHtml(mcnData.name||'-')+'</b></td><td class="lb">입금 계좌번호</td><td colspan="3">'+escHtml(mcnData.bankAccount||'')+'</td></tr>'
+    +'<tr><td class="lb">담당자명</td><td colspan="3">'+escHtml(mcnData.contact||'')+'</td><td class="lb">E-mail</td><td colspan="3">'+escHtml(mcnData.email||'')+'</td></tr>'
+    +'<tr><td class="lb">전화번호</td><td colspan="3">'+escHtml(mcnData.phone||'')+'</td><td class="lb">팩스번호</td><td colspan="3">'+escHtml(mcnData.fax||'')+'</td></tr>'
+    +'</table>'
+    // ── 광고 집행 내역
+    +'<div class="st">광고 집행 내역</div>'
+    +'<table class="tb">'
+    +'<tr><th style="width:13%">집행 월</th><th style="width:22%">예상 정액 광고비(VAT별도)</th><th style="width:22%">예상 수수료비(VAT포함)</th><th style="width:22%">기간</th><th>금액 (VAT별도)</th></tr>'
+    +'<tr><td class="tc"><b>'+year+'년 '+month+'월</b></td><td class="tr">'+fmtN(totalFixed)+'</td><td class="tr">'+fmtN(totalComm)+'</td><td class="tc">'+periodStr+'</td><td class="tr"><b>₩ '+fmtN(totalAmount)+'</b></td></tr>'
+    +'<tr><td class="tc" colspan="4"><b>Total</b></td><td class="tr"><b>₩ '+fmtN(totalAmount)+'</b></td></tr>'
+    +'</table>'
+    // ── 결제 정보
+    +'<div class="st">결제 정보</div>'
+    +'<table class="tb">'
+    +'<tr><th colspan="2" class="tc">세금계산서 발행</th><th class="tc">대행수수료</th><th colspan="3">집행금액의 10%&nbsp;&nbsp;&nbsp;□ 대행수수료 없음</th></tr>'
+    +'<tr><td class="lb" style="width:13%">계산서 발행일</td><td class="tc"><b>'+year+' 년 '+String(month).padStart(2,'0')+'월 '+lastDay+'일</b></td><td class="lb">대행피 공급가액</td><td colspan="3"></td></tr>'
+    +'<tr>'
+    +'<td colspan="2">'
+    +'<table style="width:100%;border-collapse:collapse">'
+    +'<tr><td class="lb" style="border:1px solid #bbb;padding:4px 8px">공급가액</td><td style="border:1px solid #bbb;padding:4px 8px;text-align:right"><b>₩ '+fmtN(totalAmount)+'</b></td></tr>'
+    +'<tr><td class="lb" style="border:1px solid #bbb;padding:4px 8px">세액</td><td style="border:1px solid #bbb;padding:4px 8px;text-align:right">₩ '+fmtN(tax)+'</td></tr>'
+    +'<tr><td class="lb" style="border:1px solid #bbb;padding:4px 8px"><b>합계 금액</b></td><td style="border:1px solid #bbb;padding:4px 8px;text-align:right"><b>₩ '+fmtN(grandTotal)+'</b></td></tr>'
+    +'</table>'
+    +'</td>'
+    +'<td class="lb">결제(예정)일</td><td colspan="3" class="tc"><b>'+nextYear+'년 '+nextMonth+'월 10일</b></td>'
+    +'</tr>'
+    +'<tr><td colspan="2"></td><td class="lb">결제 방식</td><td colspan="3">☑ 통장입금 &nbsp;□ 채권차감</td></tr>'
+    +'</table>'
+    // ── 특이사항 / 입금계좌
+    +'<table class="tb" style="margin-top:10px">'
+    +'<tr><td class="lb" style="width:12%">특이 사항</td><td style="height:36px"></td></tr>'
+    +'<tr><td class="lb">입금계좌 번호</td><td></td></tr>'
+    +'</table>'
+    // ── 계약 당사자 정보
+    +'<div class="st">계약 당사자 정보</div>'
+    +'<table class="tb">'
+    +'<tr><td class="lb" rowspan="4" style="width:10%;vertical-align:middle;text-align:center">계약 당사자</td>'
+    +'<td class="lb" style="width:12%">사업자명</td><td style="width:30%">'+ssg.name+'</td>'
+    +'<td class="lb" style="width:12%">사업자명</td><td>'+mcnFullName+'</td></tr>'
+    +'<tr><td class="lb">주소</td><td>'+ssg.addr+'</td><td class="lb">주소</td><td>'+escHtml(mcnData.address||'')+'</td></tr>'
+    +'<tr><td class="lb">사업자번호</td><td>'+ssg.bizno+'</td><td class="lb">사업자번호</td><td>'+escHtml(mcnData.bizno||'')+'</td></tr>'
+    +'<tr><td class="lb">대표자</td><td>'+ssg.ceo+' (인)</td><td class="lb">대표자</td><td>'+escHtml(mcnData.ceo||'')+' (인)</td></tr>'
+    +'</table>'
+    // ── 약관
+    +'<div class="terms">'
+    +'<ol>'
+    +'<li>본 광고 신청서는 인플루언서 광고 대행 계약에 근거하여 업무 내용을 확정하기 위해 작성하는 것입니다.</li>'
+    +'<li>본 신청서의 내용은 추가로 광고신청서를 작성하거나 별도 서면 합의를 함으로써 변경할 수 있습니다.</li>'
+    +'<li>성과형(공동구매 등) 캠페인의 경우, 판매 좌표(URL)를 통해 발생한 매출은 사전 협의된 캠페인 판매가를 기준으로 산정된 공급가(부가세 포함)에서 취소, 반품 및 환불 금액을 제외한 기준으로 정산됩니다.</li>'
+    +'<li>정산 시에는 사전에 협의된 수수료(부가세 포함)를 차감한 금액이 대행사에 지급됩니다.</li>'
+    +'<li>고객이 상품 구매 시 적용받는 적립금, 카드 할인, 쿠폰 등으로 인한 실제 결제 금액은 정산 기준에 포함되지 않으며, 캠페인 판매가 기준으로 정산이 진행됩니다.</li>'
+    +'<li>정산 내역은 고객 응대(CS) 기간 종료 후 약 2주 이내 제공됩니다.</li>'
+    +'<li>정산 내역 확인 후 광고신청서에 기재된 일정에 따라 세금계산서 발행 및 대금 지급이 진행됩니다.</li>'
+    +'<li>본 계약금액은 인플루언서 콘텐츠 제작 및 1차 게시에 대한 비용을 포함합니다.</li>'
+    +'<li>콘텐츠의 2차 활용(광고, 재사용 등)에 대한 권리는 별도 협의를 통해 범위 및 기간을 정하며, 이에 따른 비용은 추가로 발생할 수 있습니다.</li>'
+    +'<li>본 캠페인 광고 신청서를 2부 작성, 기명날인 후 각각 1부씩 보관합니다.</li>'
+    +'</ol></div>'
+    +'</div>';
+}
+
+function _buildAdRequestPage(docsHtml){
+  return '<!DOCTYPE html><html><head>'
+    +'<meta charset="UTF-8"><title>캠페인 광고 신청서</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:"맑은 고딕","Malgun Gothic",sans-serif;font-size:9.5pt;color:#000;background:#d0d0d0}'
+    +'.doc{width:210mm;background:#fff;margin:0 auto 20px;padding:14mm}'
+    +'h1{text-align:center;font-size:15pt;font-weight:900;letter-spacing:5px;padding:10px;border:2px solid #333;margin-bottom:14px}'
+    +'.st{font-size:9.5pt;font-weight:700;background:#dde3f0;padding:4px 8px;border:1px solid #bbb;border-bottom:none;margin-top:10px}'
+    +'.tb{width:100%;border-collapse:collapse}'
+    +'.tb th,.tb td{border:1px solid #bbb;padding:4px 7px;font-size:9pt}'
+    +'.tb th{background:#dde3f0;font-weight:700;text-align:center}'
+    +'.lb{background:#edf0f8;font-weight:700;white-space:nowrap}'
+    +'.tc{text-align:center}.tr{text-align:right}.tl{text-align:left}'
+    +'.terms{font-size:8pt;color:#333;line-height:1.8;margin-top:10px}'
+    +'.terms ol{padding-left:16px}'
+    +'.np{background:#555;padding:12px 16px;text-align:center;position:sticky;top:0;z-index:999}'
+    +'@media print{'
+    +'body{background:#fff}'
+    +'.doc{margin:0;padding:14mm;page-break-after:always}'
+    +'.doc:last-child{page-break-after:auto}'
+    +'.np{display:none}'
+    +'}'
+    +'</style></head><body>'
+    +'<div class="np">'
+    +'<button onclick="window.print()" style="padding:9px 28px;font-size:13px;background:#6c5ce7;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-right:8px">🖨️ 인쇄 / PDF 저장</button>'
+    +'<button onclick="window.close()" style="padding:9px 18px;font-size:13px;background:#888;color:#fff;border:none;border-radius:6px;cursor:pointer">✕ 닫기</button>'
+    +'</div>'
+    +docsHtml
+    +'</body></html>';
+}
 
 // ═══════════════════════════════════════
 // 권한 매트릭스
