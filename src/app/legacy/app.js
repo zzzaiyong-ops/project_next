@@ -7197,7 +7197,9 @@ function renderWeeklyView(){
       var _sd0NetOrd = _sd0Skus.reduce(function(a,si){return a+(si.netOrders||0);},0);
       var _sd0NewMem = _sd0Skus.reduce(function(a,si){return a+(si.newMembers||0);},0);
       var _sd0CtrStr = _sd0Inflow>0 ? (_sd0NetOrd/_sd0Inflow*100).toFixed(1) : '';
-      var sr = c.settleRevenue||0;
+      // 인플매출: settleRevenue 우선, 없으면 skuItems netAmt 합산 폴백
+      var _sd0NetAmt = _sd0Skus.reduce(function(a,si){return a+(si.netAmt||0);},0);
+      var sr = c.settleRevenue || _sd0NetAmt || 0;
       var ml = c._matchedMlive||{};
       // 인플 실적만 (모바일라이브 포함 체크된 경우 방송중 실적 차감)
       if(c.infRevIncludeMlive && (ml.mobOrderAmt||0)){ sr = Math.max(0, sr - (ml.mobOrderAmt||0)); }
@@ -7403,11 +7405,13 @@ function renderReports(){
   _s7FilteredCamps = camps; // 엑셀 다운로드용 캐시
   camps.forEach(function(camp){
     var mdcatVal = camp.mdcat||(camp.skus&&camp.skus[0]?camp.skus[0].mdcat:'')||'-';
-    var revenue  = camp.settleRevenue || 0;
-    var orders   = camp.settleOrders  || 0;
     // ── settleData에서 정산 상세 정보 읽기 ──
     var sd0    = (camp.settleData && camp.settleData[0]) || {};
     var sdSkus = sd0.skuItems || [];
+    // 매출: settleRevenue 우선, 없으면 skuItems netAmt 합산 폴백
+    var _sdNetAmt = sdSkus.reduce(function(s,si){return s+(si.netAmt||0);},0);
+    var revenue  = camp.settleRevenue || _sdNetAmt || 0;
+    var orders   = camp.settleOrders  || 0;
     var totalInflow  = sdSkus.reduce(function(s,si){return s+(si.inflow||0);},0);
     var totalNewMem  = sdSkus.reduce(function(s,si){return s+(si.newMembers||0);},0);
     var totalNetOrd  = sdSkus.reduce(function(s,si){return s+(si.netOrders||0);},0);
@@ -8909,6 +8913,8 @@ function calcSettleSkuNet(row){
   calcSettleConvRate(row);
   var block = row.closest('.settle-block');
   if(block) calcSettleBlockFees(block);
+  // 인플루언서 전체매출 실시간 갱신
+  calcInfTotalWithMlive();
 }
 
 function calcSettleBlockFees(block){
@@ -9151,12 +9157,11 @@ function calcInfTotalWithMlive(){
 
   var includeML = document.getElementById('p-inf-rev-include-mlive')?.checked;
 
-  // 인플 매출/건수 (정산블록에서)
-  var settleBlocks = document.querySelectorAll('#settle-blocks-container .settle-block-row');
+  // 인플 매출/건수 (정산블록 skuItems netAmt/netOrders 합산)
   var infRev=0, infOrd=0;
-  settleBlocks.forEach(function(blk){
-    infRev += parseInt((blk.querySelector('.settle-revenue')?.value||'').replace(/,/g,''))||0;
-    infOrd += parseInt((blk.querySelector('.settle-orders')?.value||'').replace(/,/g,''))||0;
+  getSettleBlocksData().forEach(function(d){
+    infRev += d.revenue||0;
+    infOrd += d.orders||0;
   });
   var editId = parseInt(document.getElementById('p-edit-id')?.value)||0;
   if(!infRev && editId){
@@ -9286,15 +9291,10 @@ function syncInfTotalRevFromMlive(liveCode){
     });
   }
   var mlRevenue = mlData ? (mlData.orderAmt||0) : (mlCamp ? (mlCamp.totalRevenue||0) : 0);
-  // 인플루언서 자체 매출 (settleRevenue)
+  // 인플루언서 자체 매출 (정산블록 skuItems netAmt 합산)
   var infRev = 0;
-  var settleBlocks = document.querySelectorAll('#settle-blocks-container .settle-block-row');
-  if(settleBlocks.length){
-    settleBlocks.forEach(function(blk){
-      infRev += parseInt((blk.querySelector('.settle-revenue')?.value||'').replace(/,/g,''))||0;
-    });
-  }
-  // 또는 현재 편집 중인 캠페인의 settleRevenue
+  getSettleBlocksData().forEach(function(d){ infRev += d.revenue||0; });
+  // 현재 편집 중인 캠페인의 저장값 폴백
   var editId = parseInt(document.getElementById('p-edit-id')?.value)||0;
   if(!infRev && editId){
     var camp = DB.campaigns.find(function(c){ return c.id===editId; });

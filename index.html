@@ -618,54 +618,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   .login-box { padding: 32px 24px; width: 94vw !important; }
   .login-box h2 { font-size: 20px !important; }
   .login-fr label { font-size: 13px !important; }
-  .login-fr input { font-size: 16px !important; padding: 14px !important; }
-  .btn-login { font-size: 16px !important; padding: 15px !important; }
-
-  /* ── 대시보드 KPI 블록 ── */
-  #dash-md-block > div,
-  #dash-mcn-header > div:last-child {
-    grid-template-columns: 1fr !important;
-  }
-  /* KPI 카드 패딩 모바일 조정 */
-  #dash-md-block [style*="padding:22px"],
-  #dash-mcn-header [style*="padding:22px"] {
-    padding: 16px 18px !important;
-  }
-  /* KPI 큰 숫자 모바일 조정 */
-  #dash-md-req-count, #dash-md-revenue,
-  #dash-mcn-inf-count, #dash-mcn-revenue {
-    font-size: 34px !important;
-  }
-  /* 대시보드 테이블 숨김 (모바일에서는 KPI+캘린더만) */
-  #dash-table-section { display: none !important; }
-
-  /* ── 캘린더 헤더 모바일 처리 ── */
-  .cal-hd-mob { flex-wrap: wrap !important; gap: 6px !important; min-height: unset !important; }
-  .cal-nav-center {
-    position: static !important;
-    transform: none !important;
-    order: 3;
-    width: 100%;
-    justify-content: center;
-  }
-  #cal-legend { margin-left: 0 !important; order: 2; flex-wrap: wrap; }
-
-  /* ── 캘린더 리스트뷰 모바일 ── */
-  #cal-grid { font-size: 12px !important; }
-  #cal-summary { font-size: 12px !important; flex-wrap: wrap; gap: 6px !important; }
-
-  /* ── 사용자 관리 역할 카드 ── */
-  #um-role-cards { grid-template-columns: repeat(2,1fr) !important; }
-}
-
-@media (max-width: 480px) {
-  #um-role-cards { grid-template-columns: 1fr !important; }
-  .nav-item { font-size: 16px !important; padding: 13px 16px !important; }
-}
-
-</style>
-</head>
-<body><!-- ════════════════════════════════════
+  .login-fr input { font-size: 16px !impor﻿<!-- ════════════════════════════════════
      LOGIN SCREEN
 ════════════════════════════════════ -->
 <div id="login-screen">
@@ -3019,7 +2972,7 @@ label{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:5px;disp
   </div>
 </div></div>
 <script>
-console.log('[SSGLIVE] 메인 스크립트 시작');
+﻿console.log('[SSGLIVE] 메인 스크립트 시작');
 
 // ── 고정 기본 텍스트 ──
 var DEFAULT_PRODUCT_BASIC_INFO = "① 상품명/상품구성 :\n②가격/프로모션 조건 : MD할인가,카드즉시할인5%(5만원이상),신규가입3천원 적립, 최종공구가\n③이벤트 : 사전알림댓글 이벤트, 구매인증 이벤트, 모바일라이브 유무 등\n④참고용상품링크 : ";
@@ -10218,7 +10171,9 @@ function renderWeeklyView(){
       var _sd0NetOrd = _sd0Skus.reduce(function(a,si){return a+(si.netOrders||0);},0);
       var _sd0NewMem = _sd0Skus.reduce(function(a,si){return a+(si.newMembers||0);},0);
       var _sd0CtrStr = _sd0Inflow>0 ? (_sd0NetOrd/_sd0Inflow*100).toFixed(1) : '';
-      var sr = c.settleRevenue||0;
+      // 인플매출: settleRevenue 우선, 없으면 skuItems netAmt 합산 폴백
+      var _sd0NetAmt = _sd0Skus.reduce(function(a,si){return a+(si.netAmt||0);},0);
+      var sr = c.settleRevenue || _sd0NetAmt || 0;
       var ml = c._matchedMlive||{};
       // 인플 실적만 (모바일라이브 포함 체크된 경우 방송중 실적 차감)
       if(c.infRevIncludeMlive && (ml.mobOrderAmt||0)){ sr = Math.max(0, sr - (ml.mobOrderAmt||0)); }
@@ -10424,11 +10379,13 @@ function renderReports(){
   _s7FilteredCamps = camps; // 엑셀 다운로드용 캐시
   camps.forEach(function(camp){
     var mdcatVal = camp.mdcat||(camp.skus&&camp.skus[0]?camp.skus[0].mdcat:'')||'-';
-    var revenue  = camp.settleRevenue || 0;
-    var orders   = camp.settleOrders  || 0;
     // ── settleData에서 정산 상세 정보 읽기 ──
     var sd0    = (camp.settleData && camp.settleData[0]) || {};
     var sdSkus = sd0.skuItems || [];
+    // 매출: settleRevenue 우선, 없으면 skuItems netAmt 합산 폴백
+    var _sdNetAmt = sdSkus.reduce(function(s,si){return s+(si.netAmt||0);},0);
+    var revenue  = camp.settleRevenue || _sdNetAmt || 0;
+    var orders   = camp.settleOrders  || 0;
     var totalInflow  = sdSkus.reduce(function(s,si){return s+(si.inflow||0);},0);
     var totalNewMem  = sdSkus.reduce(function(s,si){return s+(si.newMembers||0);},0);
     var totalNetOrd  = sdSkus.reduce(function(s,si){return s+(si.netOrders||0);},0);
@@ -11930,6 +11887,8 @@ function calcSettleSkuNet(row){
   calcSettleConvRate(row);
   var block = row.closest('.settle-block');
   if(block) calcSettleBlockFees(block);
+  // 인플루언서 전체매출 실시간 갱신
+  calcInfTotalWithMlive();
 }
 
 function calcSettleBlockFees(block){
@@ -12172,12 +12131,11 @@ function calcInfTotalWithMlive(){
 
   var includeML = document.getElementById('p-inf-rev-include-mlive')?.checked;
 
-  // 인플 매출/건수 (정산블록에서)
-  var settleBlocks = document.querySelectorAll('#settle-blocks-container .settle-block-row');
+  // 인플 매출/건수 (정산블록 skuItems netAmt/netOrders 합산)
   var infRev=0, infOrd=0;
-  settleBlocks.forEach(function(blk){
-    infRev += parseInt((blk.querySelector('.settle-revenue')?.value||'').replace(/,/g,''))||0;
-    infOrd += parseInt((blk.querySelector('.settle-orders')?.value||'').replace(/,/g,''))||0;
+  getSettleBlocksData().forEach(function(d){
+    infRev += d.revenue||0;
+    infOrd += d.orders||0;
   });
   var editId = parseInt(document.getElementById('p-edit-id')?.value)||0;
   if(!infRev && editId){
@@ -12307,15 +12265,10 @@ function syncInfTotalRevFromMlive(liveCode){
     });
   }
   var mlRevenue = mlData ? (mlData.orderAmt||0) : (mlCamp ? (mlCamp.totalRevenue||0) : 0);
-  // 인플루언서 자체 매출 (settleRevenue)
+  // 인플루언서 자체 매출 (정산블록 skuItems netAmt 합산)
   var infRev = 0;
-  var settleBlocks = document.querySelectorAll('#settle-blocks-container .settle-block-row');
-  if(settleBlocks.length){
-    settleBlocks.forEach(function(blk){
-      infRev += parseInt((blk.querySelector('.settle-revenue')?.value||'').replace(/,/g,''))||0;
-    });
-  }
-  // 또는 현재 편집 중인 캠페인의 settleRevenue
+  getSettleBlocksData().forEach(function(d){ infRev += d.revenue||0; });
+  // 현재 편집 중인 캠페인의 저장값 폴백
   var editId = parseInt(document.getElementById('p-edit-id')?.value)||0;
   if(!infRev && editId){
     var camp = DB.campaigns.find(function(c){ return c.id===editId; });
@@ -15833,6 +15786,4 @@ if(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== '여기에_API_KEY' && t
   if(window._removeAuthOverlay) window._removeAuthOverlay();
 }
 </script>
-</script>
-</body>
-</html>
+</script></body></html>
