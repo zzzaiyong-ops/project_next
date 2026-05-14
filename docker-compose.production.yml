@@ -1,0 +1,17 @@
+services:
+  app:
+    image: ssg-m-hub:latest
+    container_name: "ssg-m-hub"
+    ports:
+      - "8098:80"
+    env_file:
+      - .env
+    environment:
+      - PORT=80
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
