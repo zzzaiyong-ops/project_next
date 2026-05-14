@@ -7956,8 +7956,8 @@ function saveProd(){
     // 모바일라이브 편성코드 → appMkt에 병합
     _liveCodeInput: (document.getElementById('appmkt-live-code')?.value||'').trim(),
     settleData:    getSettleBlocksData(),
-    settleRevenue: getSettleBlocksData().reduce(function(s,d){return s+(d.revenue||0);},0),
-    settleOrders:  getSettleBlocksData().reduce(function(s,d){return s+(d.orders||0);},0),
+    settleRevenue: getSettleBlocksData().reduce(function(s,d){return s+(d.skuItems||[]).reduce(function(ss,si){return ss+(si.netAmt||0);},0);},0),
+    settleOrders:  getSettleBlocksData().reduce(function(s,d){return s+(d.skuItems||[]).reduce(function(ss,si){return ss+(si.netOrders||0);},0);},0),
     start:v('p-start').slice(0,10), end:v('p-end').slice(0,10),
     startDate:v('p-start').slice(0,10), endDate:v('p-end').slice(0,10),
     appeal:v('p-appeal'), productBasicInfo:v('p-product-basic-info'), csInfo:v('p-cs-info'), deliveryInfo:v('p-delivery-info'), infRequest:v('p-inf-request'),
@@ -9014,8 +9014,13 @@ function getSettleBlocksData(){
         adCommRate: parseFloat(row.querySelector('.settle-acr')?.value)||0
       });
     });
+    // skuItems 합산: 매출(netAmt) / 건수(netOrders)
+    var _netAmt = skuItems.reduce(function(s,si){return s+(si.netAmt||0);},0);
+    var _netOrd = skuItems.reduce(function(s,si){return s+(si.netOrders||0);},0);
     result.push({
       skuItems:    skuItems,
+      revenue:     _netAmt,   // 전체 순주문금액 합산 (그리드·저장용)
+      orders:      _netOrd,   // 전체 순주문수 합산
       commFeeVat:  pI('.settle-commfee-'+n),
       commFee2:    pI('.settle-commfee2-'+n),
       fixedFee:    pI('.settle-fixedfee-'+n),
