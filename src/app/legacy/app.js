@@ -8809,6 +8809,12 @@ function addSettleBlock(n, data, campaignSkus, campEndDate){
     // ── 광고비 / 세금계산서
     +'<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px;margin-bottom:10px">'
     +'<div style="font-weight:700;color:var(--text2);margin-bottom:7px;font-size:11.5px">🧾 광고비 / 세금계산서</div>'
+    +'<div style="margin-bottom:7px"><label style="font-size:10.5px;font-weight:600;color:var(--text2);display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">'
+    +'<span>순주문금액 합계 (정산기준)</span>'
+    +'<span style="font-size:9px;font-weight:400;color:var(--accent);cursor:pointer" onclick="resetSettleNaSum(this.closest(\'.settle-block\'))">↺ 자동계산</span>'
+    +'</label>'
+    +'<input class="inp inp-sm inp-money settle-nasum-'+n+'" placeholder="자동" value="'+fmtV(d.netAmtSum)+'"'
+    +' oninput="formatMoney(this);this.setAttribute(\'data-user-edited\',\'1\')" style="font-weight:600;color:var(--text)"></div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px">'
     +'<div><label style="font-size:10.5px;color:var(--accent2);display:block;margin-bottom:2px">수수료 광고비 (부가세포함) <span style="font-size:9px;font-weight:400">(자동)</span></label>'
     +'<input class="inp inp-sm settle-commfee-'+n+'" placeholder="자동" value="'+fmtV(d.commFeeVat)+'" style="background:var(--bg4);color:var(--accent2);font-weight:600" readonly></div>'
@@ -8843,6 +8849,15 @@ function addSettleBlock(n, data, campaignSkus, campEndDate){
   // 초기 자동계산
   block.querySelectorAll('.settle-sku-item').forEach(function(row){ calcSettleSkuNet(row); });
   calcSettleBlockFees(block);
+  // 저장된 netAmtSum이 SKU 자동합산과 다르면 수기 입력으로 복원
+  if(d.netAmtSum){
+    var _autoSum = (d.skuItems||[]).reduce(function(s,si){return s+(si.netAmt||0);},0);
+    var nEl = block.querySelector('.settle-nasum-'+n);
+    if(nEl && d.netAmtSum !== _autoSum){
+      nEl.setAttribute('data-user-edited','1');
+      nEl.value = d.netAmtSum.toLocaleString('ko-KR');
+    }
+  }
 }
 
 function addSettleSkuRow(block){
@@ -8917,10 +8932,27 @@ function calcSettleSkuNet(row){
   calcInfTotalWithMlive();
 }
 
+function resetSettleNaSum(block){
+  if(!block) return;
+  var n = block.getAttribute('data-settle-n');
+  var el = block.querySelector('.settle-nasum-'+n);
+  if(el) el.removeAttribute('data-user-edited');
+  calcSettleBlockFees(block);
+}
+
 function calcSettleBlockFees(block){
   if(!block) return;
   var n = block.getAttribute('data-settle-n');
   var pM = function(el){ return parseInt((el?.value||'').replace(/,/g,''))||0; };
+  // 순주문금액 합계 자동계산 (사용자가 수기 입력하지 않은 경우만)
+  var totalNetAmt = 0;
+  block.querySelectorAll('.settle-sku-item').forEach(function(row){
+    totalNetAmt += pM(row.querySelector('.settle-na'));
+  });
+  var naSumEl = block.querySelector('.settle-nasum-'+n);
+  if(naSumEl && !naSumEl.getAttribute('data-user-edited')){
+    naSumEl.value = totalNetAmt > 0 ? totalNetAmt.toLocaleString('ko-KR') : '';
+  }
   // 수수료광고비(부가세포함) = Σ(순주문금액 × 수수료%)
   var totalCommFee = 0;
   block.querySelectorAll('.settle-sku-item').forEach(function(row){
@@ -9021,10 +9053,14 @@ function getSettleBlocksData(){
     // skuItems 합산: 매출(netAmt) / 건수(netOrders)
     var _netAmt = skuItems.reduce(function(s,si){return s+(si.netAmt||0);},0);
     var _netOrd = skuItems.reduce(function(s,si){return s+(si.netOrders||0);},0);
+    // 순주문금액 합계: 수기 입력값 우선, 없으면 skuItems 합산
+    var naSumEl = block.querySelector('.settle-nasum-'+n);
+    var _netAmtSum = naSumEl ? (parseInt((naSumEl.value||'').replace(/,/g,''))||0) : _netAmt;
     result.push({
       skuItems:    skuItems,
-      revenue:     _netAmt,   // 전체 순주문금액 합산 (그리드·저장용)
-      orders:      _netOrd,   // 전체 순주문수 합산
+      revenue:     _netAmt,      // SKU행 합산 (그리드·저장용)
+      orders:      _netOrd,      // 전체 순주문수 합산
+      netAmtSum:   _netAmtSum,   // 순주문금액 합계 (수기 입력 or 자동)
       commFeeVat:  pI('.settle-commfee-'+n),
       commFee2:    pI('.settle-commfee2-'+n),
       fixedFee:    pI('.settle-fixedfee-'+n),
