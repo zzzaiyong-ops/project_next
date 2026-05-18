@@ -8765,9 +8765,13 @@ function addSettleBlock(n, data, campaignSkus, campEndDate){
   }
   var campSkus = campaignSkus || [];
   var rowCount = Math.max(campSkus.length, savedItems.length, 1);
-  // 인플루언서 블록 N의 확정 수수료율을 기본값으로 읽기
+  // 인플루언서 블록 N의 확정 수수료율/원고료를 기본값으로 읽기
   var infFrateEl = document.querySelector('.inf-frate-'+n);
   var infFeeRate = infFrateEl ? (parseFloat(infFrateEl.value)||0) : 0;
+  var infFamtEl = document.querySelector('.inf-famt-'+n);
+  var infFeeAmount = infFamtEl ? (parseInt((infFamtEl.value||'').replace(/[^0-9]/g,''))||0) : 0;
+  // fixedFee 미설정 시 확정원고료로 초기화
+  if(!d.fixedFee && infFeeAmount) d = Object.assign({}, d, {fixedFee: infFeeAmount});
   var skuRows = [];
   for(var i=0; i<rowCount; i++){
     var cs = campSkus[i]||{}, ss = savedItems[i]||{};
