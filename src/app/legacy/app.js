@@ -11917,15 +11917,15 @@ function exportS7ExcelFiltered(camps){
   var nmStyle = Object.assign({},dtStyle,{fill:{patternType:'solid',fgColor:{rgb:'FFFFF2CC'}}});
   var numStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'#,##0'};
   var pctStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'0.00'};
-  var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','MCN업체','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
+  var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','MCN업체','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과','입금예정일'];
   var ws = {};
-  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
+  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24},{wch:14}];
   var R = 0;
   hdrs.forEach(function(h,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:h,t:'s',s:hdStyle}; });
   // ── 2행: 입력 가이드 (A열 공백 → 업로드 시 자동 스킵)
   R++;
   var guideStyle = {font:{name:'맑은 고딕',sz:8,italic:true,color:{rgb:'FF888888'}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F2F2'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'FFD9D9D9'}},bottom:{style:'thin',color:{rgb:'FFD9D9D9'}},left:{style:'thin',color:{rgb:'FFD9D9D9'}},right:{style:'thin',color:{rgb:'FFD9D9D9'}}}};
-  var _guides = ['','조회용(입력불필요)','상품코드 입력','MCN업체명','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력'];
+  var _guides = ['','조회용(입력불필요)','상품코드 입력','MCN업체명','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력','조회용(입력불필요)'];
   _guides.forEach(function(g,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:g,t:'s',s:guideStyle}; });
   ws['!rows'] = [null, {hpt:42}]; // 가이드 행 높이
   camps.forEach(function(c){
@@ -11968,7 +11968,8 @@ function exportS7ExcelFiltered(camps){
         {v:idx===0?(sd.views||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.comments||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.settleDate||_autoSD):'',t:'s',s:dtStyle},
-        {v:idx===0?(sd.issueResult||''):'',t:'s',s:dtStyle}
+        {v:idx===0?(sd.issueResult||''):'',t:'s',s:dtStyle},
+        {v:idx===0?(c.settlePaymentDate||''):'',t:'s',s:dtStyle}
       ];
       row.forEach(function(cell,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = cell; });
     });
@@ -11990,15 +11991,15 @@ function downloadSettleTemplate(){
   var nmStyle = Object.assign({},dtStyle,{fill:{patternType:'solid',fgColor:{rgb:'FFFFF2CC'}}});
   var numStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'#,##0'};
   var pctStyle = {font:{name:'맑은 고딕',sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},border:_BD7,numFmt:'0.00'};
-  var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','MCN업체','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과'];
+  var hdrs = ['캠페인코드(KEY)','캠페인명','상품코드','MCN업체','인플루언서','당사유입수','구매자수','구매전환율(%)','신규회원수','공구가(원)','순주문수','순주문 금액(정산기준)','광고수수료(%)','수수료 광고비(부가세포함)','수수료 광고비2(부가세별도)','정액 광고비(부가세별도)','별도 광고비(메타광고)','세금계산서 공급가액(부가세별도)','릴스조회수','릴스댓글','정산일자','이슈 및 결과','입금예정일'];
   var ws = {};
-  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24}];
+  ws['!cols'] = [{wch:14},{wch:22},{wch:14},{wch:14},{wch:14},{wch:11},{wch:10},{wch:13},{wch:10},{wch:13},{wch:11},{wch:18},{wch:16},{wch:20},{wch:20},{wch:18},{wch:18},{wch:22},{wch:11},{wch:10},{wch:14},{wch:24},{wch:14}];
   var R = 0;
   hdrs.forEach(function(h,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:h,t:'s',s:hdStyle}; });
   // ── 2행: 입력 가이드 (A열 공백 → 업로드 시 자동 스킵)
   R++;
   var guideStyle = {font:{name:'맑은 고딕',sz:8,italic:true,color:{rgb:'FF888888'}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F2F2'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'FFD9D9D9'}},bottom:{style:'thin',color:{rgb:'FFD9D9D9'}},left:{style:'thin',color:{rgb:'FFD9D9D9'}},right:{style:'thin',color:{rgb:'FFD9D9D9'}}}};
-  var _guides = ['','조회용(입력불필요)','상품코드 입력','MCN업체명','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력'];
+  var _guides = ['','조회용(입력불필요)','상품코드 입력','MCN업체명','인플루언서명','건수 입력','건수 입력','자동계산(입력불필요)','건수 입력','원 단위 숫자\n(예: 59000)','건수 입력','자동계산(입력불필요)','% 숫자 입력\n(예: 20 → 20%)\n(0.2입력시 자동변환)','자동계산(입력불필요)','자동계산(입력불필요)','원 단위 직접 입력','원 단위 직접 입력','자동계산(입력불필요)','만 단위 숫자','건수 입력','날짜 형식\n(예: 2026-05-01)','텍스트 입력','조회용(입력불필요)'];
   _guides.forEach(function(g,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = {v:g,t:'s',s:guideStyle}; });
   ws['!rows'] = [null, {hpt:42}]; // 가이드 행 높이
   camps.forEach(function(c){
@@ -12042,7 +12043,8 @@ function downloadSettleTemplate(){
         {v:idx===0?(sd.views||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.comments||0):0,t:'n',s:numStyle},
         {v:idx===0?(sd.settleDate||_autoSD):'',t:'s',s:dtStyle},
-        {v:idx===0?(sd.issueResult||''):'',t:'s',s:dtStyle}
+        {v:idx===0?(sd.issueResult||''):'',t:'s',s:dtStyle},
+        {v:idx===0?(c.settlePaymentDate||''):'',t:'s',s:dtStyle}
       ];
       row.forEach(function(cell,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})] = cell; });
     });
