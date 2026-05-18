@@ -7422,7 +7422,7 @@ function renderS7(){
     if(_s7Mlive){
       s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>주차</th><th>방송일시</th><th>편성코드</th><th>라이브명</th><th>담당MD</th><th>전체매출</th><th>주문건수</th><th>한계이익</th><th>시청자</th><th>광고비</th><th>광고수익</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
     } else {
-      s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
+      s7thead.innerHTML = '<tr><th style="width:36px;text-align:center">#</th><th style="width:32px"><input type="checkbox" id="chk-all-s7" onchange="toggleAllCheck(\'s7\',this.checked)" style="cursor:pointer"></th><th>캠페인코드</th><th style="width:22%;min-width:130px">캠페인명</th><th>시작~종료일</th><th style="width:9%;min-width:70px">MDCAT</th><th>규모</th><th>MCN</th><th>인플루언서</th><th>전체매출</th><th>주문건수</th><th>전체비용</th><th>입금예정일</th><th>정산상태</th><th style="width:99vw;background:var(--bg)"></th></tr>';
     }
   }
   // 페이징 처리
@@ -7499,6 +7499,10 @@ function renderS7(){
           rows += '<tr style="border-top:1px dashed var(--border)">';
         }
 
+        var payDate = (camp.settlePaymentDate||'').slice(0,10);
+        var payDateDisp = payDate ? payDate.slice(5).replace('-','/') : '-'; // MM/DD
+        var payColor = payDate ? (payDate.slice(8)==='30'?'var(--blue)':'var(--orange)') : 'var(--text3)';
+
         rows += '<td style="font-size:12px">'+(infSize!=='-'?'<span style="background:var(--bg3);padding:1px 6px;border-radius:10px;font-size:11px">'+infSize+'</span>':'-')+'</td>'
           +'<td style="font-size:12px;color:var(--text2)">'+(inf.mcn||'-')+'</td>'
           +'<td style="font-size:12px;font-weight:600">'+(inf.infName||'-')+'</td>'
@@ -7507,7 +7511,8 @@ function renderS7(){
           +'<td style="font-weight:700;color:var(--orange);text-align:left">'+costStr+'</td>';
 
         if(infIdx === 0){
-          rows += '<td rowspan="'+rowspan+'">'+ statusBadge +'</td>'
+          rows += '<td rowspan="'+rowspan+'" style="font-size:12px;font-weight:700;color:'+payColor+';white-space:nowrap;text-align:center">'+payDateDisp+'</td>'
+            +'<td rowspan="'+rowspan+'">'+ statusBadge +'</td>'
             +'<td rowspan="'+rowspan+'"><div class="row-acts">'
             +(canEdit() && !isExtMcn() ? '<button class="btn btn-primary btn-xs" onclick="editProd('+camp.id+')">수정</button>' : '<span style="font-size:11px;color:var(--text3)">조회전용</span>')
             +'</div></td>';
@@ -7517,7 +7522,7 @@ function renderS7(){
     }
   });
   _renderPagination('s6-pagination', campList.length, 's7', 'renderS7()');
-  var s7ColSpan = _s7Mlive ? 11 : 14;
+  var s7ColSpan = _s7Mlive ? 11 : 15;
   document.getElementById('s6-tbl').innerHTML=rows||'<tr><td colspan="'+s7ColSpan+'" class="empty">정산 대상 캠페인 없음</td></tr>';
 }
 
