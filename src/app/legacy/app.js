@@ -754,13 +754,13 @@ var PF_SECTIONS = {
   },
   settle: {
     title: '💰 정산정보 붙여넣기',
-    hint: ['정산매출: 120,000,000','광고수익: 3,000,000','주문건수: 850','정산처리일: 2026-07-29','비용지불일: 2026-08-15'],
+    hint: ['정산매출: 120,000,000','광고수익: 3,000,000','주문건수: 850','정산처리일: 2026-07-29','입금예정일: 2026-08-30'],
     fields: [
       { keys:['정산매출','매출'], id:'p-settle-revenue', label:'정산매출', type:'money' },
       { keys:['da광고료','da','광고료'], id:'p-settle-da', label:'광고수익', type:'money' },
       { keys:['주문건수','주문'], id:'p-settle-orders', label:'주문건수', type:'text' },
       { keys:['정산처리일','정산일'], id:'p-settle-process-date', label:'정산처리일', type:'date' },
-      { keys:['비용지불일','지불일','결제일'], id:'p-settle-payment-date', label:'비용지불일', type:'date' },
+      { keys:['입금예정일','비용지불일','지불일','결제일'], id:'p-settle-payment-date', label:'입금예정일', type:'date' },
     ]
   }
 };
@@ -1166,7 +1166,7 @@ function _buildShareText(c){
     if(c.settleRevenue) lines.push('정산매출: '+(c.settleRevenue/100000000).toFixed(1)+'억원');
     if(c.settleDa)      lines.push('광고수익: '+c.settleDa.toLocaleString()+'원');
     if(c.settleProcessDate) lines.push('정산처리일: '+c.settleProcessDate);
-    if(c.settlePaymentDate) lines.push('비용지불일: '+c.settlePaymentDate);
+    if(c.settlePaymentDate) lines.push('입금예정일: '+c.settlePaymentDate);
     lines.push('');
   }
   lines.push('🔗 SSGLIVE 인플루언서 마케팅 허브');
@@ -1935,7 +1935,7 @@ function renderPage(p){
   if(p==='s4')          renderS4();
   if(p==='s5')          renderS5();
   if(p==='s6')          renderS6();
-  if(p==='s7')          renderS7();
+  if(p==='s7')          { if(!document.getElementById('df-s7-from')?.value) initS7PaymentDateFilter(); renderS7(); }
   if(p==='s8')          { if(!document.getElementById('s7-date-from')?.value) initS7DateFilter(); renderReports(); }
   if(p==='influencers') renderInfs();
   if(p==='campaigns')   renderCamps();
@@ -2938,9 +2938,12 @@ function editProd(id){
   var diEl=document.getElementById('p-delivery-info'); if(diEl){ diEl.value=p.deliveryInfo||''; diEl.nextElementSibling.textContent=(p.deliveryInfo||'').length+'/300'; }
   var irEl=document.getElementById('p-inf-request'); if(irEl){ irEl.value=p.infRequest||''; irEl.nextElementSibling.textContent=(p.infRequest||'').length+'/300'; }
   var spdEl=document.getElementById('p-settle-process-date'); if(spdEl){ spdEl.value=p.settleProcessDate||''; }
-  var spyEl=document.getElementById('p-settle-payment-date'); if(spyEl) spyEl.value=p.settlePaymentDate||'';
+  var spyEl=document.getElementById('p-settle-payment-date');
+  if(spyEl){ spyEl.value=p.settlePaymentDate||''; delete spyEl.dataset.userEdited; }
   // 기존 캠페인에 정산처리일 없으면 자동 계산
   if(!p.settleProcessDate) autoCalcSettleProcessDate();
+  // 입금예정일 없으면 자동 계산 (정산처리일 기반)
+  if(!p.settlePaymentDate) autoCalcSettlePaymentDate();
   // 배송 구조화 필드 복원
   var courierEl=document.getElementById('p-courier'); if(courierEl) courierEl.value=p.courier||'';
   var cutoffEl=document.getElementById('p-ship-cutoff'); if(cutoffEl) cutoffEl.value=p.shipCutoff||'';
@@ -4364,20 +4367,32 @@ function renderS7(){
   var setts=DB.settlements||[];
   var s7OwnerFilter = (document.getElementById('sf-s7-owner')?.value||'').trim();
   var s7MdFilter    = (document.getElementById('sf-s7-md')?.value||'').trim();
-  var s7SettleFrom  = (document.getElementById('sf-s7-settle-from')?.value||'').trim(); // YYYY-MM
-  var s7SettleTo    = (document.getElementById('sf-s7-settle-to')?.value||'').trim();   // YYYY-MM
+  var s7SettleFrom  = (document.getElementById('sf-s7-settle-from')?.value||'').trim();
+  var s7SettleTo    = (document.getElementById('sf-s7-settle-to')?.value||'').trim();
   function _matchesSettleDate(c){
-    if(pageFilter.s7 === 'target') return true; // 확정대상 모드엔 적용 안 함
-    if(!s7SettleFrom && !s7SettleTo) return true; // 입력 없으면 전체
+    if(pageFilter.s7 === 'target') return true;
+    if(!s7SettleFrom && !s7SettleTo) return true;
     var sd0 = (c.settleData && c.settleData[0]) ? c.settleData[0] : {};
-    var sdDate = (sd0.settleDate || '').slice(0, 7); // YYYY-MM
+    var sdDate = (sd0.settleDate || '').slice(0, 7);
     if(s7SettleFrom && (!sdDate || sdDate < s7SettleFrom)) return false;
     if(s7SettleTo   && (!sdDate || sdDate > s7SettleTo))   return false;
     return true;
   }
+  // 입금예정일 기준 조회 (일단위)
+  var _s7PayFrom = dateFilter.s7.from || '';
+  var _s7PayTo   = dateFilter.s7.to   || '';
+  function _matchesPaymentDate(c){
+    if(pageFilter.s7 === 'target') return true;
+    if(!_s7PayFrom && !_s7PayTo) return true;
+    var payDate = (c.settlePaymentDate || '').slice(0, 10);
+    if(!payDate) return true; // 입금예정일 없는 캠페인은 항상 포함
+    if(_s7PayFrom && payDate < _s7PayFrom) return false;
+    if(_s7PayTo   && payDate > _s7PayTo)   return false;
+    return true;
+  }
   var validCampIds = DB.campaigns.filter(function(c){
     if(!matchesDashMode(c)) return false;
-    if(pageFilter.s7 !== 'target' && !matchesDateFilter(c,'s7')) return false;
+    if(!_matchesPaymentDate(c)) return false;
     if(!_matchesSettleDate(c)) return false;
     var _nf=(document.getElementById('sf-s7-name')?.value||'').trim().toLowerCase();
     if(_nf && !(c.name||'').toLowerCase().includes(_nf)) return false;
@@ -4398,10 +4413,9 @@ function renderS7(){
   var daFee=filteredSetts.reduce(function(s,x){return s+(x.daFee||0);},0);
   var rows='';
   // 캠페인별 직접 표시 (정산 데이터 없어도 랜딩URL 있는 캠페인은 표시)
-  // validCampIds 방식 대신 직접 필터 (id includes 비교 문제 회피)
   var campList = DB.campaigns.filter(function(c){
     if(!matchesDashMode(c)) return false;
-    if(pageFilter.s7 !== 'target' && !matchesDateFilter(c,'s7')) return false;
+    if(!_matchesPaymentDate(c)) return false;
     if(!_matchesSettleDate(c)) return false;
     var _nf2=(document.getElementById('sf-s7-name')?.value||'').trim().toLowerCase();
     if(_nf2 && !(c.name||'').toLowerCase().includes(_nf2)) return false;
@@ -9923,6 +9937,18 @@ function clearDateFilter(page){
   applyDateFilter(page);
 }
 
+// S7 입금예정일 필터 기본값 설정 (현재일 기준 -1개월)
+function initS7PaymentDateFilter(){
+  var now = new Date();
+  var from = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  var fEl = document.getElementById('df-s7-from');
+  var tEl = document.getElementById('df-s7-to');
+  if(fEl) fEl.value = from.toISOString().slice(0, 10);
+  if(tEl) tEl.value = now.toISOString().slice(0, 10);
+  dateFilter.s7.from = fEl ? fEl.value : '';
+  dateFilter.s7.to   = tEl ? tEl.value : '';
+}
+
 // 날짜 범위 체크 헬퍼 (월 단위)
 function matchesDateFilter(c, page){
   var df = dateFilter[page];
@@ -11148,6 +11174,7 @@ function renderMcnTable(){
       +'<td style="font-size:12px;color:var(--text3)">'+(c.email?'<a href="mailto:'+escHtml(c.email)+'" style="color:var(--blue);text-decoration:none" onclick="event.stopPropagation()">'+escHtml(c.email)+'</a>':'-')+'</td>'
       +'<td style="font-size:12.5px;color:var(--text3)">'+escHtml(c.fax||'-')+'</td>'
       +'<td style="font-size:12px;color:var(--text3)">'+escHtml(c.bankAccount||'-')+'</td>'
+      +'<td style="font-size:12px;color:var(--accent2);font-weight:600">'+(c.settleCycle==='2week'?'2주':'1개월')+'</td>'
       +'<td style="font-size:12px;color:var(--text3)">'+escHtml(c.memo||'-')+'</td>'
       +'<td style="font-size:12px;color:var(--text3)">'+createdAt+'</td>'
       +'<td><div class="row-acts">'
@@ -11175,6 +11202,7 @@ function openAddMcnModal(){
   document.getElementById('mcn-bizno').value = '';
   document.getElementById('mcn-ceo').value = '';
   document.getElementById('mcn-memo').value = '';
+  document.getElementById('mcn-settle-cycle').value = '1month';
   document.getElementById('addmcn-save-btn').textContent = '추가';
   openMo('addmcn');
   setTimeout(function(){ document.getElementById('mcn-name').focus(); }, 100);
@@ -11197,6 +11225,7 @@ function openEditMcnModal(id){
   document.getElementById('mcn-bizno').value = c.bizno || '';
   document.getElementById('mcn-ceo').value = c.ceo || '';
   document.getElementById('mcn-memo').value = c.memo || '';
+  document.getElementById('mcn-settle-cycle').value = c.settleCycle || '1month';
   document.getElementById('addmcn-save-btn').textContent = '저장';
   openMo('addmcn');
 }
@@ -11214,6 +11243,7 @@ function saveMcnCompany(){
   var address = document.getElementById('mcn-address').value.trim();
   var bizno = document.getElementById('mcn-bizno').value.trim();
   var ceo = document.getElementById('mcn-ceo').value.trim();
+  var settleCycle = document.getElementById('mcn-settle-cycle').value || '1month';
   var editId = document.getElementById('edit-mcn-id').value;
   var saveBtn = document.getElementById('addmcn-save-btn');
 
@@ -11230,7 +11260,7 @@ function saveMcnCompany(){
   if(!editId){
     // 신규 추가
     var newId = Date.now();
-    var newData = { id:newId, name:name, contact:contact, phone:phone, email:email, fax:fax, bankAccount:bankAccount, bizFullName:bizFullName, address:address, bizno:bizno, ceo:ceo, memo:memo, createdAt:new Date().toISOString() };
+    var newData = { id:newId, name:name, contact:contact, phone:phone, email:email, fax:fax, bankAccount:bankAccount, bizFullName:bizFullName, address:address, bizno:bizno, ceo:ceo, settleCycle:settleCycle, memo:memo, createdAt:new Date().toISOString() };
     if(fbReady){
       fbDB.ref('influencer-hub/mcn-companies/'+newId).set(newData)
         .then(function(){
@@ -11246,7 +11276,7 @@ function saveMcnCompany(){
     }
   } else {
     // 수정
-    var updateData = { id:parseInt(editId)||editId, name:name, contact:contact, phone:phone, email:email, fax:fax, bankAccount:bankAccount, bizFullName:bizFullName, address:address, bizno:bizno, ceo:ceo, memo:memo };
+    var updateData = { id:parseInt(editId)||editId, name:name, contact:contact, phone:phone, email:email, fax:fax, bankAccount:bankAccount, bizFullName:bizFullName, address:address, bizno:bizno, ceo:ceo, settleCycle:settleCycle, memo:memo };
     if(fbReady){
       fbDB.ref('influencer-hub/mcn-companies/'+editId).update(updateData)
         .then(function(){
@@ -12996,9 +13026,58 @@ function autoCalcSettleProcessDate(){
     spEl.value = d.toISOString().substring(0,10);
   } catch(e){ /* ignore */ }
 }
-// p-end 변경 시 자동 계산
+// ── 입금예정일 자동계산 ──
+// 규칙:
+//   MCN 정산주기 = 2주:
+//     정산처리일이 전월30일~당월14일 → 당월 30일
+//     정산처리일이 당월15일~29일    → 익월 10일
+//   MCN 정산주기 = 1개월 (default):
+//     정산처리일이 당월 1~말일      → 익월 10일
+function calcSettlePaymentDate(processDateStr){
+  if(!processDateStr) return '';
+  try{
+    var d = new Date(processDateStr);
+    var day = d.getDate();
+    var y = d.getFullYear(), m = d.getMonth(); // 0-indexed
+
+    // MCN 정산주기 확인
+    var mcnName = (document.getElementById('p-mcn')?.value||'').trim();
+    var mcnInfo = MCN_COMPANIES.find(function(c){ return c.name === mcnName; });
+    var cycle = mcnInfo ? (mcnInfo.settleCycle||'1month') : '1month';
+
+    if(cycle === '2week'){
+      // 전월30일~당월14일(1~14일) → 당월 30일
+      if(day <= 14){
+        return y+'-'+String(m+1).padStart(2,'0')+'-30';
+      }
+      // 당월15일~29일 → 익월 10일
+      var nm = m+1; var ny = y; if(nm>11){ nm=0; ny++; }
+      return ny+'-'+String(nm+1).padStart(2,'0')+'-10';
+    } else {
+      // 1개월: 익월 10일
+      var nm2 = m+1; var ny2 = y; if(nm2>11){ nm2=0; ny2++; }
+      return ny2+'-'+String(nm2+1).padStart(2,'0')+'-10';
+    }
+  } catch(e){ return ''; }
+}
+
+function autoCalcSettlePaymentDate(){
+  var pdEl = document.getElementById('p-settle-payment-date');
+  if(!pdEl || pdEl.dataset.userEdited) return; // 수동 입력 보호
+  var processDate = document.getElementById('p-settle-process-date')?.value||'';
+  var result = calcSettlePaymentDate(processDate);
+  if(result) pdEl.value = result;
+}
+
+function onSettlePaymentDateInput(){
+  var pdEl = document.getElementById('p-settle-payment-date');
+  if(pdEl) pdEl.dataset.userEdited = '1';
+}
+
+// p-end, p-settle-process-date 변경 시 자동 계산
 document.addEventListener('change', function(e){
   if(e.target && e.target.id === 'p-end') autoCalcSettleProcessDate();
+  if(e.target && (e.target.id === 'p-settle-process-date' || e.target.id === 'p-mcn')) autoCalcSettlePaymentDate();
 });
 
 // INIT
