@@ -4534,7 +4534,50 @@ function renderS7(){
   });
   _renderPagination('s6-pagination', campList.length, 's7', 'renderS7()');
   var s7ColSpan = _s7Mlive ? 11 : 15;
-  document.getElementById('s6-tbl').innerHTML=rows||'<tr><td colspan="'+s7ColSpan+'" class="empty">정산 대상 캠페인 없음</td></tr>';
+  // ── 합계 행 (전체 필터 기준, 페이징 무관)
+  var _sumRow = '';
+  if(campList.length){
+    var _fmtN2 = function(n){ return n ? n.toLocaleString()+'원' : '-'; };
+    if(_s7Mlive){
+      var _mRev=0,_mOrd=0,_mProfit=0,_mAdFee=0,_mAdIncome=0;
+      campList.forEach(function(c){
+        _mRev    += c.totalRevenue||c.revenue||0;
+        _mOrd    += c.mliveOrderQty||0;
+        _mProfit += c.mliveProfitAmt||0;
+        _mAdFee  += c.settleDa||0;
+        _mAdIncome += c.adIncome||0;
+      });
+      var fmtK2=function(n){return n?(n>=100000000?(n/100000000).toFixed(1)+'억':n>=10000?Math.round(n/10000).toLocaleString()+'만':n.toLocaleString()):'-';};
+      _sumRow='<tr style="background:var(--bg3);font-weight:700;font-size:12px;border-bottom:2px solid var(--border2);position:sticky;top:0;z-index:2">'
+        +'<td colspan="7" style="text-align:right;padding:6px 10px;color:var(--text3);font-size:11px">합계 ('+campList.length+'건)</td>'
+        +'<td style="color:var(--green);font-weight:700">'+fmtK2(_mRev)+'</td>'
+        +'<td style="color:var(--text2)">'+(_mOrd?_mOrd.toLocaleString()+'건':'-')+'</td>'
+        +'<td style="color:var(--blue);font-weight:700">'+fmtK2(_mProfit)+'</td>'
+        +'<td></td>'
+        +'<td style="color:var(--blue)">'+fmtK2(_mAdFee)+'</td>'
+        +'<td style="color:var(--orange)">'+fmtK2(_mAdIncome)+'</td>'
+        +'<td colspan="2"></td>'
+        +'</tr>';
+    } else {
+      var _iRev=0,_iOrd=0,_iCost=0;
+      campList.forEach(function(c){
+        var sl=c.settleData&&c.settleData.length?c.settleData:[{revenue:c.settleRevenue||0,orders:c.settleOrders||0}];
+        sl.forEach(function(sd){
+          _iRev  += sd.revenue||0;
+          _iOrd  += sd.orders||0;
+          _iCost += sd.taxSupply||(Math.round((sd.commFeeVat||0)/1.1)+(sd.fixedFee||0)+(sd.metaFee||0));
+        });
+      });
+      _sumRow='<tr style="background:var(--bg3);font-weight:700;font-size:12px;border-bottom:2px solid var(--border2);position:sticky;top:0;z-index:2">'
+        +'<td colspan="9" style="text-align:right;padding:6px 10px;color:var(--text3);font-size:11px">합계 ('+campList.length+'건)</td>'
+        +'<td style="color:var(--green);font-weight:700">'+_fmtN2(_iRev)+'</td>'
+        +'<td style="color:var(--text2)">'+(_iOrd?_iOrd.toLocaleString()+'건':'-')+'</td>'
+        +'<td style="color:var(--orange);font-weight:700;text-align:left">'+_fmtN2(_iCost)+'</td>'
+        +'<td colspan="3"></td>'
+        +'</tr>';
+    }
+  }
+  document.getElementById('s6-tbl').innerHTML=_sumRow+(rows||'<tr><td colspan="'+s7ColSpan+'" class="empty">정산 대상 캠페인 없음</td></tr>');
 }
 
 function openSettleByCamp(campId){
