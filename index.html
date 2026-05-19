@@ -11920,8 +11920,9 @@ function addSettleBlock(n, data, campaignSkus, campEndDate){
 
   // ── SKU 행 목록: 저장된 skuItems + 캠페인 상품정보 병합
   var savedItems = d.skuItems || [];
-  if(!savedItems.length && (d.skuCode || d.netOrders || d.netAmt)){
-    savedItems = [{skuCode:d.skuCode||'', netOrders:d.netOrders||0, convRate:d.convRate||0,
+  // 구버전 호환: skuItems 없고 구버전 필드(revenue/orders 또는 netAmt/netOrders) 있으면 마이그레이션
+  if(!savedItems.length && (d.skuCode || d.netOrders || d.netAmt || d.orders || d.revenue)){
+    savedItems = [{skuCode:d.skuCode||'', netOrders:d.netOrders||d.orders||0, convRate:d.convRate||0,
                    dealPrice:d.dealPrice||0, netAmt:d.netAmt||d.revenue||0, adCommRate:d.adCommRate||0}];
   }
   var campSkus = campaignSkus || [];
@@ -12030,8 +12031,9 @@ function addSettleBlock(n, data, campaignSkus, campEndDate){
     el.addEventListener('input', function(){ formatMoney(this); });
   });
   container.appendChild(block);
-  // 초기 자동계산
-  block.querySelectorAll('.settle-sku-item').forEach(function(row){ calcSettleSkuNet(row); });
+  // 초기 자동계산: settle-na는 HTML에서 이미 저장값으로 설정됐으므로 덮어쓰지 않고
+  // 전환율만 계산한 뒤 수수료 합산 (구버전 revenue 데이터 보호)
+  block.querySelectorAll('.settle-sku-item').forEach(function(row){ calcSettleConvRate(row); });
   calcSettleBlockFees(block);
   // 저장된 netAmtSum이 SKU 자동합산과 다르면 수기 입력으로 복원
   if(d.netAmtSum){
