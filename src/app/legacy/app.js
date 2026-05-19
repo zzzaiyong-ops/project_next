@@ -7386,6 +7386,63 @@ function renderWeeklyView(){
 
   html += '</tbody></table></div></div>';
   container.innerHTML = html;
+
+  // ── 엑셀 다운로드용 flat 데이터 캐시 (구분/inf/mlive 개별 행)
+  _s8ExportRows = [];
+  rows.forEach(function(row){
+    if(row.type==='inf'){
+      var c=row.camp;
+      var sd0=(c.settleData||[])[0]||{};
+      var _sk=sd0.skuItems||[];
+      var _infl=_sk.reduce(function(a,si){return a+(si.inflow||0);},0);
+      var _nord=_sk.reduce(function(a,si){return a+(si.netOrders||0);},0);
+      var _nmem=_sk.reduce(function(a,si){return a+(si.newMembers||0);},0);
+      var _namt=_sk.reduce(function(a,si){return a+(si.netAmt||0);},0);
+      var sr=c.settleRevenue||_namt||0;
+      var ml2=c._matchedMlive||{};
+      if(c.infRevIncludeMlive&&(ml2.mobOrderAmt||0)){sr=Math.max(0,sr-(ml2.mobOrderAmt||0));}
+      var infOrd=c.settleOrders||0;
+      if(c.infRevIncludeMlive&&(ml2.mobOrderQty||0)){infOrd=Math.max(0,infOrd-(ml2.mobOrderQty||0));}
+      var inf0=(c.infData&&c.infData[0])||{};
+      var fr=parseFloat(inf0.feeRate||c.feeRate)||0,fa=parseInt(inf0.feeAmount||c.feeAmount)||0;
+      var ar=parseFloat(inf0.agencyRate||c.agencyRate)||0,da=parseInt(inf0.daFee||c.settleDa)||0;
+      var cost=Math.round(sr*fr/100)+fa+Math.round(sr*ar/100)+da;
+      var adRev=(ml2.adRevenue||0)||(c.adIncome||0);
+      var infProfit=Math.round(sr*(c.profitRateInput||0)/100)+(c.adIncome||0)-cost;
+      var totalRev=sr+(ml2.orderAmt||0);
+      var totalProfit=infProfit+(ml2.profitAmt||0)+adRev;
+      _s8ExportRows.push({
+        type:'인플루언서마케팅',
+        date:(c.start||c.startDate||'').slice(0,10),
+        mdcat:c.mdcat||'',size:c.infSize||'',name:c.name||'',
+        totalRev:totalRev,totalOrd:(c.settleOrders||0)+(ml2.orderQty||0),
+        infRev:sr,infOrd:infOrd,cost:cost,
+        views:sd0.views||0,inflow:_infl,ctr:_infl>0?(_nord/_infl*100).toFixed(1):'',
+        brdAmt:ml2.mobOrderAmt||0,brdQty:ml2.mobOrderQty||0,
+        outAmt:Math.max(0,totalRev-sr-(ml2.mobOrderAmt||0)),
+        outQty:Math.max(0,(ml2.orderQty||0)-(ml2.mobOrderQty||0)),
+        mktFee:ml2.marketingFee||0,profit:totalProfit,
+        profitRate:totalRev>0?(totalProfit/totalRev*100).toFixed(1):'',
+        adRev:adRev,newMem:_nmem
+      });
+    } else if(row.type==='mlive'){
+      var wk=row.week;
+      wk.items.forEach(function(m){
+        _s8ExportRows.push({
+          type:'모바일라이브',
+          date:m.date||'',mdcat:m.mdCat||'',size:m.cat||'',name:m.programName||'',
+          totalRev:m.orderAmt||0,totalOrd:m.orderQty||0,
+          infRev:0,infOrd:0,cost:0,views:0,inflow:0,ctr:'',
+          brdAmt:m.mobOrderAmt||0,brdQty:m.mobOrderQty||0,
+          outAmt:(m.orderAmt||0)-(m.mobOrderAmt||0),outQty:(m.orderQty||0)-(m.mobOrderQty||0),
+          mktFee:m.marketingFee||0,profit:m.profitAmt||0,
+          profitRate:m.orderAmt>0?(m.profitAmt/m.orderAmt*100).toFixed(1):'',
+          adRev:m.adRevenue||0,newMem:0
+        });
+      });
+    }
+  });
+
   // KPI 진행률 표시 (gt 계산 완료 후)
   var kpiEl = document.getElementById('s8-kpi-progress');
   if(kpiEl && _tgtAll > 0){
@@ -7396,6 +7453,76 @@ function renderWeeklyView(){
       +'<span style="font-size:11px;color:var(--text3)">('+_passedDays+'/'+_totalDays+'일 기준)</span>'
       +'</div>';
   }
+}
+
+// ── 성과분석 엑셀 다운로드
+function exportS8Excel(){
+  if(!window.XLSX){ showToast('XLSX 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+  if(!_s8ExportRows.length){ showToast('다운로드할 데이터가 없습니다. 먼저 조회해주세요.'); return; }
+
+  var _BD = {top:{style:'thin',color:{rgb:'FFD0D7E3'}},bottom:{style:'thin',color:{rgb:'FFD0D7E3'}},left:{style:'thin',color:{rgb:'FFD0D7E3'}},right:{style:'thin',color:{rgb:'FFD0D7E3'}}};
+  var hdStyle = {font:{name:'맑은 고딕',sz:9,bold:true,color:{rgb:'FF1B2A4A'}},fill:{patternType:'solid',fgColor:{rgb:'FFD9E1F2'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:_BD};
+  var dtBase  = {font:{name:'맑은 고딕',sz:9},alignment:{vertical:'center'},border:_BD};
+  var dtL     = Object.assign({},dtBase,{fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'left',vertical:'center'}});
+  var dtC     = Object.assign({},dtBase,{fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'center',vertical:'center'}});
+  var numS    = Object.assign({},dtBase,{fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'},numFmt:'#,##0'});
+  var pctS    = Object.assign({},dtBase,{fill:{patternType:'solid',fgColor:{rgb:'FFFFFFFF'}},alignment:{horizontal:'right',vertical:'center'}});
+  // 인플루언서 행 배경 (연초록)
+  var infFill = {patternType:'solid',fgColor:{rgb:'FFF0FBF4'}};
+  var dtLI  = Object.assign({},dtL,{fill:infFill});
+  var dtCI  = Object.assign({},dtC,{fill:infFill});
+  var numSI = Object.assign({},numS,{fill:infFill});
+  var pctSI = Object.assign({},pctS,{fill:infFill});
+  // 모바일라이브 행 배경 (연파랑)
+  var mlFill = {patternType:'solid',fgColor:{rgb:'FFEBF4FD'}};
+  var dtLM  = Object.assign({},dtL,{fill:mlFill});
+  var dtCM  = Object.assign({},dtC,{fill:mlFill});
+  var numSM = Object.assign({},numS,{fill:mlFill});
+  var pctSM = Object.assign({},pctS,{fill:mlFill});
+
+  var hdrs = ['구분','날짜','MDCAT','패키지','캠페인명','전체매출(원)','전체건수','인플매출(원)','인플건수','비용(원)','조회수','당사유입','CTR(%)','M라이브방송중(원)','방송중건수','방송외(원)','방송외건수','마케팅비(원)','한계이익(원)','이익율(%)','광고수익(원)','신규가입'];
+  var cols  = [{wch:14},{wch:12},{wch:10},{wch:10},{wch:28},{wch:16},{wch:9},{wch:16},{wch:9},{wch:16},{wch:9},{wch:9},{wch:9},{wch:16},{wch:9},{wch:16},{wch:9},{wch:14},{wch:16},{wch:9},{wch:14},{wch:9}];
+
+  var ws = {}; ws['!cols'] = cols;
+  var R = 0;
+  hdrs.forEach(function(h,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})]={v:h,t:'s',s:hdStyle}; });
+
+  _s8ExportRows.forEach(function(row){
+    R++;
+    var isInf = row.type==='인플루언서마케팅';
+    var _dtL=isInf?dtLI:dtLM, _dtC=isInf?dtCI:dtCM, _num=isInf?numSI:numSM, _pct=isInf?pctSI:pctSM;
+    var cells = [
+      {v:row.type,t:'s',s:Object.assign({},_dtC,{font:{name:'맑은 고딕',sz:9,bold:true,color:{rgb:isInf?'FF1A7C3E':'FF1565C0'}}})},
+      {v:row.date,t:'s',s:_dtC},
+      {v:row.mdcat,t:'s',s:_dtC},
+      {v:row.size,t:'s',s:_dtC},
+      {v:row.name,t:'s',s:Object.assign({},_dtL,{font:{name:'맑은 고딕',sz:9,bold:isInf}})},
+      {v:row.totalRev||0,t:'n',s:_num},
+      {v:row.totalOrd||0,t:'n',s:_num},
+      {v:row.infRev||0,t:'n',s:_num},
+      {v:row.infOrd||0,t:'n',s:_num},
+      {v:row.cost||0,t:'n',s:_num},
+      {v:row.views||0,t:'n',s:_num},
+      {v:row.inflow||0,t:'n',s:_num},
+      {v:row.ctr!==''?parseFloat(row.ctr)||0:0,t:'n',s:_pct},
+      {v:row.brdAmt||0,t:'n',s:_num},
+      {v:row.brdQty||0,t:'n',s:_num},
+      {v:row.outAmt||0,t:'n',s:_num},
+      {v:row.outQty||0,t:'n',s:_num},
+      {v:row.mktFee||0,t:'n',s:_num},
+      {v:row.profit||0,t:'n',s:Object.assign({},_num,{font:{name:'맑은 고딕',sz:9,bold:true,color:{rgb:((row.profit||0)>=0?'FF1565C0':'FFD32F2F')}}})},
+      {v:row.profitRate!==''?parseFloat(row.profitRate)||0:0,t:'n',s:_pct},
+      {v:row.adRev||0,t:'n',s:_num},
+      {v:row.newMem||0,t:'n',s:_num}
+    ];
+    cells.forEach(function(cell,ci){ ws[XLSX.utils.encode_cell({r:R,c:ci})]=cell; });
+  });
+
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(R,1),c:hdrs.length-1}});
+  ws['!rows'] = [{hpt:24}]; // 헤더 행 높이
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'성과분석');
+  XLSX.writeFile(wb,'성과분석_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 function setS7Filter(val){
@@ -7517,6 +7644,7 @@ function renderReports(){
 }
 
 var _s7FilteredCamps = [];
+var _s8ExportRows = [];
 
 function toggleS7CheckAll(checked){
   document.querySelectorAll('.s7-camp-cb').forEach(function(cb){ cb.checked = checked; });
