@@ -8326,6 +8326,10 @@ function saveProd(){
     if(idx===-1){ alert('수정할 캠페인을 찾을 수 없습니다.'); return; }
     newData.id = DB.campaigns[idx].id;
     var oldData = DB.campaigns[idx];
+    // campCode 보존: 수정 시 기존 캠페인 코드 유지 (newData에 campCode가 없음)
+    if(!newData.campCode && oldData.campCode){
+      newData.campCode = oldData.campCode;
+    }
     // mcnList 보존: saveProd에서 mcnList를 직접 편집하지 않으므로 기존 값 유지
     // (MCN 복수 등록은 openMcnEdit/saveMcnEdit 전용)
     if(!newData.mcnList && oldData.mcnList && oldData.mcnList.length){
