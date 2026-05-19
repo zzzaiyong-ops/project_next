@@ -15256,8 +15256,13 @@ function importSettleExcel(input){
       if(!data.length){ showToast('파일이 비어 있습니다.'); return; }
       var hdrRow = -1;
       for(var i=0;i<Math.min(5,data.length);i++){
-        var cell = String(data[i][0]||'').trim().replace('(KEY)','').trim();
-        if(cell==='캠페인코드'){ hdrRow=i; break; }
+        // 시작일/종료일이 A열로 이동한 경우에도 감지: 행 전체에서 캠페인코드 헤더 탐색
+        var found=false;
+        for(var ci=0;ci<data[i].length;ci++){
+          var cell=String(data[i][ci]||'').trim().replace('(KEY)','').trim();
+          if(cell==='캠페인코드'){ hdrRow=i; found=true; break; }
+        }
+        if(found) break;
       }
       if(hdrRow===-1){ showToast('헤더를 찾을 수 없습니다. 업로드 양식을 사용해주세요.'); return; }
       var hdr = data[hdrRow].map(function(h){ return String(h||'').trim(); });
