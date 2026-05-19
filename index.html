@@ -10173,8 +10173,9 @@ function renderWeeklyView(){
         if(infOrd<0) infOrd=0;
       }
       var _i0=(c.infData&&c.infData[0])||{};
+      var _sd0gt=(c.settleData&&c.settleData[0])||{};
       var fr2=parseFloat(_i0.feeRate||c.feeRate)||0,fa2=parseInt(_i0.feeAmount||c.feeAmount)||0,ar2=parseFloat(_i0.agencyRate||c.agencyRate)||0,da2=parseInt(_i0.daFee||c.settleDa)||0;
-      var cost2=Math.round(sr*fr2/100)+fa2+Math.round(sr*ar2/100)+da2; // 비용소계 (DA 포함)
+      var cost2=_sd0gt.taxSupply||(Math.round((_sd0gt.commFeeVat||0)/1.1)+(_sd0gt.fixedFee||0)+(_sd0gt.metaFee||0))||(Math.round(sr*fr2/100)+fa2+Math.round(sr*ar2/100)+da2);
       gt.infCost+=cost2;
       gt.infRev+=sr; gt.infOrd+=infOrd;
       (c.settleData||[]).forEach(function(s){
@@ -10257,14 +10258,13 @@ function renderWeeklyView(){
       if(c.infRevIncludeMlive && (ml.mobOrderAmt||0)){ sr = Math.max(0, sr - (ml.mobOrderAmt||0)); }
       var infOrd = c.settleOrders||0;
       if(c.infRevIncludeMlive && (ml.mobOrderQty||0)){ infOrd = Math.max(0, infOrd - (ml.mobOrderQty||0)); }
-      // infData에서 비용 정보 가져오기 (캠페인 레벨 폴백)
+      // 비용 = 세금계산서 공급가액(부가세별도) 우선, 없으면 구성항목 합산
       var inf0 = (c.infData&&c.infData[0])||{};
       var fr=parseFloat(inf0.feeRate||c.feeRate)||0;
       var fa=parseInt(inf0.feeAmount||c.feeAmount)||0;
       var ar=parseFloat(inf0.agencyRate||c.agencyRate)||0;
       var daFee=parseInt(inf0.daFee||c.settleDa)||0;
-      // 비용소계 = 수수료 + 원고료 + 에이전시 + DA (정산 비용소계와 동일)
-      var cost = Math.round(sr*fr/100)+fa+Math.round(sr*ar/100)+daFee;
+      var cost = sd0.taxSupply || (Math.round((sd0.commFeeVat||0)/1.1) + (sd0.fixedFee||0) + (sd0.metaFee||0)) || (Math.round(sr*fr/100)+fa+Math.round(sr*ar/100)+daFee);
       var startD=(c.start||c.startDate||'').slice(5,10), endD=(c.end||c.endDate||'').slice(5,10);
 
       // 인플루언서 한계이익 계산
@@ -10396,7 +10396,7 @@ function renderWeeklyView(){
       var inf0=(c.infData&&c.infData[0])||{};
       var fr=parseFloat(inf0.feeRate||c.feeRate)||0,fa=parseInt(inf0.feeAmount||c.feeAmount)||0;
       var ar=parseFloat(inf0.agencyRate||c.agencyRate)||0,da=parseInt(inf0.daFee||c.settleDa)||0;
-      var cost=Math.round(sr*fr/100)+fa+Math.round(sr*ar/100)+da;
+      var cost=sd0.taxSupply||(Math.round((sd0.commFeeVat||0)/1.1)+(sd0.fixedFee||0)+(sd0.metaFee||0))||(Math.round(sr*fr/100)+fa+Math.round(sr*ar/100)+da);
       var adRev=(ml2.adRevenue||0)||(c.adIncome||0);
       var infProfit=Math.round(sr*(c.profitRateInput||0)/100)+(c.adIncome||0)-cost;
       var totalRev=sr+(ml2.orderAmt||0);
