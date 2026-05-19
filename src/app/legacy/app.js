@@ -4487,7 +4487,8 @@ function renderS7(){
 
       infList.forEach(function(inf, infIdx){
         var sd = settleList[infIdx] || {};
-        var rev = sd.revenue || 0;
+        // 전체매출: revenue 저장값 우선, 없으면 skuItems netAmt(또는 netOrders×dealPrice) 합산
+        var rev = sd.revenue || (sd.skuItems||[]).reduce(function(s,si){ return s+(si.netAmt||(si.netOrders*(si.dealPrice||0))||0); },0);
         // 전체 비용 = 세금계산서 공급가액(부가세별도) — 저장값 우선, 없으면 commFeeVat 기준 재계산
         var totalCost = sd.taxSupply || (Math.round((sd.commFeeVat||0)/1.1) + (sd.fixedFee||0) + (sd.metaFee||0));
         var revStr  = rev  ? rev.toLocaleString()+'원'       : '-';
@@ -12311,7 +12312,7 @@ function importSettleExcel(input){
           buyers:     iBuyers>=0    ? pInt(row[iBuyers])   : 0,
           newMembers: iNewMem>=0    ? pInt(row[iNewMem])   : 0,
           dealPrice:  iDealPrice>=0 ? pInt(row[iDealPrice]): 0,
-          netAmt:     iNet>=0       ? pInt(row[iNet])      : 0,
+          netAmt:     (function(){ var dp=iDealPrice>=0?pInt(row[iDealPrice]):0; var na=iNet>=0?pInt(row[iNet]):0; return na||(no0*dp)||0; })(),
           adCommRate: (function(){ if(iAdComm<0) return 0; var r=pFlt(row[iAdComm]); return (r>0&&r<1)?(Math.round(r*10000)/100):r; })()
         };
         a.skuItems.push(skuItem);
@@ -12344,7 +12345,7 @@ function importSettleExcel(input){
         if(a.issueResult) sd.issueResult=a.issueResult;
         // S7 표시용: skuItems 합산 → settleData + camp 루트 양쪽 모두 업데이트
         var totalNet=0, totalOrd=0;
-        a.skuItems.forEach(function(s){ totalNet+=s.netAmt||0; totalOrd+=s.netOrders||0; });
+        a.skuItems.forEach(function(s){ totalNet+=(s.netAmt||(s.netOrders*(s.dealPrice||0))||0); totalOrd+=s.netOrders||0; });
         camp.settleRevenue=totalNet; camp.settleOrders=totalOrd;
         sd.revenue=totalNet; sd.orders=totalOrd;  // 그리드 표시용
         // 상품정보(c.skus) 상품코드 동기화: 엑셀의 상품코드를 c.skus[]에 반영
