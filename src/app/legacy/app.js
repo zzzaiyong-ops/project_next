@@ -6514,23 +6514,36 @@ function uploadMliveExcel(input){
     var skipped = 0;
 
     // 헤더 행에서 컬럼 인덱스 자동 매핑
+    // 첫 30행 중 키워드 매칭이 가장 많은 행을 헤더로 선택 (상단 메타데이터 행 무시)
     var colMap = {};
     var headerKeywords = {
       '순주문수량':null, '순주문금액':null, '주문이익율':null, '주문이익액':null,
       '총시청자수':null, '프로그램명':null, '방송구분':null, '방송일자':null,
       '대표담당MD':null, '시작':null, '종료':null, '마케팅':null, '광고수익':null
     };
-    for(var hi=0; hi<Math.min(10,rows.length); hi++){
+    var _bestHdrRow = -1, _bestScore = 0;
+    for(var hi=0; hi<Math.min(30,rows.length); hi++){
       var hrow = rows[hi];
+      var _score = 0;
       for(var hj=0; hj<hrow.length; hj++){
         var hv = String(hrow[hj]||'').trim();
+        if(hv in headerKeywords) _score += 2;
+        if(hv.includes('마케팅') || hv.includes('광고수익') || hv.includes('편성') || hv.includes('방송')) _score++;
+      }
+      if(_score > _bestScore){ _bestScore = _score; _bestHdrRow = hi; }
+    }
+    // 최적 헤더 행으로 키워드 매핑
+    if(_bestHdrRow >= 0){
+      var _hrow2 = rows[_bestHdrRow];
+      for(var hj=0; hj<_hrow2.length; hj++){
+        var hv = String(_hrow2[hj]||'').trim();
         if(hv in headerKeywords && headerKeywords[hv]===null) headerKeywords[hv]=hj;
-        // 부분 매칭도 시도
+        // 부분 매칭: '마케팅비', '마케팅비(VAT포함)' 등 모두 포함
         if(headerKeywords['마케팅']===null && hv.includes('마케팅')) headerKeywords['마케팅']=hj;
         if(headerKeywords['광고수익']===null && hv.includes('광고수익')) headerKeywords['광고수익']=hj;
       }
     }
-    console.log('[M라이브] 헤더 매핑:', JSON.stringify(headerKeywords));
+    console.log('[M라이브] 헤더행:', _bestHdrRow, '점수:', _bestScore, '매핑:', JSON.stringify(headerKeywords));
 
     // 헤더 기반 인덱스 (폴백: 고정 인덱스)
     var CI = {
@@ -6545,12 +6558,16 @@ function uploadMliveExcel(input){
       adRev:headerKeywords['광고수익']!=null?headerKeywords['광고수익']:88,
     };
     console.log('[M라이브] 컬럼 인덱스:', JSON.stringify(CI));
-    // 첫 데이터행 원시값 디버그 (V열 위치 확인용)
+    // 첫 데이터행 원시값 디버그
     for(var di=0; di<rows.length; di++){
       var dr=rows[di]; var dc=String(dr[0]||'').trim();
       if(dc.match(/^\d{6,}/)){
         console.log('[M라이브] 첫 데이터행 idx '+di+' 컬럼 18~25:', JSON.stringify([dr[18],dr[19],dr[20],dr[21],dr[22],dr[23],dr[24],dr[25]]));
         console.log('[M라이브] 헤더 profitRate idx='+CI.profitRate+' 값='+dr[CI.profitRate]);
+        // 마케팅비 컬럼 디버그: 감지된 인덱스 및 주변 값 출력
+        var _mktNear=[];
+        for(var _nb=Math.max(0,CI.mktFee-3);_nb<=Math.min(dr.length-1,CI.mktFee+3);_nb++) _mktNear.push('['+_nb+']='+dr[_nb]);
+        console.log('[M라이브] 마케팅비 col='+CI.mktFee+' val='+dr[CI.mktFee]+' 주변:', _mktNear.join(', '));
         break;
       }
     }
