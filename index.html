@@ -9504,36 +9504,27 @@ function uploadMliveExcel(input){
     var skipped = 0;
 
     // 헤더 행에서 컬럼 인덱스 자동 매핑
-    // 첫 30행 중 키워드 매칭이 가장 많은 행을 헤더로 선택 (상단 메타데이터 행 무시)
+    // 데이터행 이전까지 모든 헤더행을 스캔 (다중 헤더행 지원, 최대 30행)
+    // 예: Row1=대분류, Row2=소분류, Row3=세부항목(M라이브마케팅비 등)
     var colMap = {};
     var headerKeywords = {
       '순주문수량':null, '순주문금액':null, '주문이익율':null, '주문이익액':null,
       '총시청자수':null, '프로그램명':null, '방송구분':null, '방송일자':null,
       '대표담당MD':null, '시작':null, '종료':null, '마케팅':null, '광고수익':null
     };
-    var _bestHdrRow = -1, _bestScore = 0;
     for(var hi=0; hi<Math.min(30,rows.length); hi++){
       var hrow = rows[hi];
-      var _score = 0;
+      // 데이터행 도달 시 탐색 종료 (편성코드: 6자리+ 숫자로 시작)
+      if(String(hrow[0]||'').trim().match(/^\d{6,}/)) break;
       for(var hj=0; hj<hrow.length; hj++){
         var hv = String(hrow[hj]||'').trim();
-        if(hv in headerKeywords) _score += 2;
-        if(hv.includes('마케팅') || hv.includes('광고수익') || hv.includes('편성') || hv.includes('방송')) _score++;
-      }
-      if(_score > _bestScore){ _bestScore = _score; _bestHdrRow = hi; }
-    }
-    // 최적 헤더 행으로 키워드 매핑
-    if(_bestHdrRow >= 0){
-      var _hrow2 = rows[_bestHdrRow];
-      for(var hj=0; hj<_hrow2.length; hj++){
-        var hv = String(_hrow2[hj]||'').trim();
         if(hv in headerKeywords && headerKeywords[hv]===null) headerKeywords[hv]=hj;
-        // 부분 매칭: '마케팅비', '마케팅비(VAT포함)' 등 모두 포함
-        if(headerKeywords['마케팅']===null && hv.includes('마케팅')) headerKeywords['마케팅']=hj;
+        // 마케팅비: '마케팅비' 포함어만 허용 (단독 '마케팅' 섹션레이블은 제외)
+        if(headerKeywords['마케팅']===null && hv.includes('마케팅비')) headerKeywords['마케팅']=hj;
         if(headerKeywords['광고수익']===null && hv.includes('광고수익')) headerKeywords['광고수익']=hj;
       }
     }
-    console.log('[M라이브] 헤더행:', _bestHdrRow, '점수:', _bestScore, '매핑:', JSON.stringify(headerKeywords));
+    console.log('[M라이브] 헤더 매핑:', JSON.stringify(headerKeywords));
 
     // 헤더 기반 인덱스 (폴백: 고정 인덱스)
     var CI = {
