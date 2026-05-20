@@ -6635,9 +6635,12 @@ function uploadMliveExcel(input){
     var _totalOrderAmt = _mliveData.reduce(function(s,m){return s+(m.orderAmt||0);},0);
     var _totalAmtStr = _totalOrderAmt >= 100000000 ? (Math.round(_totalOrderAmt/100000000*10)/10)+'억' : Math.round(_totalOrderAmt/10000)+'만';
     showToast('M라이브 '+_mliveData.length+'건 로드 | 순주문금액 합계: '+_totalAmtStr+' | '+(sample?sample.programName:''));
-    // Firebase에 편성코드 키로 저장 (기존 데이터와 머지)
+    // 업로드 직후 Firebase 리스너가 loadMliveFromDb를 재호출해 데이터를 덮어쓰는
+    // 레이스 컨디션 방지: 10초간 loadMliveFromDb 스킵 플래그 설정
+    _mliveLastUpload = Date.now();
+    // Firebase에 편성코드 키로 저장
     saveMliveToDb();
-    // 매칭되는 캠페인 정산 정보 자동 기입 (전체매출/방송중매출/방송외매출)
+    // 표시용 동기화 (인플루언서 정산 데이터는 건드리지 않음)
     syncMliveToCampaignSettle();
     renderReports();
   };
@@ -6713,8 +6716,8 @@ function syncMliveToCampaignSettle(){
     if(m.profitAmt && c.mliveProfitAmt !== m.profitAmt){ c.mliveProfitAmt = m.profitAmt; updated=true; }
     // 시청자수
     if(m.viewers && c.mliveViewers !== m.viewers){ c.mliveViewers = m.viewers; updated=true; }
-    // 마케팅비 → 정산 DA광고료
-    if(m.marketingFee && c.settleDa !== m.marketingFee){ c.settleDa = m.marketingFee; updated=true; }
+    // 마케팅비 → 정산 DA광고료 (미입력 시에만 자동 채움, 사용자 입력값 보호)
+    if(m.marketingFee && !c.settleDa){ c.settleDa = m.marketingFee; updated=true; }
     // 딜코드
     if(m.dealCode && !c.dealCode){ c.dealCode = m.dealCode; updated=true; }
     // 방송구분
@@ -6739,7 +6742,8 @@ function syncMliveToCampaignSettle(){
   });
   if(changed > 0){
     console.log('[syncMliveToCampaignSettle] '+changed+'개 캠페인 실적 자동 동기화');
-    if(fbReady) pushToFirebase();
+    // pushToFirebase() 제거: 전체 캠페인 덮어쓰기로 인한 인플루언서 정산 데이터 유실 방지
+    // 파생값(매출/이익/시청자 등)은 renderReports()에서 _mliveData 기반으로 표시되므로 저장 불필요
     showToast(changed+'개 캠페인에 엑셀 실적 자동 반영 (매출/이익/시청자/광고수익 등)');
   }
 }
@@ -6759,6 +6763,12 @@ function saveMliveToDb(){
 // M라이브 데이터 Firebase에서 로드
 function loadMliveFromDb(){
   if(!fbReady || !fbRef) return;
+  // 최근 엑셀 업로드 직후(10초 이내)에는 Firebase 로드를 건너뜀 (race condition 방지)
+  // saveMliveToDb()가 Firebase on('value') 리스너를 트리거해도 새 데이터를 덮어쓰지 않도록
+  if(_mliveLastUpload && (Date.now() - _mliveLastUpload) < 10000){
+    console.log('[M라이브] 엑셀 업로드 직후 Firebase 로드 스킵 (race condition 방지)');
+    return;
+  }
   fbRef.child('mliveData').once('value', function(snap){
     var d = snap.val();
     if(!d) return;
