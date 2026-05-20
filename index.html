@@ -9631,7 +9631,9 @@ function uploadMliveExcel(input){
       m.profitAmt = Math.round(totalAmt * mlRate);       // AR
     });
     var sample = _mliveData[0];
-    showToast('M라이브 '+_mliveData.length+'건 로드 | '+(sample?sample.programName+' / 이익:'+sample.profitAmt:'0건'));
+    var _totalOrderAmt = _mliveData.reduce(function(s,m){return s+(m.orderAmt||0);},0);
+    var _totalAmtStr = _totalOrderAmt >= 100000000 ? (Math.round(_totalOrderAmt/100000000*10)/10)+'억' : Math.round(_totalOrderAmt/10000)+'만';
+    showToast('M라이브 '+_mliveData.length+'건 로드 | 순주문금액 합계: '+_totalAmtStr+' | '+(sample?sample.programName:''));
     // Firebase에 편성코드 키로 저장 (기존 데이터와 머지)
     saveMliveToDb();
     // 매칭되는 캠페인 정산 정보 자동 기입 (전체매출/방송중매출/방송외매출)
@@ -9921,20 +9923,23 @@ function renderWeeklyView(){
     }
   });
 
-  // M라이브 주차합계에서 매칭된 편성코드 제외하여 재계산
-  Object.keys(mlWeekMap).forEach(function(k){
-    var wk = mlWeekMap[k];
-    var filtered = wk.items.filter(function(m){ return !matchedMliveCodes[m.code]; });
-    wk.items = filtered;
-    wk.totAmt=0; wk.totQty=0; wk.totProfit=0; wk.totBrdAmt=0; wk.totBrdQty=0; wk.totOutAmt=0; wk.totOutQty=0; wk.totMktFee=0; wk.totAdRev=0;
-    filtered.forEach(function(m){
-      wk.totAmt+=m.orderAmt||0; wk.totQty+=m.orderQty||0; wk.totProfit+=m.profitAmt||0;
-      wk.totBrdAmt+=m.mobOrderAmt||0; wk.totBrdQty+=m.mobOrderQty||0;
-      wk.totOutAmt+=(m.orderAmt||0)-(m.mobOrderAmt||0); wk.totOutQty+=(m.orderQty||0)-(m.mobOrderQty||0);
-      wk.totMktFee+=m.marketingFee||0;
-      wk.totAdRev+=m.adRevenue||0;
+  // M라이브 주차합계에서 매칭된 편성코드 제외 (이중집계 방지)
+  // 단, M라이브 전용 뷰(s8Type==='mlive')에서는 인플 행이 없으므로 제외 안 함
+  if(s8Type !== 'mlive'){
+    Object.keys(mlWeekMap).forEach(function(k){
+      var wk = mlWeekMap[k];
+      var filtered = wk.items.filter(function(m){ return !matchedMliveCodes[m.code]; });
+      wk.items = filtered;
+      wk.totAmt=0; wk.totQty=0; wk.totProfit=0; wk.totBrdAmt=0; wk.totBrdQty=0; wk.totOutAmt=0; wk.totOutQty=0; wk.totMktFee=0; wk.totAdRev=0;
+      filtered.forEach(function(m){
+        wk.totAmt+=m.orderAmt||0; wk.totQty+=m.orderQty||0; wk.totProfit+=m.profitAmt||0;
+        wk.totBrdAmt+=m.mobOrderAmt||0; wk.totBrdQty+=m.mobOrderQty||0;
+        wk.totOutAmt+=(m.orderAmt||0)-(m.mobOrderAmt||0); wk.totOutQty+=(m.orderQty||0)-(m.mobOrderQty||0);
+        wk.totMktFee+=m.marketingFee||0;
+        wk.totAdRev+=m.adRevenue||0;
+      });
     });
-  });
+  }
 
   // 통합 행 목록 (시간순: 인플루언서=개별행, M라이브=주차 합계행)
   var rows = [];
