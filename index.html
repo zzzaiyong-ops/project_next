@@ -7726,6 +7726,17 @@ function renderCamps(){
   var countEl = document.getElementById('camp-count');
   if(countEl) countEl.textContent = '총 '+filtered.length+'건'+(ME_ROLE==='md' ? ' (본인 담당)' : '');
 
+  // 정렬: 미확정(stage 1~4) 먼저 → 그 안에서 최신 등록(id 내림차순)
+  // 확정(stage 5~) 이후도 최신 등록 순
+  filtered.sort(function(a, b){
+    var aId = (STAGES.find(function(s){ return s.name===a.stage; })||{id:9}).id;
+    var bId = (STAGES.find(function(s){ return s.name===b.stage; })||{id:9}).id;
+    var aConf = aId >= 5 ? 1 : 0; // 0=미확정, 1=확정
+    var bConf = bId >= 5 ? 1 : 0;
+    if(aConf !== bConf) return aConf - bConf; // 미확정 먼저
+    return (b.id||0) - (a.id||0);             // 같은 그룹 내 최신 등록 먼저
+  });
+
   // 페이징
   var totalPg2 = Math.max(1, Math.ceil(filtered.length / _campPageSize));
   if(_campPage > totalPg2) _campPage = totalPg2;
