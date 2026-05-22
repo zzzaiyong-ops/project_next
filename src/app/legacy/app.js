@@ -7105,7 +7105,16 @@ function renderWeeklyView(){
       _tgtInf+=(mt.inf||0)*ratio;
     });
     _totalDays = queryDays;
-    _passedDays = queryDays; // 주 단위는 조회기간=경과기간
+    // 현재 주: 오늘 이전 완료된 일수만 경과로 계산 (일할 달성율)
+    // 예) 금요일 조회 → 월~목 4일치 목표 기준
+    // 과거 주: 전체 기간 경과 (ratio=1, 목표 100% 적용)
+    if(toDate < today){
+      _passedDays = queryDays;
+    } else {
+      // 오늘 00:00 기준 경과일 (오늘은 미포함 — 아직 진행 중)
+      var _elapsed = Math.floor((today - fromDate) / 86400000);
+      _passedDays = Math.min(Math.max(_elapsed, 0), queryDays);
+    }
   } else {
     // 월 단위
     var _coveredMonths = {};
@@ -7143,8 +7152,11 @@ function renderWeeklyView(){
   // 달성율 계산 함수
   function _cp(act,tgt){
     if(!tgt) return '';
-    // 주 단위: 목표가 이미 일할 적용됨, 월 단위: 일할 적용
-    var target = s8Period==='week' ? Math.round(tgt) : Math.round(tgt * _dailyRatio);
+    // 주/월 모두 _dailyRatio 적용
+    // 주 단위 현재주: _dailyRatio = 경과일/7 → 금요일이면 4/7
+    // 주 단위 과거주: _dailyRatio = 1 → 전체 목표 적용
+    // 월 단위: _dailyRatio = 경과일/월일수
+    var target = Math.round(tgt * _dailyRatio);
     var r2 = target>0?(act/target*100).toFixed(1):'0';
     var cl=r2>=100?'var(--green)':r2>=80?'var(--orange)':'var(--pink)';
     return '(<span style="font-size:16px;font-weight:800;color:'+cl+'">'+r2+'%</span>)';
