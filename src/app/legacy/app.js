@@ -7105,14 +7105,24 @@ function renderWeeklyView(){
       _tgtInf+=(mt.inf||0)*ratio;
     });
     _totalDays = queryDays;
-    // 현재 주: 오늘 이전 완료된 일수만 경과로 계산 (일할 달성율)
-    // 예) 금요일 조회 → 월~목 4일치 목표 기준
-    // 과거 주: 전체 기간 경과 (ratio=1, 목표 100% 적용)
-    if(toDate < today){
+    // 날짜 문자열 비교로 timezone 오차 제거
+    // new Date('YYYY-MM-DD')는 UTC 자정 파싱 → KST+9 환경에서 오전 9시로 오인됨
+    // getWeekRange()가 반환한 로컬 날짜 문자열과 today 문자열을 직접 비교
+    var _todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+    var _weekFrom = wfr ? wfr.from : '';  // 'YYYY-MM-DD'
+    var _weekTo   = wtr ? wtr.to   : '';  // 'YYYY-MM-DD'
+    if(_weekTo < _todayStr){
+      // 과거 주: 전체 기간 경과
       _passedDays = queryDays;
+    } else if(_weekFrom >= _todayStr){
+      // 미래 주: 아직 시작 안 함
+      _passedDays = 0;
     } else {
-      // 오늘 00:00 기준 경과일 (오늘은 미포함 — 아직 진행 중)
-      var _elapsed = Math.floor((today - fromDate) / 86400000);
+      // 현재 주: 주 시작(월)부터 오늘까지의 완료 일수 (오늘 미포함)
+      // 예) 금요일(5/22) 조회 → 월(5/18)~목(5/21) = 4일
+      var _fp = _weekFrom.split('-');
+      var _fromLocal = new Date(parseInt(_fp[0]), parseInt(_fp[1])-1, parseInt(_fp[2])); // 로컬 자정
+      var _elapsed = Math.floor((today - _fromLocal) / 86400000);
       _passedDays = Math.min(Math.max(_elapsed, 0), queryDays);
     }
   } else {
